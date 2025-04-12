@@ -1,5 +1,9 @@
 import xml.etree.ElementTree as ET
 from typing import Any, Optional, Union, Tuple, List
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from uo_runtime.gumps import *
 
 
 def _clamp(val: float, val_min: float, val_max: float) -> float:
@@ -326,9 +330,9 @@ class GumpNodeWrapper:
         elif self.element.tag == "label":
             Gumps.AddLabelCropped(gd, x, y, w, h, color, text)
         elif self.element.tag == "html":
-            Gumps.AddHtml(gd, x, y, w, h, self.element.text, bg, int(self["scrollbar"] or "0"))
+            Gumps.AddHtml(gd, x, y, w, h, self.element.text or "", bool(bg), bool(int(self["scrollbar"] or "0")))
         elif self.element.tag == "h":
-            Gumps.AddHtml(gd, x, y, w, h, f"<CENTER>{self.element.text}</CENTER>", 0, 0)
+            Gumps.AddHtml(gd, x, y, w, h, f"<CENTER>{self.element.text}</CENTER>", False, False)
         elif self.element.tag == "itemimg":
             Gumps.AddItem(gd, x, y, src, color)
         elif self.element.tag == "gumpimg":
@@ -345,7 +349,9 @@ class GumpNodeWrapper:
             assert self["id"] is not None, "Text entry must have an ID"
             if src == 40018:
                 Gumps.AddButton(gd, x, y - 2, 40018, 40028, len(id_list), 1, 0)
-                Gumps.AddHtml(gd, x, y, w, h, f'<CENTER><BASEFONT COLOR="#FFFFFF">{text}</BASEFONT></CENTER>', 0, 0)
+                Gumps.AddHtml(
+                    gd, x, y, w, h, f'<CENTER><BASEFONT COLOR="#FFFFFF">{text}</BASEFONT></CENTER>', False, False
+                )
             id_list.append(self["id"])
 
         if self["tooltip"] is not None:
@@ -360,8 +366,8 @@ class GumpNodeWrapper:
 def open_gump(
     root: ET.Element,
     gump_id: Optional[int] = None,
-    x: Optional[int] = 200,
-    y: Optional[int] = 200,
+    x: int = 200,
+    y: int = 200,
 ) -> Tuple[ET.Element, Optional[str]]:
     gnw = GumpNodeWrapper(root)
     gnw._measure()

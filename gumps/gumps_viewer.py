@@ -1,3 +1,9 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from uo_runtime.gumps import *
+
+
 GUMP_ID = 0xBABED0D0
 GUMP_ASSET_ID = 0
 GUMP_GRID_VIEW = True

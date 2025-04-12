@@ -1,3 +1,9 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from uo_runtime.gumps import *
+
+
 GUMP_ID = 0x4BEEFBEE
 
 count = 0

@@ -1,0 +1,10 @@
+{
+    "reportMissingImports": true,
+    "reportUndefinedVariable": true,
+    "stubPath": "./stubs",
+    "extraPaths": [
+        "./stubs"
+    ],
+    "useLibraryCodeForTypes": true,
+    "pythonVersion": "3.9",
+}

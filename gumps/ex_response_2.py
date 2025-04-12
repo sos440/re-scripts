@@ -1,3 +1,9 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from uo_runtime.gumps import *
+
+
 setX = 25
 setY = 50
 
