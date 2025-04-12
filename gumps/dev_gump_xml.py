@@ -307,12 +307,10 @@ class GumpNodeWrapper:
             else:
                 cx += child.outer_w + self.spacing
 
-    def render(self, gd=None, id_list: Optional[list] = None, text_list: Optional[list] = None):
+    def render(self, gd=None, id_list: Optional[list] = None):
         """Render the GumpNodeWrapper to a string."""
         if id_list is None:
             id_list = [None]
-        if text_list is None:
-            text_list = []
 
         if gd is None:
             gd = Gumps.CreateGump(movable=True)
@@ -344,7 +342,6 @@ class GumpNodeWrapper:
             Gumps.AddBackground(gd, x, y - 2, w, h + 4, 9350)
             Gumps.AddTextEntry(gd, x + 2, y, w - 4, h, color, len(id_list), text)
             id_list.append(self["id"])
-            text_list.append(self["id"])
         elif self.element.tag == "button":
             assert self["id"] is not None, "Text entry must have an ID"
             if src == 40018:
@@ -358,9 +355,9 @@ class GumpNodeWrapper:
             Gumps.AddTooltip(gd, self["tooltip"] or "")
 
         for child in self:
-            child.render(gd, id_list, text_list)
+            child.render(gd, id_list)
 
-        return gd, id_list, text_list
+        return gd, id_list
 
 
 def open_gump(
@@ -372,16 +369,18 @@ def open_gump(
     gnw = GumpNodeWrapper(root)
     gnw._measure()
     gnw._layout()
-    gd, id_list, text_list = gnw.render()
+    gd, id_list = gnw.render()
     gump_id = gump_id or (hash(gd) & 0xFFFFFFFF)
     Gumps.SendGump(gump_id, Player.Serial, x, y, gd.gumpDefinition, gd.gumpStrings)
     if Gumps.WaitForGump(gump_id, 3600000):
         gd = Gumps.GetGumpData(gump_id)
+        id_map = {id_str: id_int for id_int, id_str in enumerate(id_list)}
         # Update the text entries
-        text_map = {id: idx for idx, id in enumerate(text_list)}
+        textvalue_map = {id_int: text for id_int, text in zip(gd.textID, gd.text)}
         for entry in root.iter("textentry"):
-            if entry.attrib["id"] in text_map:
-                entry.attrib["text"] = gd.text[text_map[entry.attrib["id"]]]
+            id = entry.attrib["id"]
+            if id in id_map:
+                entry.attrib["text"] = textvalue_map[id_map[id]]
     return root, id_list[gd.buttonid]
 
 
