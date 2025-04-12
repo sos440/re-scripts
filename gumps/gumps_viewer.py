@@ -1,18 +1,20 @@
 GUMP_ID = 0xBABED0D0
 GUMP_ASSET_ID = 0
+GUMP_GRID_VIEW = True
 
 Gumps.CloseGump(GUMP_ID)
 
 
 def show_gump_viewer():
     global GUMP_ASSET_ID
+    global GUMP_GRID_VIEW
 
     gd = Gumps.CreateGump(movable=True)
     Gumps.AddPage(gd, 0)
 
     # Background
-    Gumps.AddBackground(gd, 0, 0, 800, 600, 9270)
-    Gumps.AddBackground(gd, 10, 10, 780, 580, 3000)
+    Gumps.AddBackground(gd, 0, 0, 800, 675, 9270)
+    Gumps.AddBackground(gd, 10, 10, 780, 655, 3000)
 
     # Menubar
     Gumps.AddBackground(gd, 10, 10, 780, 53, 3500)
@@ -27,19 +29,29 @@ def show_gump_viewer():
     Gumps.AddButton(gd, 180, 26, 1541, 1542, 1004, 1, 0)
     # Next 12
     Gumps.AddButton(gd, 200, 26, 1539, 1540, 1005, 1, 0)
+
+    if GUMP_GRID_VIEW:
+        Gumps.AddButton(gd, 300, 24, 4005, 4007, 1007, 1, 0)
+        Gumps.AddLabel(gd, 335, 26, 0, "Change To Single View")
+    else:
+        Gumps.AddButton(gd, 300, 24, 4005, 4007, 1006, 1, 0)
+        Gumps.AddLabel(gd, 335, 26, 0, "Change To Grid View")
+
     # Close
     Gumps.AddButton(gd, 745, 26, 1535, 1536, 0, 1, 0)
 
     # Display
     Gumps.AddPage(gd, 1)
-
-    for id_mod in range(12):
-        row = id_mod // 4
-        col = id_mod % 4
-        x = 20 + col * 200
-        y = 75 + row * 200
-        Gumps.AddLabel(gd, x, y, 0, f"{GUMP_ASSET_ID + id_mod}")
-        Gumps.AddImage(gd, x, y + 20, GUMP_ASSET_ID + id_mod)
+    if GUMP_GRID_VIEW:
+        for id_mod in range(12):
+            row = id_mod // 4
+            col = id_mod % 4
+            x = 20 + col * 200
+            y = 75 + row * 200
+            Gumps.AddLabel(gd, x, y, 0, f"{GUMP_ASSET_ID + id_mod}")
+            Gumps.AddImage(gd, x, y + 20, GUMP_ASSET_ID + id_mod)
+    else:
+        Gumps.AddImage(gd, 20, 75, GUMP_ASSET_ID)
 
     Gumps.SendGump(GUMP_ID, Player.Serial, 25, 25, gd.gumpDefinition, gd.gumpStrings)
 
@@ -70,6 +82,12 @@ def show_gump_viewer():
         return True
     elif gd.buttonid == 1005:
         GUMP_ASSET_ID = min(65535, GUMP_ASSET_ID + 12)
+        return True
+    elif gd.buttonid == 1006:
+        GUMP_GRID_VIEW = True
+        return True
+    elif gd.buttonid == 1007:
+        GUMP_GRID_VIEW = False
         return True
 
 
