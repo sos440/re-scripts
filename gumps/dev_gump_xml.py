@@ -3,7 +3,8 @@ from typing import Any, Optional, Tuple, List, Dict, Callable, Union
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from uo_runtime.gumps import *
+    from uo_runtime.gumps import Gumps
+    from uo_runtime.player import Player
 
 
 ################################################################################
@@ -54,7 +55,7 @@ class GumpDOMNode:
         self.parent: Optional["GumpDOMNode"] = parent
         self.children: List["GumpDOMNode"] = []
 
-        self.id = hash(self)  # Unique ID for the element
+        self.id = hash(element) & 0xFFFF  # Unique ID for the element
 
     def __getitem__(self, item: str):
         return self.element.attrib.get(item, None)
@@ -197,11 +198,26 @@ class GumpDOMNode:
         self.spacing = float(self["spacing"] or 0)
 
         # Apply default values for specific tags
+        # ToDo: Make this more generic and less hardcoded
+        # Maybe I can implement "preprocess" method in the GumpDOMNode class
         if self.element.tag == "h":
             self.width_type = "relative"
             self.width_value = 1.0
             self.height_type = "absolute"
             self.height_value = 18.0
+            self["centered"] = "yes"
+        elif self.element.tag == "hfill":
+            self.width_type = "flex"
+            self.flex = 1.0
+        elif self.element.tag == "vfill":
+            self.height_type = "flex"
+            self.flex = 1.0
+        elif self.element.tag == "hbox":
+            self.width_type = "relative"
+            self.width_value = 1.0
+        elif self.element.tag == "vbox":
+            self.height_type = "relative"
+            self.height_value = 1.0
         elif self.element.tag == "label":
             self.height_type = "absolute"
             self.height_value = 18.0
@@ -212,6 +228,17 @@ class GumpDOMNode:
             if self["src"] == "40018":
                 self.width_type = "absolute"
                 self.width_value = 65.0
+                self.height_type = "absolute"
+                self.height_value = 18.0
+            elif self["src"] in ("40019", "40020", "40021", "40297", "40299"):
+                self.width_type = "absolute"
+                self.width_value = 125.0
+                self.height_type = "absolute"
+                self.height_value = 18.0
+        elif self.element.tag == "checkbox":
+            if self["src"] == "9026":
+                self.width_type = "absolute"
+                self.width_value = 18.0
                 self.height_type = "absolute"
                 self.height_value = 18.0
 
@@ -311,8 +338,8 @@ class GumpDOMNode:
         if not self.children:
             return self
 
-        cx = x + self.padding[0]
-        cy = y + self.padding[1]
+        cx = self.x + self.padding[0]
+        cy = self.y + self.padding[1]
         for child in self.children:
             child._layout(cx, cy)
             if self.orientation == "vertical":
@@ -341,7 +368,14 @@ class GumpStyleElement:
         raise NotImplementedError("Subclasses must implement this method.")
 
     @classmethod
-    def wrap(cls, renderer: Callable[[Gumps.GumpData, GumpDOMNode], None]) -> "GumpStyleElement":
+    def wrap(cls, renderer: Callable) -> "GumpStyleElement":
+        """
+        Wraps a callable function into a `GumpStyleElement` instance.
+
+        The callable function should accept `GumpData` and `GumpDOMNode` as arguments.
+        This allows for dynamic rendering based on the element's attributes and state.
+        """
+
         class _(GumpStyleElement):
             def render(self, gd: Gumps.GumpData, e: GumpDOMNode) -> None:
                 renderer(gd, e)
@@ -357,11 +391,7 @@ class GumpStyleSheet:
     def __init__(self):
         self.styles: Dict[str, GumpStyleElement] = {}
 
-    def add_style(
-        self,
-        tag: str,
-        style,
-    ) -> None:
+    def add_style(self, tag: str, style) -> None:
         """
         Adds a style for a specific tag.
         The style can be:
@@ -382,27 +412,102 @@ class GumpStyleSheet:
 
 
 class GumpDOMParser:
-    @classmethod
-    def parse(cls, root: ET.Element) -> GumpDOMNode:
+    class RenderedGump:
         """
-        Parses the `ElementTree` XML structure and creates a `GumpDOMNode` object.
+        This class represents a rendered gump.
+
+        It contains the gump data and the root node of the gump DOM.
+        It also provides methods to send the gump and handle events.
+
+        Attributes:
+            gd (Gumps.GumpData): The gump data object.
+            gdom (GumpDOMNode): The root node of the gump DOM.
+            id (int): The ID of the gump.
+            events (dict): A dictionary mapping button IDs to event handlers.
+
+        Methods:
+            add_event(button_id: Optional[str], handler: Callable) -> None:
+                Adds an event handler for a specific button ID.
+                Each hander accepts a dictionary of field IDs and their values.
+            send(x: int, y: int) -> None:
+                Sends the gump to the client and listens for events.
+        """
+
+        def __init__(self, gd: Gumps.GumpData, gdom: GumpDOMNode):
+            self.gd = gd
+            self.gdom = gdom
+            self.id = gdom.id
+            self.events: Dict[Optional[str], List[Callable]] = {}
+
+        def add_event(self, button_id: Optional[str], handler: Callable) -> None:
+            if button_id not in self.events:
+                self.events[button_id] = []
+            self.events[button_id].append(handler)
+
+        def send_and_listen(self, x: int, y: int) -> Tuple[Optional[str], Dict[str, Any]]:
+            Gumps.SendGump(self.id, Player.Serial, x, y, self.gd.gumpDefinition, self.gd.gumpStrings)
+            return self._listen()
+
+        def _listen(self):
+            button_id = None
+            iv_map = {}
+            # Wait for the gump to be closed or a button to be clicked
+            if Gumps.WaitForGump(self.id, 3600000):
+                gd = Gumps.GetGumpData(self.id)
+                # Parse the response and update the gump data
+                text_map = {id_int: text for id_int, text in zip(gd.textID, gd.text)}
+                for e in self.gdom.iter():
+                    assert isinstance(e, GumpDOMNode)
+                    if e.id == gd.buttonid:
+                        button_id = e["id"]
+                    elif e.element.tag == "textentry":
+                        e["text"] = text_map.get(e.id, "")
+                        iv_map[e["id"]] = e["text"]
+                    elif e.element.tag == "checkbox":
+                        e["checked"] = e.id in gd.switches
+                        iv_map[e["id"]] = e["checked"]
+            # Handles the click event
+            if button_id in self.events:
+                for handler in self.events[button_id]:
+                    handler(iv_map)
+            return button_id, iv_map
+
+    @classmethod
+    def parse(cls, root: ET.Element, gcss: GumpStyleSheet) -> "GumpDOMParser.RenderedGump":
+        """
+        Parses the `ElementTree` XML structure and builds a gump.
 
         This method performs the following steps:
         1. Wraps the parsed `ElementTree` into a tree structure of `GumpDOMNode` objects.
         2. Measures and lays out the gump structure.
-        3. Returns the root `GumpDOMNode` object.
+        3. Renders the gump using the provided `GumpStyleSheet`.
+        4. Returns a `RenderedGump` object containing the gump data and the root `GumpDOMNode`.
         """
-        gnw = GumpDOMNode(root)._init_parse()._measure()._layout()
-        return gnw
+        # Creates an empty gump
+        gd = Gumps.CreateGump(movable=True)
+        Gumps.AddPage(gd, 0)
+        # Parse the XML and create a GumpDOMNode object
+        gdom = GumpDOMNode(root)._init_parse()._measure()._layout()
+        # Render the gump using the GumpStyleSheet
+        for e in gdom.iter():
+            assert isinstance(e, GumpDOMNode)
+            gcss.apply(gd, e)
+            tooltip = e["tooltip"]
+            if tooltip is not None:
+                Gumps.AddTooltip(gd, tooltip)
+        # Return the root GumpDOMNode object
+        return GumpDOMParser.RenderedGump(gd, gdom)
 
-    @classmethod
-    def render(cls, e: GumpDOMNode, gd: Gumps.GumpData, gcss: GumpStyleSheet):
-        """
-        Renders the `GumpDOMNode` object into the GumpData object using the `GumpStyleSheet`.
-        """
-        gcss.apply(gd, e)
-        for child in e:
-            GumpDOMParser.render(child, gd, gcss)
+
+def parse_bool(val: Optional[str]) -> bool:
+    if val is None:
+        return False
+    val = val.lower()
+    if val in ("true", "yes", "1"):
+        return True
+    if val in ("false", "no", "0"):
+        return False
+    raise ValueError(f"Invalid value for 'checked': {val}")
 
 
 ################################################################################
@@ -411,19 +516,14 @@ class GumpDOMParser:
 
 
 def build_gump_ss_default() -> GumpStyleSheet:
-    def render_window(gd: Gumps.GumpData, e: GumpDOMNode) -> None:
-        if e["bg"] is None:
-            return
-        x, y, w, h = int(e.x), int(e.y), int(e.measured_w), int(e.measured_h)
-        bg = int(e["bg"] or "0")
-        Gumps.AddBackground(gd, x, y, w, h, bg)
-
     def render_container(gd: Gumps.GumpData, e: GumpDOMNode) -> None:
         if e["bg"] is None:
             return
         x, y, w, h = int(e.x), int(e.y), int(e.measured_w), int(e.measured_h)
         bg = int(e["bg"] or "0")
         Gumps.AddBackground(gd, x, y, w, h, bg)
+        if parse_bool(e["alpha"]):
+            Gumps.AddAlphaRegion(gd, x, y, w, h)
 
     def render_label(gd: Gumps.GumpData, e: GumpDOMNode) -> None:
         x, y, w, h = int(e.x), int(e.y), int(e.measured_w), int(e.measured_h)
@@ -434,14 +534,13 @@ def build_gump_ss_default() -> GumpStyleSheet:
     def render_html(gd: Gumps.GumpData, e: GumpDOMNode) -> None:
         x, y, w, h = int(e.x), int(e.y), int(e.measured_w), int(e.measured_h)
         text = e.element.text or ""
-        bg = bool(e["bg"])
-        scrollbar = bool(e["scrollbar"])
+        bg = parse_bool(e["bg"])
+        scrollbar = parse_bool(e["scrollbar"])
+        if e["color"]:
+            text = f'<BASEFONT COLOR="{e["color"]}">{text}</BASEFONT>'
+        if parse_bool(e["centered"]):
+            text = f"<CENTER>{text}</CENTER>"
         Gumps.AddHtml(gd, x, y, w, h, text, bg, scrollbar)
-
-    def render_h(gd: Gumps.GumpData, e: GumpDOMNode) -> None:
-        x, y, w, h = int(e.x), int(e.y), int(e.measured_w), int(e.measured_h)
-        text = e.element.text or ""
-        Gumps.AddHtml(gd, x, y, w, h, f"<CENTER>{text}</CENTER>", False, False)
 
     def render_itemimg(gd: Gumps.GumpData, e: GumpDOMNode) -> None:
         x, y = int(e.x), int(e.y)
@@ -469,26 +568,41 @@ def build_gump_ss_default() -> GumpStyleSheet:
 
     class render_button(GumpStyleElement):
         def test(self, e: GumpDOMNode) -> bool:
-            return e["src"] == "40018"
+            return e["src"] in ["40018", "40019", "40020", "40021", "40297", "40299"]
 
         def render(self, gd: Gumps.GumpData, e: GumpDOMNode) -> None:
             x, y, w, h = int(e.x), int(e.y), int(e.measured_w), int(e.measured_h)
             src = int(e["src"] or "0")
             text = e["text"] or ""
-            Gumps.AddButton(gd, x, y - 2, 40018, 40028, e.id, 1, 0)
+            if src in [40018, 40019, 40020, 40021]:
+                Gumps.AddButton(gd, x, y - 2, src, src + 10, e.id, 1, 0)
+            elif src in [40297, 40299]:
+                Gumps.AddButton(gd, x, y - 2, src, src + 1, e.id, 1, 0)
+            else:
+                raise ValueError(f"Unimplemented button source: {src}")
             Gumps.AddHtml(gd, x, y, w, h, f'<CENTER><BASEFONT COLOR="#FFFFFF">{text}</BASEFONT></CENTER>', False, False)
 
+    class render_checkbox(GumpStyleElement):
+        def test(self, e: GumpDOMNode) -> bool:
+            return e["src"] == "9026"
+
+        def render(self, gd: Gumps.GumpData, e: GumpDOMNode) -> None:
+            x, y = int(e.x), int(e.y)
+            checked = parse_bool(e["checked"])
+            Gumps.AddCheck(gd, x, y, 9026, 9027, checked, e.id)
+
     gcss = GumpStyleSheet()
-    gcss.add_style("window", render_window)
-    gcss.add_style("container", render_container)
+    for tag in ["window", "container", "hbox", "vbox", "hfill", "vfill"]:
+        gcss.add_style(tag, GumpStyleElement.wrap(render_container))
     gcss.add_style("label", render_label)
     gcss.add_style("html", render_html)
-    gcss.add_style("h", render_h)
+    gcss.add_style("h", render_html)
     gcss.add_style("itemimg", render_itemimg)
     gcss.add_style("gumpimg", render_gumpimg)
     gcss.add_style("gumpimgtiled", render_gumpimgtiled)
     gcss.add_style("textentry", render_textentry)
     gcss.add_style("button", render_button)
+    gcss.add_style("checkbox", render_checkbox)
 
     return gcss
 
@@ -496,115 +610,86 @@ def build_gump_ss_default() -> GumpStyleSheet:
 gump_ss_default = build_gump_ss_default()
 
 
-def open_gump(
-    root: ET.Element,
-    x: int = 200,
-    y: int = 200,
-) -> Tuple[ET.Element, Optional[str]]:
-    """
-    Renders a gump using the provided XML root element.
-
-    Returns:
-        - The root element of the XML structure, with its contents updated if necessary.
-        - The ID of the button that was clicked, or None if no button was clicked.
-    """
-    # Creates an empty gump
-    gd = Gumps.CreateGump(movable=True)
-    Gumps.AddPage(gd, 0)
-    # Parse the XML and create a GumpDOMNode object
-    gdom = GumpDOMParser.parse(root)
-    # Render the gump using the GumpStyleSheet
-    GumpDOMParser.render(gdom, gd, gump_ss_default)
-    # Sends the gump to the client
-    Gumps.SendGump(gdom.id, Player.Serial, x, y, gd.gumpDefinition, gd.gumpStrings)
-    button_id = None
-    if Gumps.WaitForGump(gdom.id, 3600000):
-        gd = Gumps.GetGumpData(gdom.id)
-        text_map = {id_int: text for id_int, text in zip(gd.textID, gd.text)}
-        for e in gdom.iter():
-            assert isinstance(e, GumpDOMNode)
-            if e.id == gd.buttonid:
-                button_id = e["id"]
-            if e.element.tag != "textentry":
-                continue
-            if e.id in text_map:
-                e["text"] = text_map[e.id]
-    return gdom.element, button_id
-
-
 def open_confirm(
     msg: str,
     width: int,
     height: int,
-    x: Optional[int] = 200,
-    y: Optional[int] = 200,
+    x: Optional[int] = 300,
+    y: Optional[int] = 150,
 ) -> bool:
     dialog_xml = f"""
-    <window width="{width}" height="{height}" bg="9270" padding="5">
-        <container bg="3000" height="100%" padding="10">
-            <h>CONFIRMATION</h>
-                <container flex="1" />
-            <html width="100%" height="18">&lt;center&gt;{msg}&lt;/center&gt;</html>
-                <container flex="1" />
-            <container width="100%">
-                <container flex="1" />
-                <button id="yes" text="Yes" src="40018" />
-                <button id="no" text="No" src="40018" />
-                <container flex="1" />
-            </container>
-        </container>
+    <window width="{width}" height="{height}" bg="30546" padding="15" alpha="yes" orientation="vertical">
+        <html width="100%" flex="1" margin="0 0 0 15" centered="yes" color="#FFFFFF">{msg}</html>
+        <hbox>
+            <hfill />
+            <button id="yes" text="Yes" src="40018" />
+            <button id="no" text="No" src="40018" />
+            <hfill />
+        </hbox>
     </window>
     """
     root = ET.fromstring(dialog_xml)
-    _, button = open_gump(root, 300, 300)
-    if button == "yes":
-        return True
-    elif button == "no" or button is None:
-        return False
-    else:
-        raise ValueError(f"Unexpected button ID: {button}")
+    g = GumpDOMParser.parse(root, gump_ss_default)
+    g.id = hash(dialog_xml) & 0xFFFFFFFF
+    res, _ = g.send_and_listen(300, 200)
+    return res == "yes"
 
 
-WINDOW_EXAMPLE = """
-<window width="800" height="600" bg="9270" padding="5">
-    <container width="100%" height="100%" bg="3000" spacing="-5">
-        <container width="100%" height="50" bg="3500" padding="20 16">
-            <label text="Profile:" width="50" />
-            <textentry id="profile_name" width="180" text="Default Profile" />
-            <button id="profile_rename" text="Rename" src="40018" />
-            <button id="profile_load" text="Load" src="40018" />
-            <button id="profile_save" text="Save" src="40018" />
+def main():
+    WINDOW_EXAMPLE = """
+    <window width="800" height="600" bg="9270" padding="5">
+        <container width="100%" height="100%" bg="3000" spacing="-5">
+            <hbox height="50" bg="3500" padding="20 16">
+                <label text="Profile:" width="50" />
+                <textentry id="profile_name" width="180" text="Default Profile" />
+                <button id="profile_rename" text="Rename" src="40018" />
+                <button id="profile_load" text="Load" src="40018" />
+                <button id="profile_save" text="Save" src="40018" />
+            </hbox>
+            <hbox flex="1" spacing="-5">
+                <vbox width="200" bg="3500" padding="20 12">
+                    <h>RULES</h>
+                </vbox>
+                <vbox flex="1" height="100%" bg="3500" padding="20 12" spacing="10">
+                    <h>RULE EDITOR</h>
+                    <hbox>
+                        <label text="Name:" width="50" />
+                        <textentry id="rule_name" width="180" text="Current Rule" />
+                        <button id="rule_rename" text="Rename" src="40018" />
+                        <button id="rule_load" text="Load" src="40018" />
+                        <button id="rule_save" text="Save" src="40018" />
+                    </hbox>
+                    <hbox spacing="5">
+                        <checkbox id="rule_enabled" src="9026" checked="true" />
+                        <label text="Enable" width="100" tooltip="When unchecked, the lootmaster will bypass this rule." />
+                        <checkbox id="rule_highlight" src="9026" />
+                        <label text="Highlight" width="100" tooltip="When checked, the lootmaster will highlight the matched items with a bright shiny color." />
+                        <checkbox id="rule_notify" src="9026" />
+                        <label text="Notify" width="100" tooltip="When checked, the lootmaster will inform you of the matched items." />
+                    </hbox>
+                    <vfill />
+                    <hbox padding="0 10">
+                        <hfill />
+                        <button id="rule_apply_chg" text="Apply Change" src="40020" />
+                        <button id="rule_discard_chg" text="Discard Change" src="40297" />
+                    </hbox>
+                </vbox>
+            </hbox>
         </container>
-        <container width="100%" flex="1" spacing="-5">
-            <container width="200" height="100%" bg="3500" padding="20 12">
-                <h>RULES</h>
-            </container>
-            <container flex="1" height="100%" bg="3500" padding="20 12">
-                <h>RULE EDITOR</h>
-                <container width="100%" padding="0 10 0 0">
-                    <label text="Name:" width="50" />
-                    <textentry id="rule_name" width="180" text="Current Rule" />
-                    <button id="rule_rename" text="Rename" src="40018" />
-                    <button id="rule_load" text="Load" src="40018" />
-                    <button id="rule_save" text="Save" src="40018" />
-                </container>
-                <container width="100%" padding="0 10 0 0">
-                    <label text="[v]" width="20" />
-                    <label text="Enable" width="100" tooltip="When unchecked, the lootmaster will bypass this rule." />
-                    <label text="[v]" width="20" />
-                    <label text="Notify" width="100" tooltip="When checked, the lootmaster will inform you of the matched items." />
-                </container>
-            </container>
-        </container>
-    </container>
-</window>
-"""
+    </window>
+    """
+
+    root = ET.fromstring(WINDOW_EXAMPLE)
+    gump_id = hash(WINDOW_EXAMPLE) & 0xFFFFFFFF
+
+    while True:
+        g = GumpDOMParser.parse(root, gump_ss_default)
+        g.id = gump_id
+        res, iv_map = g.send_and_listen(300, 200)
+        if res is None:
+            if open_confirm("Are you sure you want to close the window?", 300, 100):
+                break
 
 
-root = ET.fromstring(WINDOW_EXAMPLE)
-while True:
-    root, button = open_gump(root, 0x11111111)
-    if button is None:
-        res = open_confirm("Do you want to exit the editor?", 300, 150)
-        if res:
-            break
+if __name__ == "__main__":
+    main()

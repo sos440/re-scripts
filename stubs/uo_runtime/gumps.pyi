@@ -247,5 +247,9 @@ class Gumps:
         entryID: int,
         initialText: str,
     ) -> None: ...
+    @overload
+    @classmethod
+    def AddTooltip(cls, gd: GumpData, text: str) -> None: ...
+    @overload
     @classmethod
     def AddTooltip(cls, gd: GumpData, cliloc: str, text: str | None = ...) -> None: ...
