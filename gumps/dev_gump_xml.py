@@ -55,7 +55,7 @@ class GumpDOMNode:
         self.parent: Optional["GumpDOMNode"] = parent
         self.children: List["GumpDOMNode"] = []
 
-        self.id = hash(element) & 0xFFFF  # Unique ID for the element
+        self.id = hash(element.attrib.get("id") or element) & 0xFFFF  # Unique ID for the element
 
     def __getitem__(self, item: str):
         return self.element.attrib.get(item, None)
