@@ -509,6 +509,8 @@ class GumpDOMParser:
                         ev_map[e.id] = e
                     if e.hash == gd.buttonid:
                         clicked_element = e
+                        if e.tag == "toggle":
+                            e["checked"] = not e.checked
                     elif e.tag == "textentry":
                         e.text = text_map.get(e.hash, "")
                     elif e.tag == "checkbox":
@@ -757,6 +759,20 @@ class GumpThemePresets:
                 src_on = int(e["src-active"] or "0")
                 Gumps.AddCheck(gd, x, y, src_off, src_on, checked, e.hash)
 
+            def render_toggle(gd: Gumps.GumpData, e: GumpDOMNode) -> None:
+                # Add button
+                x, y = int(e.x), int(e.y)
+                checked = parse_bool(e["checked"])
+                if checked:
+                    src_up = int(e["src-on"] or "0")
+                    src_down = int(e["src-on-active"] or "0")
+                else:
+                    src_up = int(e["src-off"] or "0")
+                    src_down = int(e["src-off-active"] or "0")
+                Gumps.AddButton(gd, x, y, src_up, src_down, e.hash, 1, 0)
+                # Add text for the button if present
+                render_html(gd, e)
+
             for tag in ["frame", "container", "hbox", "vbox", "hfill", "vfill"]:
                 self.add_style(tag, GumpStyleElement.wrap(render_container))
             self.add_style("label", render_label)
@@ -768,6 +784,7 @@ class GumpThemePresets:
             self.add_style("textentry", render_textentry)
             self.add_style("button", render_button)
             self.add_style("checkbox", render_checkbox)
+            self.add_style("toggle", render_toggle)
 
         def preprocess(self, root: ET.Element) -> ET.Element:
             for e in root.iter():
@@ -832,6 +849,34 @@ class GumpThemePresets:
                             m = (18 - preset["height"]) / 2
                             e.attrib["margin"] = e.attrib.get("margin", f"0 {m}")
                             e.attrib["padding"] = e.attrib.get("padding", f"0 {-m}")
+                    continue
+                if e.tag == "toggle":
+                    # Set default values for button attributes
+                    if "src-on" not in e.attrib and "src-off" not in e.attrib:
+                        e.attrib["src-on"] = e.attrib.get("src-on", "211")
+                        e.attrib["src-on-active"] = e.attrib.get("src-on-active", "211")
+                        e.attrib["src-off"] = e.attrib.get("src-off", "210")
+                        e.attrib["src-off-active"] = e.attrib.get("src-off-active", "210")
+                        e.attrib["width"] = e.attrib.get("width", "19")
+                        e.attrib["height"] = e.attrib.get("height", "20")
+                    e.attrib["color"] = e.attrib.get("color", "#FFFFFF")
+                    e.attrib["centered"] = e.attrib.get("centered", "yes")
+                    e.attrib["valign"] = e.attrib.get("valign", "baseline")
+                    checked = parse_bool(e.attrib["checked"])
+                    # Set default button size
+                    for src_key, src_key_active in [("src-on", "src-on-active"), ("src-off", "src-off-active")]:
+                        src = int(e.attrib[src_key] or "0")
+                        if src in GUMP_BUTTON_PRESET:
+                            preset = GUMP_BUTTON_PRESET[src]
+                            e.attrib[src_key_active] = e.attrib.get(src_key_active, str(preset["src-active"]))
+                            if checked == (src_key == "src-on"):
+                                e.attrib["width"] = e.attrib.get("width", str(preset["width"]))
+                                e.attrib["height"] = e.attrib.get("height", str(preset["height"]))
+                                if e.attrib.get("valign") == "baseline":
+                                    m = (18 - preset["height"]) / 2
+                                    e.attrib["margin"] = e.attrib.get("margin", f"0 {m}")
+                                    e.attrib["padding"] = e.attrib.get("padding", f"0 {-m}")
+                    continue
 
             return root
 

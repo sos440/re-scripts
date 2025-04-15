@@ -25,7 +25,7 @@ EDITOR_FRAME = """
             <button id="profile_save">Save</button>
         </hbox>
         <hbox flex="1" spacing="-5">
-            <vbox width="200" bg="frame:3500" padding="20 12">
+            <vbox width="200" bg="frame:3500" padding="10 12">
                 <h>RULES</h>
                 <hidden id="rule_selected" value="{rule_selected}" />
                 <vbox id="show_rules" width="100%">
@@ -38,6 +38,22 @@ EDITOR_FRAME = """
         </hbox>
     </vbox>
 </frame>
+"""
+
+EDITOR_RULE_SELECTED = """
+<hbox height="22" padding="5 2" bg="9304">
+    <button id="rule_{i}_open" index="{i}" src="1209" />
+    <label height="18" flex="1" margin="5 0">{name}</label>
+    <toggle id="rule_{i}_enabled" index="{i}" checked="{enabled}" />
+</hbox>
+"""
+
+EDITOR_RULE_DESELECTED = """
+<hbox height="22" padding="5 2">
+    <button id="rule_{i}_open" index="{i}" src="1209" />
+    <label height="18" flex="1" margin="5 0">{name}</label>
+    <toggle id="rule_{i}_enabled" index="{i}" checked="{enabled}" />
+</hbox>
 """
 
 EDITOR_CORE = """
@@ -67,8 +83,7 @@ EDITOR_CORE = """
 
 EDITOR_WELCOM = """
 <h>RULE EDITOR</h>
-<html width="100%" flex="1" scrollbar="true">
-Welcome to the Rule Editor!
+<html width="100%" flex="1" scrollbar="true" color="#000000">Welcome to the Rule Editor!
 
 This is a simple editor that allows you to create and manage rules for the lootmaster.
 </html>
@@ -92,11 +107,11 @@ def main():
     while True:
         # Build the XML string based on the current profile
         xml_list = "\n".join(
-            f"""<hbox height="22" {'bg="9304"' if i == selected_rule else ''}>
-                <button id="rule_{i}_open" index="{i}" src="1209" />
-                <label flex="1" padding="5 2">{rule["name"]}</label>
-                <button id="rule_{i}_enabled" src="212" src-active="212">{"V" if rule['enabled'] else "X"}</button>
-                </hbox>"""
+            (EDITOR_RULE_SELECTED if i == selected_rule else EDITOR_RULE_DESELECTED).format(
+                i=i,
+                name=rule["name"],
+                enabled=str(rule["enabled"]).lower(),
+            )
             for i, rule in enumerate(rules)
         )
 
@@ -125,17 +140,28 @@ def main():
         g = GumpDOMParser.render(root, GumpThemePresets.Light)
 
         # Add event listeners
-        def open_rule(e: GumpDOMNode):
+        def apply_changes(e: GumpDOMNode):
             nonlocal selected_rule
             if selected_rule != -1:
                 rules[selected_rule]["name"] = g.gdom.find_by_id("rule_name").text
                 rules[selected_rule]["enabled"] = g.gdom.find_by_id("rule_enabled").checked
                 rules[selected_rule]["notify"] = g.gdom.find_by_id("rule_notify").checked
                 rules[selected_rule]["highlight"] = g.gdom.find_by_id("rule_highlight").checked
+
+        def open_rule(e: GumpDOMNode):
+            nonlocal selected_rule
             selected_rule = int(e["index"] or -1)
 
+        def toggle_rule(e: GumpDOMNode):
+            nonlocal selected_rule
+            cur_rule = int(e["index"] or -1)
+            if cur_rule != -1:
+                rules[cur_rule]["enabled"] = e.checked
+
+        g.add_event_listener("rule_apply_chg", apply_changes)
         for i in range(len(rules)):
             g.add_event_listener(f"rule_{i}_open", open_rule)
+            g.add_event_listener(f"rule_{i}_enabled", toggle_rule)
 
         # Fix the gump ID to ensure it is consistent across sessions
         g.id = gump_id
