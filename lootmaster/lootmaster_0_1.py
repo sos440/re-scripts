@@ -71,6 +71,24 @@ def create_template_profile() -> LootProfile:
     rule.notify = True
     rule.highlight = True
     rule.lootbag = LootMatchItemBase(name="Red Backpack", id=0x0E75, color=33)
+    # Rule: 100% Elemental Damage
+    rule = profile.add_rule(LootRules("100% Elemental Damage"))
+    rule.add_match_props(
+        LootMatchAny(
+            name="100% Elemental Damage",
+            match_list=[
+                LootMatchMagicProperty(name="Cold Damage", prop="Cold Damage", min_value=100),
+                LootMatchMagicProperty(name="Energy Damage", prop="Energy Damage", min_value=100),
+                LootMatchMagicProperty(name="Fire Damage", prop="Fire Damage", min_value=100),
+                LootMatchMagicProperty(name="Poison Damage", prop="Poison Damage", min_value=100),
+                LootMatchMagicProperty(name="Chaos Damage", prop="Chaos Damage", min_value=100),
+            ],
+        )
+    )
+    rule.notify = True
+    rule.highlight = True
+    rule.highlight_color = 1152
+    rule.lootbag = LootMatchItemBase(name="Red Backpack", id=0x0E75, color=33)
     # Rule: Gold
     rule = profile.add_rule(LootRules("Gold"))
     rule.add_match_base(LootMatchPresets.Gold())
@@ -198,8 +216,9 @@ def main():
     if profile_filename is not None:
         try:
             PROFILE = io.load_profile(profile_filename)
+            Logger.Info(f"Profile loaded: {profile_filename}")
         except FileNotFoundError:
-            Logger.Error(f"Last profile not found: {SETTING['last-profile-path']}")
+            Logger.Error(f"Last profile not found: {profile_filename}")
             PROFILE = create_template_profile()
     else:
         PROFILE = create_template_profile()
@@ -211,7 +230,7 @@ def main():
     Logger.Info(f"Profile saved as: {filename}")
 
     # Update the setting with the last profile path and name
-    SETTING["last-profile-path"] = filename
+    SETTING["last-profile-filename"] = filename
     SETTING["last-profile-name"] = PROFILE.name
     io.save_setting(SETTING)
     Logger.Info("Setting saved.")

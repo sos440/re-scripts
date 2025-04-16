@@ -50,6 +50,8 @@ class LootMatch:
             return LootMatchItemGroup.load(match_dict)
         elif match_dict["type"] == "LootMatchSerial":
             return LootMatchSerial.load(match_dict)
+        elif match_dict["type"] == "LootMatchName":
+            return LootMatchName.load(match_dict)
         elif match_dict["type"] == "LootMatchWeight":
             return LootMatchWeight.load(match_dict)
         elif match_dict["type"] == "LootMatchRarity":
@@ -58,6 +60,10 @@ class LootMatch:
             return LootMatchProperty.load(match_dict)
         elif match_dict["type"] == "LootMatchMagicProperty":
             return LootMatchMagicProperty.load(match_dict)
+        elif match_dict["type"] == "LootMatchAll":
+            return LootMatchAll.load(match_dict)
+        elif match_dict["type"] == "LootMatchAny":
+            return LootMatchAny.load(match_dict)
         else:
             raise ValueError(f"Unknown LootMatch type: {match_dict['type']}")
 
@@ -424,6 +430,58 @@ class LootMatchMagicProperty(LootMatch):
         )
 
 
+class LootMatchAll(LootMatch):
+    """
+    A class that matches all criteria in a list of LootMatch objects.
+    This class is used to combine multiple matching criteria into a single match.
+    """
+
+    def __init__(self, name: str, match_list: List[LootMatch]):
+        self.name = name
+        self.match_list = match_list
+
+    def test(self, item: ItemSummary) -> bool:
+        return all(match.test(item) for match in self.match_list)
+
+    @classmethod
+    def load(cls, match_dict: dict) -> "LootMatchAll":
+        assert "type" in match_dict
+        assert "name" in match_dict
+        assert "match_list" in match_dict
+        assert match_dict["type"] == "LootMatchAll"
+
+        return LootMatchAll(
+            name=match_dict["name"],
+            match_list=[LootMatch.load(match) for match in match_dict["match_list"]],
+        )
+
+
+class LootMatchAny(LootMatch):
+    """
+    A class that matches any criteria in a list of LootMatch objects.
+    This class is used to combine multiple matching criteria into a single match.
+    """
+
+    def __init__(self, name: str, match_list: List[LootMatch]):
+        self.name = name
+        self.match_list = match_list
+
+    def test(self, item: ItemSummary) -> bool:
+        return any(match.test(item) for match in self.match_list)
+
+    @classmethod
+    def load(cls, match_dict: dict) -> "LootMatchAny":
+        assert "type" in match_dict
+        assert "name" in match_dict
+        assert "match_list" in match_dict
+        assert match_dict["type"] == "LootMatchAny"
+
+        return LootMatchAny(
+            name=match_dict["name"],
+            match_list=[LootMatch.load(match) for match in match_dict["match_list"]],
+        )
+
+
 ################################################################################
 # Loot Rules
 ################################################################################
@@ -516,7 +574,7 @@ class LootRules(LootMatch):
         rule.highlight = match_dict["highlight"]
         rule.highlight_color = match_dict["highlight_color"]
         rule.notify = match_dict["notify"]
-        rule.lootbag = match_dict["lootbag"].load() if match_dict["lootbag"] else None
+        rule.lootbag = LootMatch.load(match_dict["lootbag"]) if match_dict["lootbag"] else None
         rule.match_base = [LootMatch.load(match) for match in match_dict["match_base"]]
         rule.match_props = [LootMatch.load(match) for match in match_dict["match_props"]]
         rule.match_except = [LootMatch.load(match) for match in match_dict["match_except"]]
@@ -579,6 +637,8 @@ __all__ = [
     "LootMatchRarity",
     "LootMatchProperty",
     "LootMatchMagicProperty",
+    "LootMatchAll",
+    "LootMatchAny",
     "LootRules",
     "LootProfile",
 ]

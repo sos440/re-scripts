@@ -46,6 +46,7 @@
     <property name="Fire Damage" type="percent" />
     <property name="Poison Damage" type="percent" />
     <property name="Energy Damage" type="percent" />
+    <property name="Chaos Damage" type="percent" />
 
     <!-- Caster Item Properties -->
     <property name="Spell Damage Increase" type="percent" />
