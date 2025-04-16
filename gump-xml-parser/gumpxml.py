@@ -4,9 +4,7 @@ from typing import Any, Optional, Tuple, List, Dict, Callable, Union
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from uo_runtime.gumps import Gumps
-    from uo_runtime.player import Player
-    from uo_runtime.misc import Misc
+    from razorenhanced import *
 
 
 ################################################################################

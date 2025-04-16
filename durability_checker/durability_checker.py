@@ -1,5 +1,8 @@
 import re
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from razorenhanced import *
 
 REFRESH_DURATION = 1000  # in milliseconds
 DANGER_THRESHOLD = 40  # percent

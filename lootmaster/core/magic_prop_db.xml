@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <!-- On Hit Spells -->
+    <property name="Hit Magic Arrow" type="percent" />
+    <property name="Hit Harm" type="percent" />
+    <property name="Hit Fireball" type="percent" />
+    <property name="Hit Lightning" type="percent" />
+    <property name="Hit Cold Area" type="percent" />
+    <property name="Hit Energy Area" type="percent" />
+    <property name="Hit Fire Area" type="percent" />
+    <property name="Hit Physical Area" type="percent" />
+    <property name="Hit Poison Area" type="percent" />
+    <property name="Hit Dispel" type="percent" />
+    <property name="Hit Curse" type="percent" />
+    <property name="Hit Lower Attack" type="percent" />
+    <property name="Hit Lower Defense" type="percent" />
+    <property name="Hit Life Leech" type="percent" />
+    <property name="Hit Mana Leech" type="percent" />
+    <property name="Hit Stamina Leech" type="percent" />
+    <property name="Hit Fatigue" type="percent" />
+    <property name="Hit Mana Drain" type="percent" />
+    <property name="Splintering Weapon" type="percent" />
+    <property name="Velocity" type="percent" />
+
+    <!-- Melee Item Properties -->
+    <property name="Damage Increase" type="percent" />
+    <property name="Defense Chance Increase" type="percent" />
+    <property name="Hit Chance Increase" type="percent" />
+    <property name="Swing Speed Increase" type="percent" />
+    <property name="Soul Charge" type="percent" />
+    <property name="Reactive Paralyze" type="bool" />
+    <property name="Reflect Physical Damage" type="percent" />
+    <property name="Battle Lust" type="bool" />
+    <property name="Blood Drinker" type="bool" />
+    <property name="Balanced" type="bool" />
+    <property name="Searing Weapon" type="bool" />
+    <property name="Use Best Weapon Skill" type="bool" />
+    <property name="Fire Eater" type="percent" />
+    <property name="Cold Eater" type="percent" />
+    <property name="Poison Eater" type="percent" />
+    <property name="Energy Eater" type="percent" />
+    <property name="Kinetic Eater" type="percent" />
+    <property name="Damage Eater" type="percent" />
+    <property name="Physical Damage" type="percent" />
+    <property name="Cold Damage" type="percent" />
+    <property name="Fire Damage" type="percent" />
+    <property name="Poison Damage" type="percent" />
+    <property name="Energy Damage" type="percent" />
+
+    <!-- Caster Item Properties -->
+    <property name="Spell Damage Increase" type="percent" />
+    <property name="Casting Focus" type="int" />
+    <property name="Lower Mana Cost" type="percent" />
+    <property name="Lower Reagent Cost" type="percent" />
+    <property name="Mage Weapon" type="int" />
+    <property name="Faster Cast Recovery" type="int" />
+    <property name="Faster Casting" type="int" />
+    <property name="Spell Channeling" type="bool" />
+    <property name="Mage Armor" type="bool" />
+
+    <!-- Stat & Resist Item Properties -->
+    <property name="Strength Bonus" type="int" />
+    <property name="Dexterity Bonus" type="int" />
+    <property name="Intelligence Bonus" type="int" />
+    <property name="Hit Point Increase" type="int" />
+    <property name="Hit Point Regeneration" type="int" />
+    <property name="Stamina Increase" type="int" />
+    <property name="Stamina Regeneration" type="int" />
+    <property name="Mana Increase" type="int" />
+    <property name="Mana Regeneration" type="int" />
+    <property name="Luck" type="int" />
+    <property name="Physical Resist" type="percent" />
+    <property name="Cold Resist" type="percent" />
+    <property name="Fire Resist" type="percent" />
+    <property name="Poison Resist" type="percent" />
+    <property name="Energy Resist" type="percent" />
+
+    <!-- Special Item Properties -->
+    <property name="Gargoyles Only" type="bool" />
+    <property name="Elves Only" type="bool" />
+    <property name="Night Sight" type="bool" />
+    <property name="Self Repair" type="int" />
+    <property name="Lower Requirements" type="percent" />
+    <property name="Enhance Potions" type="percent" />
+    <property name="Artifact Rarity" type="int" />
+
+    <!-- Negatives -->
+    <property name="Cursed" type="bool" />
+    <property name="Antique" type="bool" />
+    <property name="Prized" type="bool" />
+    <property name="Brittle" type="bool" />
+
+    <!-- Skills -->
+    <property name="Alchemy" type="int" />
+    <property name="Anatomy" type="int" />
+    <property name="Animal Lore" type="int" />
+    <property name="Item Identification" type="int" />
+    <property name="Arms Lore" type="int" />
+    <property name="Parry" type="int" />
+    <property name="Begging" type="int" />
+    <property name="Blacksmithing" type="int" />
+    <property name="Bowcraft/Fletching" type="int" />
+    <property name="Peacemaking" type="int" />
+    <property name="Camping" type="int" />
+    <property name="Carpentry" type="int" />
+    <property name="Cartography" type="int" />
+    <property name="Cooking" type="int" />
+    <property name="Detect Hidden" type="int" />
+    <property name="Discordance" type="int" />
+    <property name="Evaluating Intelligence" type="int" />
+    <property name="Healing" type="int" />
+    <property name="Fishing" type="int" />
+    <property name="Forensic Evaluation" type="int" />
+    <property name="Herding" type="int" />
+    <property name="Hiding" type="int" />
+    <property name="Provocation" type="int" />
+    <property name="Inscription" type="int" />
+    <property name="Lockpicking" type="int" />
+    <property name="Magery" type="int" />
+    <property name="Magic Resist" type="int" />
+    <property name="Tactics" type="int" />
+    <property name="Snooping" type="int" />
+    <property name="Musicianship" type="int" />
+    <property name="Poisoning" type="int" />
+    <property name="Archery" type="int" />
+    <property name="Spirit Speak" type="int" />
+    <property name="Stealing" type="int" />
+    <property name="Tailoring" type="int" />
+    <property name="Animal Taming" type="int" />
+    <property name="Taste Identification" type="int" />
+    <property name="Tinkering" type="int" />
+    <property name="Tracking" type="int" />
+    <property name="Veterinary" type="int" />
+    <property name="Swordsmanship" type="int" />
+    <property name="Mace Fighting" type="int" />
+    <property name="Fencing" type="int" />
+    <property name="Wrestling" type="int" />
+    <property name="Lumberjacking" type="int" />
+    <property name="Mining" type="int" />
+    <property name="Meditation" type="int" />
+    <property name="Stealth" type="int" />
+    <property name="Remove Trap" type="int" />
+    <property name="Necromancy" type="int" />
+    <property name="Focus" type="int" />
+    <property name="Chivalry" type="int" />
+    <property name="Bushido" type="int" />
+    <property name="Ninjitsu" type="int" />
+    <property name="Spellweaving" type="int" />
+    <property name="Imbuing" type="int" />
+    <property name="Mysticism" type="int" />
+    <property name="Throwing" type="int" />
+
+    <!-- Wands -->
+    <property name="Greater Healing Charges" type="int" />
+    <property name="Healing Charges" type="int" />
+    <property name="Harm Charges" type="int" />
+    <property name="Magic Arrow Charges" type="int" />
+    <property name="Lightning Charges" type="int" />
+</root>

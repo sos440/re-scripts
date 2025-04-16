@@ -5,9 +5,7 @@ from typing import Dict, TYPE_CHECKING
 # This code is purely for type hinting and will not be executed in the actual environment.
 # If you are not using type hinting, you can safely remove the following lines.
 if TYPE_CHECKING:
-    from uo_runtime.gumps import Gumps
-    from uo_runtime.player import Player
-    from uo_runtime.misc import Misc
+    from razorenhanced import *
 
 # This allows the RazorEnhanced to correctly identify the path of the gumpxml module.
 PATH = os.path.dirname(os.path.abspath(__file__))

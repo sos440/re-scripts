@@ -1,3 +1,11 @@
+from typing import TYPE_CHECKING
+
+# This code is purely for type hinting and will not be executed in the actual environment.
+# If you are not using type hinting, you can safely remove the following lines.
+if TYPE_CHECKING:
+    from razorenhanced import *
+
+
 GUMP_ID = 0x5AFEC0DE
 GUMP_W = 800
 GUMP_H = 600
@@ -35,6 +43,8 @@ Click on the blue button to select a rule to edit.
 You can also load and save your rules to a preset.
 """
 
+GUMP_TEXT_BUTTON = """<CENTER><BASEFONT COLOR="#FFFFFF">{text}</BASEFONT></CENTER>"""
+
 
 def editor_show(gump_status):
     gd = Gumps.CreateGump(movable=True)
@@ -52,29 +62,29 @@ def editor_show(gump_status):
     Gumps.AddBackground(gd, 85, 19, 170, 22, 9350)
     Gumps.AddTextEntry(gd, 90, 21, 160, 18, 0, 102, gump_status["preset"]["name"])
     Gumps.AddButton(gd, 260, 19, 40018, 40028, GUMP_PRESET_RENAME, 1, 0)
-    Gumps.AddHtml(gd, 260, 21, 66, 18, '<CENTER><BASEFONT COLOR="#FFFFFF">Rename</BASEFONT></CENTER>', 0, 0)
+    Gumps.AddHtml(gd, 260, 21, 66, 18, GUMP_TEXT_BUTTON.format(text="Rename"), False, False)
     Gumps.AddButton(gd, 325, 19, 40018, 40028, GUMP_PRESET_LOAD, 1, 0)
-    Gumps.AddHtml(gd, 325, 21, 66, 18, '<CENTER><BASEFONT COLOR="#FFFFFF">Load</BASEFONT></CENTER>', 0, 0)
+    Gumps.AddHtml(gd, 325, 21, 66, 18, GUMP_TEXT_BUTTON.format(text="Load"), False, False)
     Gumps.AddButton(gd, 390, 19, 40018, 40028, GUMP_PRESET_SAVE, 1, 0)
-    Gumps.AddHtml(gd, 390, 21, 66, 18, '<CENTER><BASEFONT COLOR="#FFFFFF">Save</BASEFONT></CENTER>', 0, 0)
+    Gumps.AddHtml(gd, 390, 21, 66, 18, GUMP_TEXT_BUTTON.format(text="Save"), False, False)
     # Close
     # Gumps.AddButton(gd, GUMP_W - 58, 20, 4017, 4019, 0, 1, 0)
 
     # (3) Sidebar
     Gumps.AddBackground(gd, 5, 50, 180, GUMP_H - 55, 3500)
-    Gumps.AddHtml(gd, 5, 63, 180, 18, "<CENTER>RULES</CENTER>", 0, 0)
+    Gumps.AddHtml(gd, 5, 63, 180, 18, "<CENTER>RULES</CENTER>", False, False)
     # Add
     Gumps.AddButton(gd, 30, GUMP_H - 62, 40018, 40028, GUMP_RULE_ADD, 1, 0)
-    Gumps.AddHtml(gd, 30, GUMP_H - 60, 66, 18, '<CENTER><BASEFONT COLOR="#FFFFFF">New</BASEFONT></CENTER>', 0, 0)
+    Gumps.AddHtml(gd, 30, GUMP_H - 60, 66, 18, GUMP_TEXT_BUTTON.format(text="New"), False, False)
     # Delect
     Gumps.AddButton(gd, 95, GUMP_H - 62, 40018, 40028, GUMP_RULE_DELETE, 1, 0)
-    Gumps.AddHtml(gd, 95, GUMP_H - 60, 66, 18, '<CENTER><BASEFONT COLOR="#FFFFFF">Delete</BASEFONT></CENTER>', 0, 0)
+    Gumps.AddHtml(gd, 95, GUMP_H - 60, 66, 18, GUMP_TEXT_BUTTON.format(text="Delete"), False, False)
     # Move Up
     Gumps.AddButton(gd, 30, GUMP_H - 42, 40018, 40028, GUMP_RULE_MOVE_UP, 1, 0)
-    Gumps.AddHtml(gd, 30, GUMP_H - 40, 66, 18, '<CENTER><BASEFONT COLOR="#FFFFFF">Up</BASEFONT></CENTER>', 0, 0)
+    Gumps.AddHtml(gd, 30, GUMP_H - 40, 66, 18, GUMP_TEXT_BUTTON.format(text="Up"), False, False)
     # Move Down
     Gumps.AddButton(gd, 95, GUMP_H - 42, 40018, 40028, GUMP_RULE_MOVE_DOWN, 1, 0)
-    Gumps.AddHtml(gd, 95, GUMP_H - 40, 66, 18, '<CENTER><BASEFONT COLOR="#FFFFFF">Down</BASEFONT></CENTER>', 0, 0)
+    Gumps.AddHtml(gd, 95, GUMP_H - 40, 66, 18, GUMP_TEXT_BUTTON.format(text="Down"), False, False)
     # Existing Rules
     rules = gump_status["preset"]["rules"]
     for i, rule in enumerate(rules):
@@ -91,52 +101,38 @@ def editor_show(gump_status):
     # (4) Editor View
     cur_idx = gump_status["entry"]
     if cur_idx == -1:
-        Gumps.AddHtml(gd, 190, 60, GUMP_W - 205, GUMP_H - 75, GUMP_TEXT_WELCOME, 1, 1)
+        Gumps.AddHtml(gd, 190, 60, GUMP_W - 205, GUMP_H - 75, GUMP_TEXT_WELCOME, True, True)
     else:
         Gumps.AddGroup(gd, 1)
         Gumps.AddBackground(gd, 180, 50, GUMP_W - 185, GUMP_H - 55, 3500)
-        Gumps.AddHtml(gd, 180, 63, GUMP_W - 185, 18, "<CENTER>RULE SETTING</CENTER>", 0, 0)
+        Gumps.AddHtml(gd, 180, 63, GUMP_W - 185, 18, "<CENTER>RULE SETTING</CENTER>", False, False)
         cur_rule = rules[cur_idx]
         # Name Field
-        Gumps.AddHtml(gd, 200, 90, 50, 18, "Name:", 0, 0)
+        Gumps.AddHtml(gd, 200, 90, 50, 18, "Name:", False, False)
         Gumps.AddTooltip(gd, GUMP_EDIT_NAME_TOOLTIP)
         Gumps.AddBackground(gd, 250, 88, 210, 22, 9350)
         Gumps.AddTextEntry(gd, 255, 90, 200, 18, 0, GUMP_EDIT_NAME, cur_rule["name"])
         Gumps.AddButton(gd, 465, 88, 40018, 40028, GUMP_EDIT_LOAD, 1, 0)
-        Gumps.AddHtml(gd, 465, 90, 66, 18, '<CENTER><BASEFONT COLOR="#FFFFFF">Load</BASEFONT></CENTER>', 0, 0)
+        Gumps.AddHtml(gd, 465, 90, 66, 18, GUMP_TEXT_BUTTON.format(text="Load"), False, False)
         Gumps.AddButton(gd, 530, 88, 40018, 40028, GUMP_EDIT_SAVE, 1, 0)
-        Gumps.AddHtml(gd, 530, 90, 66, 18, '<CENTER><BASEFONT COLOR="#FFFFFF">Save</BASEFONT></CENTER>', 0, 0)
+        Gumps.AddHtml(gd, 530, 90, 66, 18, GUMP_TEXT_BUTTON.format(text="Save"), False, False)
         # Enabled Checkbox
-        Gumps.AddCheck(gd, 200, 118, 210, 211, int(cur_rule["enabled"]), GUMP_EDIT_ENABLED)
+        Gumps.AddCheck(gd, 200, 118, 210, 211, cur_rule["enabled"], GUMP_EDIT_ENABLED)
         Gumps.AddLabel(gd, 225, 120, 0, "Enable")
         Gumps.AddTooltip(gd, GUMP_EDIT_ENABLED_TOOLTIP)
         # Notify Checkbox
-        Gumps.AddCheck(gd, 280, 118, 210, 211, int(cur_rule["notify"]), GUMP_EDIT_NOTIFY)
+        Gumps.AddCheck(gd, 280, 118, 210, 211, cur_rule["notify"], GUMP_EDIT_NOTIFY)
         Gumps.AddLabel(gd, 305, 120, 0, "Notify")
         Gumps.AddTooltip(gd, GUMP_EDIT_NOTIFY_TOOLTIP)
         # Apply
         Gumps.AddButton(gd, GUMP_W - 275, GUMP_H - 43, 40021, 40031, GUMP_EDIT_APPLY, 1, 1)
         Gumps.AddHtml(
-            gd,
-            GUMP_W - 275,
-            GUMP_H - 40,
-            125,
-            18,
-            '<CENTER><BASEFONT COLOR="#FFFFFF">Apply Changes</BASEFONT></CENTER>',
-            0,
-            0,
+            gd, GUMP_W - 275, GUMP_H - 40, 125, 18, GUMP_TEXT_BUTTON.format(text="Apply Changes"), False, False
         )
         # Discard
         Gumps.AddButton(gd, GUMP_W - 150, GUMP_H - 43, 40297, 40298, GUMP_EDIT_DISCARD, 1, 1)
         Gumps.AddHtml(
-            gd,
-            GUMP_W - 150,
-            GUMP_H - 40,
-            125,
-            18,
-            '<CENTER><BASEFONT COLOR="#FFFFFF">Discard Changes</BASEFONT></CENTER>',
-            0,
-            0,
+            gd, GUMP_W - 150, GUMP_H - 40, 125, 18, GUMP_TEXT_BUTTON.format(text="Discard Changes"), False, False
         )
 
         # Base Items Field
@@ -144,7 +140,7 @@ def editor_show(gump_status):
         rect_t, rect_b = 170, 290
         rect_w = rect_r - rect_l
         rect_h = rect_b - rect_t
-        Gumps.AddHtml(gd, rect_l, 150, rect_w, 18, "This rule matches any of the following item types:", 0, 0)
+        Gumps.AddHtml(gd, rect_l, 150, rect_w, 18, "This rule matches any of the following item types:", False, False)
 
         item_w = 100
         item_per_row = (rect_w - 20) // item_w

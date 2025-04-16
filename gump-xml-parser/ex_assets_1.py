@@ -1,3 +1,9 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from razorenhanced import *
+
+
 GUMP_ID = 0xDEADBEE3
 
 Gumps.CloseGump(GUMP_ID)

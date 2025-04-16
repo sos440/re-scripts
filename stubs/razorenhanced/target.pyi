@@ -1,0 +1,3 @@
+class Target:
+    @classmethod
+    def PromptTarget(cls, message: str, color: int) -> int: ...
