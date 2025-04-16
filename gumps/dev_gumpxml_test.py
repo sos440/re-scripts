@@ -16,23 +16,38 @@ from gumpxml import GumpDOMNode, GumpDOMParser, GumpThemePresets, GumpPresets, E
 
 
 EDITOR_FRAME = """
-<frame width="800" height="600" bg="frame:9270" padding="5">
-    <vbox width="100%" height="100%" bg="frame:3000" spacing="-5">
-        <hbox height="50" bg="frame:3500" padding="20 16">
+<frame width="800" height="600" bg="frame:30546" alpha="yes" padding="5">
+    <vbox width="100%" height="100%" spacing="5">
+        <hbox height="40" bg="3504" padding="10 10">
             <label id="profile_name" width="150">{profile_name}</label>
             <button id="profile_rename">Rename</button>
             <button id="profile_load">Load</button>
             <button id="profile_save">Save</button>
         </hbox>
-        <hbox flex="1" spacing="-5">
-            <vbox width="200" bg="frame:3500" padding="10 12">
+        <hbox flex="1" spacing="5">
+            <vbox width="200" bg="3504" padding="0 10">
                 <h>RULES</h>
                 <hidden id="rule_selected" value="{rule_selected}" />
-                <vbox id="show_rules" width="100%">
+                <container id="show_rules" width="100%" padding="0 5" orientation="vertical">
                     {LIST}
-                </vbox>
+                </container>
+                <vfill />
+                <container width="100%" orientation="vertical">
+                    <hbox margin="0 2">
+                        <hfill />
+                        <button id="rule_add">Add</button>
+                        <button id="rule_del">Delete</button>
+                        <hfill />
+                    </hbox>
+                    <hbox margin="0 2">
+                        <hfill />
+                        <button id="rule_move_up">Up</button>
+                        <button id="rule_move_dn">Down</button>
+                        <hfill />
+                    </hbox>
+                </container>
             </vbox>
-            <vbox flex="1" bg="frame:3500" padding="20 12" spacing="10">
+            <vbox flex="1" bg="3504" padding="10 10" spacing="10">
                 {CORE}
             </vbox>
         </hbox>
@@ -74,7 +89,7 @@ EDITOR_CORE = """
     <label width="100" padding="5 0" tooltip="When checked, the lootmaster will highlight the matched items with a bright shiny color.">Highlight</label>
 </hbox>
 <vfill />
-<hbox padding="0 10">
+<hbox>
     <hfill />
     <button id="rule_apply_chg" src="40020">Apply Change</button>
     <button id="rule_discard_chg" src="40297">Discard Change</button>
