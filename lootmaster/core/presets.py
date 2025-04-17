@@ -111,3 +111,10 @@ class LootMatchPresets:
     class UnwieldyMagicItem(LootMatchWeight):
         def __init__(self):
             super().__init__(name="Unwieldy Magic Item", weight_min=50, weight_max=255)
+
+    class ArmorRefinement(LootMatchItemGroup):
+        def __init__(self):
+            super().__init__(
+                name="Armor Refinement",
+                id_list=[0x142A, 0x142B, 0x2D61, 0x4CD8, 0x4CD9, 0x4CDA],
+            )

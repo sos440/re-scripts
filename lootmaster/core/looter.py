@@ -21,6 +21,18 @@ from core.match import LootProfile, LootRules, LootMatch
 ################################################################################
 
 
+IDLIST_CHEST = [
+    0x0E3C, 0x0E3D,  # large crate
+    0x0E3E, 0x0E3F,  # medium crate
+    0x0E7E, 0x09A9,  # small crate
+    0x0E40, 0x0E41,  # fancy metal crate
+    0x0E42, 0x0E43,  # wooden crate
+    0x0E77,  # large barrel
+    0x0E7F,  # small barrel
+    0x0E7C, 0x09AB,  # metal crate
+]
+
+
 class LootingMode(Enum):
     STOPPED = 0
     LOOP = 1
@@ -262,8 +274,11 @@ class Looter:
         return self.mode != LootingMode.STOPPED and self._thread is not None
 
     @classmethod
-    def scanner_corpse(cls):
-        return Items.FindAllByID(0x2006, -1, -1, 2)
+    def scanner_basic(cls):
+        scan_corpse = Items.FindAllByID(0x2006, -1, -1, 2)
+        scan_t_chest = Items.FindAllByID(IDLIST_CHEST, -1, -1, 2)
+        scan_t_chest = [chest for chest in scan_t_chest if "treasure chest" in chest.Name.lower()]
+        return scan_corpse + scan_t_chest
 
     @classmethod
     def generate_scanner(cls, serial: int) -> Callable:

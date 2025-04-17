@@ -238,7 +238,7 @@ def main():
     # Initialize the looter
     LOOTER = Looter(SETTING, PROFILE)
     LOOTER.callback = refresh_gump_menu
-    LOOTER.scanner = Looter.scanner_corpse
+    LOOTER.scanner = Looter.scanner_basic
     LOOTER.start(LootingMode.LOOP)
     Logger.Info("Looter started.")
 
@@ -272,7 +272,7 @@ def main():
             if LOOTER.is_running:
                 LOOTER.stop()
             # Start the looter in autoloot mode
-            LOOTER.scanner = Looter.scanner_corpse
+            LOOTER.scanner = Looter.scanner_basic
             LOOTER.start(LootingMode.LOOP)
             Logger.Info("Autoloot mode enabled.")
             continue

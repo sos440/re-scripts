@@ -442,6 +442,13 @@ class LootMatchAll(LootMatch):
 
     def test(self, item: ItemSummary) -> bool:
         return all(match.test(item) for match in self.match_list)
+    
+    def to_dict(self) -> dict:
+        return {
+            "type": "LootMatchAll",
+            "name": self.name,
+            "match_list": [match.to_dict() for match in self.match_list],
+        }
 
     @classmethod
     def load(cls, match_dict: dict) -> "LootMatchAll":
@@ -468,6 +475,13 @@ class LootMatchAny(LootMatch):
 
     def test(self, item: ItemSummary) -> bool:
         return any(match.test(item) for match in self.match_list)
+    
+    def to_dict(self) -> dict:
+        return {
+            "type": "LootMatchAny",
+            "name": self.name,
+            "match_list": [match.to_dict() for match in self.match_list],
+        }
 
     @classmethod
     def load(cls, match_dict: dict) -> "LootMatchAny":

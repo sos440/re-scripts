@@ -23,13 +23,13 @@
     <property name="Velocity" type="percent" />
 
     <!-- Melee Item Properties -->
-    <property name="Damage Increase" type="percent" />
-    <property name="Defense Chance Increase" type="percent" />
-    <property name="Hit Chance Increase" type="percent" />
-    <property name="Swing Speed Increase" type="percent" />
+    <property name="Damage Increase" key="DI" type="percent" />
+    <property name="Defense Chance Increase" key="DCI" type="percent" />
+    <property name="Hit Chance Increase" key="HCI" type="percent" />
+    <property name="Swing Speed Increase" key="SSI" type="percent" />
     <property name="Soul Charge" type="percent" />
     <property name="Reactive Paralyze" type="bool" />
-    <property name="Reflect Physical Damage" type="percent" />
+    <property name="Reflect Physical Damage" key="RPD" type="percent" />
     <property name="Battle Lust" type="bool" />
     <property name="Blood Drinker" type="bool" />
     <property name="Balanced" type="bool" />
@@ -49,32 +49,32 @@
     <property name="Chaos Damage" type="percent" />
 
     <!-- Caster Item Properties -->
-    <property name="Spell Damage Increase" type="percent" />
+    <property name="Spell Damage Increase" key="SDI" type="percent" />
     <property name="Casting Focus" type="int" />
-    <property name="Lower Mana Cost" type="percent" />
-    <property name="Lower Reagent Cost" type="percent" />
+    <property name="Lower Mana Cost" key="LMC" type="percent" />
+    <property name="Lower Reagent Cost" key="LRC" type="percent" />
     <property name="Mage Weapon" type="int" />
-    <property name="Faster Cast Recovery" type="int" />
-    <property name="Faster Casting" type="int" />
+    <property name="Faster Cast Recovery" key="FCR" type="int" />
+    <property name="Faster Casting" key="FC" type="int" />
     <property name="Spell Channeling" type="bool" />
     <property name="Mage Armor" type="bool" />
 
     <!-- Stat & Resist Item Properties -->
-    <property name="Strength Bonus" type="int" />
-    <property name="Dexterity Bonus" type="int" />
-    <property name="Intelligence Bonus" type="int" />
-    <property name="Hit Point Increase" type="int" />
-    <property name="Hit Point Regeneration" type="int" />
-    <property name="Stamina Increase" type="int" />
-    <property name="Stamina Regeneration" type="int" />
-    <property name="Mana Increase" type="int" />
-    <property name="Mana Regeneration" type="int" />
-    <property name="Luck" type="int" />
-    <property name="Physical Resist" type="percent" />
-    <property name="Cold Resist" type="percent" />
-    <property name="Fire Resist" type="percent" />
-    <property name="Poison Resist" type="percent" />
-    <property name="Energy Resist" type="percent" />
+    <property name="Strength Bonus" key="Str" type="int" />
+    <property name="Dexterity Bonus" key="Dex" type="int" />
+    <property name="Intelligence Bonus" key="Int" type="int" />
+    <property name="Hit Point Increase" key="Hits" type="int" />
+    <property name="Hit Point Regeneration" key="HitsRegen" type="int" />
+    <property name="Stamina Increase" key="Stam" type="int" />
+    <property name="Stamina Regeneration" key="StamRegen" type="int" />
+    <property name="Mana Increase" key="Mana" type="int" />
+    <property name="Mana Regeneration" key="ManaRegen" type="int" />
+    <property name="Luck" key="Luck" type="int" />
+    <property name="Physical Resist" key="PhysRes" type="percent" />
+    <property name="Cold Resist" key="ColdRes" type="percent" />
+    <property name="Fire Resist" key="FireRes" type="percent" />
+    <property name="Poison Resist" key="PoisonRes" type="percent" />
+    <property name="Energy Resist" key="EnergyRes" type="percent" />
 
     <!-- Special Item Properties -->
     <property name="Gargoyles Only" type="bool" />
