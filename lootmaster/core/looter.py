@@ -193,6 +193,7 @@ class Looter:
         if len(lootables) == 0:
             return False
 
+        # TODO: Add weight/count check
         for i, rule in enumerate(self.profile.rules):
             # Sort the lootables based on the rule
             item_to_loot = None

@@ -39,6 +39,8 @@ class Items:
 
     # --- Search / filter helpers ------------------------------------------------
     @classmethod
+    def Filter(cls) -> ItemsFilter: ...
+    @classmethod
     def ApplyFilter(cls, filter: ItemsFilter) -> List[Item]: ...
     @classmethod
     def FindAllByID(
