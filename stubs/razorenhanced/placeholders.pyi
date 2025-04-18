@@ -1,6 +1,7 @@
 class Item:
     Name: str
     Serial: int
+    ItemID: int
     Contains: list[Item]
     OnGround: bool
     IsContainer: bool
