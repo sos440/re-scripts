@@ -13,10 +13,11 @@ if TYPE_CHECKING:
 ################################################################################
 
 
+# TODO: Implement "Export to CSV" functionality
 PATH_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PATH_EXPORT_DIR = os.path.join(PATH_SCRIPT_DIR, "exports")
-if not os.path.exists(PATH_EXPORT_DIR):
-    os.makedirs(PATH_EXPORT_DIR)
+# if not os.path.exists(PATH_EXPORT_DIR):
+#     os.makedirs(PATH_EXPORT_DIR)
 
 
 ################################################################################
@@ -34,6 +35,30 @@ RARITY_MAP = {
     "Greater Artifact": 6,
     "Major Artifact": 7,
     "Legendary Artifact": 8,
+}
+
+LAYER_MAP = {
+    "RightHand": 1,
+    "FirstValid": 2,
+    "LeftHand": 2,
+    "Shoes": 3,
+    "Pants": 4,
+    "Shirt": 5,
+    "Head": 6,
+    "Gloves": 7,
+    "Ring": 8,
+    "Neck": 9,
+    "Waist": 10,
+    "InnerTorso": 11,
+    "Bracelet": 12,
+    "MiddleTorso": 13,
+    "Earrings": 14,
+    "Arms": 15,
+    "Cloak": 16,
+    "OuterTorso": 17,
+    "OuterLegs": 18,
+    "InnerLegs": 19,
+    "Talisman": 20,
 }
 
 
@@ -105,23 +130,23 @@ MAGIC_PROP_DB = MagicProperty.parse_xml_db(
     <property name="Blood Drinker" type="bool" />
     <property name="Balanced" type="bool" />
     <property name="Searing Weapon" type="bool" />
-    <property name="Use Best Weapon Skill" type="bool" />
+    <property name="Use Best Weapon Skill" key="BestWeapon" type="bool" />
     <property name="Fire Eater" type="percent" />
     <property name="Cold Eater" type="percent" />
     <property name="Poison Eater" type="percent" />
     <property name="Energy Eater" type="percent" />
     <property name="Kinetic Eater" type="percent" />
     <property name="Damage Eater" type="percent" />
-    <property name="Physical Damage" type="percent" />
-    <property name="Cold Damage" type="percent" />
-    <property name="Fire Damage" type="percent" />
-    <property name="Poison Damage" type="percent" />
-    <property name="Energy Damage" type="percent" />
-    <property name="Chaos Damage" type="percent" />
+    <property name="Physical Damage" key="PhysDmg" type="percent" />
+    <property name="Cold Damage" key="ColdDmg" type="percent" />
+    <property name="Fire Damage" key="FireDmg" type="percent" />
+    <property name="Poison Damage" key="PoisonDmg" type="percent" />
+    <property name="Energy Damage" key="EnergyDmg" type="percent" />
+    <property name="Chaos Damage" key="ChaosDmg" type="percent" />
 
     <!-- Caster Item Properties -->
     <property name="Spell Damage Increase" key="SDI" type="percent" />
-    <property name="Casting Focus" type="int" />
+    <property name="Casting Focus" key="CF" type="int" />
     <property name="Lower Mana Cost" key="LMC" type="percent" />
     <property name="Lower Reagent Cost" key="LRC" type="percent" />
     <property name="Mage Weapon" type="int" />
@@ -134,12 +159,12 @@ MAGIC_PROP_DB = MagicProperty.parse_xml_db(
     <property name="Alchemy" type="int" />
     <property name="Anatomy" type="int" />
     <property name="Animal Lore" type="int" />
-    <property name="Item Identification" type="int" />
+    <property name="Item Identification" key="ItemID" type="int" />
     <property name="Arms Lore" type="int" />
     <property name="Parry" type="int" />
     <property name="Begging" type="int" />
     <property name="Blacksmithing" type="int" />
-    <property name="Bowcraft/Fletching" type="int" />
+    <property name="Bowcraft/Fletching" key="Fletching" type="int" />
     <property name="Peacemaking" type="int" />
     <property name="Camping" type="int" />
     <property name="Carpentry" type="int" />
@@ -147,10 +172,10 @@ MAGIC_PROP_DB = MagicProperty.parse_xml_db(
     <property name="Cooking" type="int" />
     <property name="Detect Hidden" type="int" />
     <property name="Discordance" type="int" />
-    <property name="Evaluating Intelligence" type="int" />
+    <property name="Evaluating Intelligence" key="EvalInt" type="int" />
     <property name="Healing" type="int" />
     <property name="Fishing" type="int" />
-    <property name="Forensic Evaluation" type="int" />
+    <property name="Forensic Evaluation" key="Forensic" type="int" />
     <property name="Herding" type="int" />
     <property name="Hiding" type="int" />
     <property name="Provocation" type="int" />
@@ -167,7 +192,7 @@ MAGIC_PROP_DB = MagicProperty.parse_xml_db(
     <property name="Stealing" type="int" />
     <property name="Tailoring" type="int" />
     <property name="Animal Taming" type="int" />
-    <property name="Taste Identification" type="int" />
+    <property name="Taste Identification" key="TasteID" type="int" />
     <property name="Tinkering" type="int" />
     <property name="Tracking" type="int" />
     <property name="Veterinary" type="int" />
@@ -217,7 +242,7 @@ MAGIC_PROP_DB = MagicProperty.parse_xml_db(
     <property name="Elves Only" type="bool" />
     <property name="Night Sight" type="bool" />
     <property name="Self Repair" type="int" />
-    <property name="Lower Requirements" type="percent" />
+    <property name="Lower Requirements" key="LowerReq" type="percent" />
     <property name="Enhance Potions" type="percent" />
     <property name="Artifact Rarity" type="int" />
 
@@ -228,11 +253,11 @@ MAGIC_PROP_DB = MagicProperty.parse_xml_db(
     <property name="Brittle" type="bool" />
 
     <!-- Wands -->
-    <property name="Greater Healing Charges" type="int" />
-    <property name="Healing Charges" type="int" />
-    <property name="Harm Charges" type="int" />
-    <property name="Magic Arrow Charges" type="int" />
-    <property name="Lightning Charges" type="int" />
+    <property name="Greater Healing Charges" key="GreaterHealChg" type="int" />
+    <property name="Healing Charges" key="HealChg" type="int" />
+    <property name="Harm Charges" key="HarmChg" type="int" />
+    <property name="Magic Arrow Charges" key="MagicArrowChg" type="int" />
+    <property name="Lightning Charges" key="LightningChg" type="int" />
 </root>
 """
 )
@@ -275,6 +300,7 @@ class ParsedItem:
         self.Amount: int = item.Amount
         self.Name: str = item.Name
         self.Weight: int = item.Weight
+        self.Layer: int = LAYER_MAP.get(item.Layer, 99)
         self.Rarity: int = -1
         self.MagicProperties: Dict[str, Union[int, bool, str]] = {}
 
@@ -420,42 +446,119 @@ def scan_contained() -> List[ParsedItem]:
 ################################################################################
 
 
+MAGIC_PROP_DB_EXT = (
+    [
+        MagicProperty("Rarity", "int"),
+        MagicProperty("Layer", "int"),
+    ]
+    + MAGIC_PROP_DB
+    + [
+        MagicProperty("Slayer", "str"),
+        MagicProperty("Weight", "int"),
+    ]
+)
+
+LAYER_INVMAP = {
+    1: "Right Hand",
+    2: "Left Hand",
+    3: "Shoes",
+    4: "Pants",
+    5: "Shirt",
+    6: "Head",
+    7: "Gloves",
+    8: "Ring",
+    9: "Neck",
+    10: "Waist",
+    11: "Inner Torso",
+    12: "Bracelet",
+    13: "Middle Torso",
+    14: "Earrings",
+    15: "Arms",
+    16: "Cloak",
+    17: "Outer Torso",
+    18: "Outer Legs",
+    19: "Inner Legs",
+    20: "Talisman",
+    99: "",
+}
+
+RARITY_INVMAP = {
+    -1: "",
+    0: "Minor Magic",
+    1: "Lesser Magic",
+    2: "Greater Magic",
+    3: "Major Magic",
+    4: "Minor Artifact",
+    5: "Lesser Artifact",
+    6: "Greater Artifact",
+    7: "Major Artifact",
+    8: "Legendary Artifact",
+}
+
 GUMP_MENU = hash("MagicItemViewer") & 0xFFFFFFFF
 GUMP_PROMPT = hash("MagicItemSortByPrompt") & 0xFFFFFFFF
+
+
+class ViewerColumn(MagicProperty):
+    def __init__(self, name: str, prop_type: str, key: Optional[str] = None, sort_order: str = "dsc"):
+        super().__init__(name, prop_type, key)
+        self.sort_order = sort_order  # "asc" or "dsc"
+        self.filter = None
+
+    def sort_key(self, item: ParsedItem) -> Any:
+        if not self.name:
+            return item.Serial
+        if self.name == "Name":
+            return to_proper_case(item.Name)
+        if self.name == "Rarity":
+            return item.Rarity
+        if self.name == "Weight":
+            return item.Weight
+        if self.name == "Damage":
+            return (item.DamageMin, item.DamageMax)
+        if self.name == "Speed":
+            return item.WeaponSpeed
+        if self.name == "Layer":
+            return item.Layer
+
+        if self.type == "bool":
+            return item.MagicProperties.get(self.name, False)
+        if self.type == "int":
+            return int(item.MagicProperties.get(self.name, 0))
+        if self.type == "percent":
+            return int(item.MagicProperties.get(self.name, 0))
+        if self.type == "float":
+            return float(item.MagicProperties.get(self.name, 0.0))
+        if self.type == "str":
+            return item.MagicProperties.get(self.name, "")
+
+    @classmethod
+    def to_column(cls, prop_data: MagicProperty) -> "ViewerColumn":
+        return cls(prop_data.name, prop_data.type, prop_data.key)
 
 
 class ViewerContext:
     def __init__(self, items: List[ParsedItem]):
         self.items = items
-        self.items_per_page = 16
+        self.items_per_page = 10
+        self.col_width = 150
+        self.row_height = 45
         self.page = 0
-        self.sort_by: Optional[str] = None
-        self.sort_by_type: Optional[str] = None
-        self.sort_order = "dsc"  # "asc" or "dsc"
+        self.columns = [
+            ViewerColumn("Layer", "int", sort_order="asc"),
+            ViewerColumn("", "str"),
+            ViewerColumn("", "str"),
+        ]
         self.filter = None
 
-    def key(self, item: ParsedItem) -> Any:
-        if self.sort_by is None:
-            return item.Serial
-        if self.sort_by == "Name":
-            return item.Name
-        if self.sort_by == "Rarity":
-            return item.Rarity
-        if self.sort_by == "Weight":
-            return item.Weight
-        if self.sort_by == "Damage":
-            return (item.DamageMin, item.DamageMax)
-        if self.sort_by == "Speed":
-            return item.WeaponSpeed
-        return int(item.MagicProperties.get(self.sort_by, 0))
-
     def sort_items(self) -> None:
-        if self.sort_order == "asc":
-            self.items.sort(key=self.key)
-        elif self.sort_order == "dsc":
-            self.items.sort(key=self.key, reverse=True)
-        else:
-            raise ValueError(f"Invalid sort order: {self.sort_order}")
+        for column in reversed(self.columns):
+            if column.sort_order == "asc":
+                self.items.sort(key=column.sort_key)
+            elif column.sort_order == "dsc":
+                self.items.sort(key=column.sort_key, reverse=True)
+            else:
+                raise ValueError(f"Invalid sort order: {column.sort_order}")
 
     @property
     def max_page(self) -> int:
@@ -473,101 +576,130 @@ class ViewerContext:
 def gump_menu(ctx: ViewerContext) -> None:
     Gumps.CloseGump(GUMP_MENU)
 
+    WIDTH = 10 + 40 + 70 + ctx.col_width * len(ctx.columns) + 100 + 100 + 10
+    HEIGHT = 70 + ctx.items_per_page * ctx.row_height + 45
+
     # Create the gump
     gd = Gumps.CreateGump(movable=True)
     Gumps.AddPage(gd, 0)
-    Gumps.AddBackground(gd, 0, 0, 800, 600, 30546)
-    Gumps.AddAlphaRegion(gd, 0, 0, 800, 600)
+    Gumps.AddBackground(gd, 0, 0, WIDTH, HEIGHT, 30546)
+    # Gumps.AddAlphaRegion(gd, 0, 0, WIDTH, HEIGHT)
     Gumps.AddHtml(
-        gd, 10, 10, 780, 18, '<center><basefont color="#FFFFFF">Magic Item Viewer</basefont></center>', False, False
+        gd, 10, 10, 780, 18, '<center><basefont color="#FFFFFF">Magic Item Explorer</basefont></center>', False, False
     )
 
     # Header
-    Gumps.AddLabelCropped(gd, 10, 40, 40, 18, 88, "Index")
-    Gumps.AddLabelCropped(gd, 50, 40, 200, 18, 88, "Name")
-    if ctx.sort_by is None:
-        Gumps.AddLabelCropped(gd, 260, 40, 170, 18, 88, "Sort by What?")
-    else:
-        Gumps.AddLabelCropped(gd, 260, 40, 170, 18, 88, f"{ctx.sort_by}")
-    Gumps.AddButton(gd, 430, 38, 4005, 4007, 1101, 1, 0)
-    if ctx.sort_order == "asc":
-        Gumps.AddButton(gd, 460, 39, 251, 250, 1201, 1, 0)
-    elif ctx.sort_order == "dsc":
-        Gumps.AddButton(gd, 460, 39, 253, 252, 1201, 1, 0)
-    Gumps.AddLabelCropped(gd, 490, 40, 200, 18, 88, "Actions")
+    # Column - Item Graphic
+    Gumps.AddImageTiled(gd, 40, 40, 70, 20, 39929)
+    Gumps.AddLabelCropped(gd, 45, 40, 60, 18, 68, "Item")
+    for j, column in enumerate(ctx.columns):
+        x = 120 + ctx.col_width * j
+        # Column Header Background
+        Gumps.AddImageTiled(gd, x - 5, 40, ctx.col_width - 5, 20, 39929)
+        # Column Name
+        if not column.name:
+            Gumps.AddLabelCropped(gd, x, 40, ctx.col_width - 55, 18, 88, "(Select)")
+        elif column.key:
+            Gumps.AddLabelCropped(gd, x, 40, ctx.col_width - 55, 18, 68, column.key)
+            Gumps.AddTooltip(gd, f"Sort by: {column.name}")
+        else:
+            Gumps.AddLabelCropped(gd, x, 40, ctx.col_width - 55, 18, 68, column.name)
+        # Column Property Selector
+        x += ctx.col_width - 55
+        Gumps.AddButton(gd, x, 38, 4005, 4007, 1100 + j, 1, 0)
+        # Column Sort Order
+        x += 30
+        if column.sort_order == "asc":
+            Gumps.AddButton(gd, x, 39, 251, 250, 1200 + j, 1, 0)
+        elif column.sort_order == "dsc":
+            Gumps.AddButton(gd, x, 39, 253, 252, 1200 + j, 1, 0)
+    # Column - Actions
+    x = 10 + 40 + 70 + ctx.col_width * len(ctx.columns)
+    Gumps.AddImageTiled(gd, x, 40, 200, 20, 39929)
+    Gumps.AddLabelCropped(gd, x + 5, 40, 190, 18, 68, "Actions")
 
     # List the items
     i_min = ctx.page * ctx.items_per_page
     i_max = min(i_min + ctx.items_per_page, len(ctx.items))
     for i in range(i_min, i_max):
         row = i % ctx.items_per_page
-        y = 70 + row * 30
+        y = 70 + row * ctx.row_height
         item = ctx.items[i]
 
+        # Column 1 - Index
         Gumps.AddLabelCropped(gd, 10, y, 40, 18, 53, str(i + 1))
-        Gumps.AddLabelCropped(gd, 50, y, 200, 18, 1153, to_proper_case(item.Name))
+        # Column 2 - Item Graphic
+        Gumps.AddImageTiled(gd, 40, y, 70, ctx.row_height - 5, 3004)
         Gumps.AddTooltip(gd, item.property_html)
+        Gumps.AddItem(gd, 50, y, item.ItemID, item.Color)
 
-        if ctx.sort_by is not None:
-            color = 0x3B2 if ctx.key(item) == 0 else 1153
-            if ctx.sort_by_type == "percent":
-                Gumps.AddLabelCropped(gd, 260, y, 200, 18, color, f"{ctx.key(item)}%")
-            elif ctx.sort_by_type == "int":
-                Gumps.AddLabelCropped(gd, 260, y, 200, 18, color, f"{ctx.key(item)}")
-            elif ctx.sort_by_type == "bool":
-                Gumps.AddLabelCropped(gd, 260, y, 200, 18, color, "Yes" if ctx.key(item) else "No")
+        for j, column in enumerate(ctx.columns):
+            x = 120 + ctx.col_width * j
+            if not column.name:
+                continue
+            value = column.sort_key(item)
+            color = 1153 if value else 0x3B2
+            if column.name == "Layer":
+                Gumps.AddLabelCropped(gd, x, y, ctx.col_width, 18, color, LAYER_INVMAP.get(value, "Unknown"))
+            elif column.name == "Rarity":
+                Gumps.AddLabelCropped(gd, x, y, ctx.col_width, 18, color, RARITY_INVMAP.get(value, ""))
+            elif column.type == "percent":
+                Gumps.AddLabelCropped(gd, x, y, ctx.col_width, 18, color, f"{value}%")
+            elif column.type == "int":
+                Gumps.AddLabelCropped(gd, x, y, ctx.col_width, 18, color, f"{value}")
+            elif column.type == "bool":
+                Gumps.AddLabelCropped(gd, x, y, ctx.col_width, 18, color, "Yes" if value else "")
+            elif column.type == "float":
+                Gumps.AddLabelCropped(gd, x, y, ctx.col_width, 18, color, f"{value:.1f}")
             else:
-                Gumps.AddLabelCropped(gd, 260, y, 200, 18, color, str(ctx.key(item)))
+                Gumps.AddLabelCropped(gd, x, y, ctx.col_width, 18, color, str(value))
 
-        Gumps.AddButton(gd, 490, y - 2, 4005, 4007, 2000 + i, 1, 0)
+        x = 10 + 40 + 70 + ctx.col_width * len(ctx.columns)
+        Gumps.AddButton(gd, x, y - 2, 4005, 4007, 2000 + i, 1, 0)
         Gumps.AddTooltip(gd, item.property_html)
-        Gumps.AddLabelCropped(gd, 525, y, 100, 18, 1153, "To Inventory")
-        Gumps.AddButton(gd, 625, y - 2, 4005, 4007, 3000 + i, 1, 0)
+        x += 35
+        Gumps.AddLabelCropped(gd, x, y, 100, 18, 1153, "Pick Up")
+        Gumps.AddTooltip(gd, "This will move the item to your backpack.")
+        x += 65
+        Gumps.AddButton(gd, x, y - 2, 4005, 4007, 3000 + i, 1, 0)
         Gumps.AddTooltip(gd, item.property_html)
-        Gumps.AddLabelCropped(gd, 660, y, 100, 18, 1153, "Equip")
+        x += 35
+        Gumps.AddLabelCropped(gd, x, y, 100, 18, 1153, "Equip")
+        Gumps.AddTooltip(gd, "This will equip the item, if the slot is available.")
 
     # Footer
-    Gumps.AddButton(gd, 10, 568, 4014, 4016, 1001, 1, 0)
-    Gumps.AddLabel(gd, 45, 570, 1153, "Previous Page")
-    Gumps.AddButton(gd, 160, 568, 4005, 4007, 1002, 1, 0)
-    Gumps.AddLabel(gd, 195, 570, 1153, "Next Page")
-    Gumps.AddButton(gd, 310, 568, 4017, 4019, 1000, 1, 0)
-    Gumps.AddLabel(gd, 345, 570, 1153, "Exit")
-    Gumps.AddLabel(gd, 700, 570, 1153, f"Page {ctx.page + 1} / {ctx.max_page + 1}")
+    Gumps.AddButton(gd, 10, HEIGHT - 32, 4014, 4016, 1001, 1, 0)
+    Gumps.AddLabel(gd, 45, HEIGHT - 30, 1153, "Previous Page")
+    Gumps.AddButton(gd, 160, HEIGHT - 32, 4005, 4007, 1002, 1, 0)
+    Gumps.AddLabel(gd, 195, HEIGHT - 30, 1153, "Next Page")
+    Gumps.AddButton(gd, 310, HEIGHT - 32, 4017, 4019, 1000, 1, 0)
+    Gumps.AddLabel(gd, 345, HEIGHT - 30, 1153, "Exit")
+    Gumps.AddLabel(gd, WIDTH - 100, HEIGHT - 30, 1153, f"Page {ctx.page + 1} / {ctx.max_page + 1}")
 
     # Send the gump and listen for the response
     Gumps.SendGump(GUMP_MENU, Player.Serial, 100, 100, gd.gumpDefinition, gd.gumpStrings)
 
 
-def prompt_sort_by() -> Tuple[Optional[str], Optional[str]]:
+def prompt_sort_by() -> Optional[MagicProperty]:
     Gumps.CloseGump(GUMP_PROMPT)
 
     gd = Gumps.CreateGump(movable=True)
     Gumps.AddPage(gd, 0)
     Gumps.AddBackground(gd, 0, 0, 500, 400, 30546)
     Gumps.AddAlphaRegion(gd, 0, 0, 500, 400)
-    Gumps.AddHtml(
-        gd,
-        10,
-        10,
-        480,
-        18,
-        '<center><basefont color="#FFFFFF">Which properto to sort by?</basefont></center>',
-        False,
-        False,
-    )
+    Gumps.AddHtml(gd, 10, 10, 480, 18, '<basefont color="#FFFFFF">Which properto to sort by?</basefont>', False, False)
 
     rows = 15
     cols = 2
-    max_page = (len(MAGIC_PROP_DB) - 1) // (rows * cols)
-    for i, prop_data in enumerate(MAGIC_PROP_DB):
+    max_page = (len(MAGIC_PROP_DB_EXT) - 1) // (rows * cols)
+    for i, prop_data in enumerate(MAGIC_PROP_DB_EXT):
         cur_page = i // (rows * cols)
         cur_idx = i % (rows * cols)
         if cur_idx == 0:
             Gumps.AddPage(gd, cur_page + 1)
             Gumps.AddButton(gd, 10, 368, 4014, 4016, 0, 0, max(cur_page, 1))
             Gumps.AddLabel(gd, 45, 370, 1153, "Previous")
-            Gumps.AddButton(gd, 110, 368, 4005, 4007, 0, 0, min(cur_page + 2, max_page))
+            Gumps.AddButton(gd, 110, 368, 4005, 4007, 0, 0, min(cur_page + 2, max_page + 1))
             Gumps.AddLabel(gd, 145, 370, 1153, "Next")
         cur_row = cur_idx % rows
         cur_col = cur_idx // rows
@@ -578,12 +710,12 @@ def prompt_sort_by() -> Tuple[Optional[str], Optional[str]]:
 
     Gumps.SendGump(GUMP_PROMPT, Player.Serial, 100, 100, gd.gumpDefinition, gd.gumpStrings)
     if not Gumps.WaitForGump(GUMP_PROMPT, 3600000):
-        return None, None
+        return None
     gd = Gumps.GetGumpData(GUMP_PROMPT)
     if gd.buttonid >= 1000:
         i = gd.buttonid - 1000
-        return MAGIC_PROP_DB[i].name, MAGIC_PROP_DB[i].type
-    return None, None
+        return MAGIC_PROP_DB_EXT[i]
+    return None
 
 
 def main():
@@ -617,19 +749,20 @@ def main():
         if gd.buttonid == 1002:
             ctx.next_page()
             continue
-        if gd.buttonid == 1101:
-            sort_by, sort_by_type = prompt_sort_by()
-            if sort_by is None:
+        if 1100 <= gd.buttonid < 1200:
+            j = gd.buttonid - 1100
+            prop_data = prompt_sort_by()
+            if prop_data is None:
                 continue
-            ctx.sort_by = sort_by
-            ctx.sort_by_type = sort_by_type
+            ctx.columns[j] = ViewerColumn.to_column(prop_data)
             ctx.sort_items()
             continue
-        if gd.buttonid == 1201:
-            if ctx.sort_order == "asc":
-                ctx.sort_order = "dsc"
+        if 1200 <= gd.buttonid < 1300:
+            j = gd.buttonid - 1200
+            if ctx.columns[j].sort_order == "asc":
+                ctx.columns[j].sort_order = "dsc"
             else:
-                ctx.sort_order = "asc"
+                ctx.columns[j].sort_order = "asc"
             ctx.sort_items()
             continue
         if 2000 <= gd.buttonid < 3000:
