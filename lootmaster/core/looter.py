@@ -109,7 +109,7 @@ class Looter:
 
         Returns:
             return (Tuple[bool, List[ItemSummary]]):
-                A tuple containing a boolean indicating if the target was successfully opened,
+                A tuple containing a boolean indicating if the target was successfully opened or no retry is needed,
                 and a list of lootable items in the target.
         """
         max_attempts = self.setting.get("max-open-attempts", 3)
@@ -123,14 +123,19 @@ class Looter:
         if not cur_mem.lootable:
             return True, []
         # If failed to open the target, increment the attempts and check if it should be marked as not lootable.
-        if not (cur_mem.opened or Items.WaitForContents(target.Serial, 1000)):
+        action_performed = False
+        cont_opened = target.ContainerOpened
+        if not cont_opened:
+            cont_opened = Items.WaitForContents(target.Serial, 1000)
+            action_performed = True
+        if not cont_opened:
             cur_mem.attempts += 1
             if cur_mem.attempts >= max_attempts:
                 cur_mem.lootable = False
                 return True, []
             return False, []
         # Builds the list of lootable items in the target.
-        if not cur_mem.opened:
+        if action_performed:
             Misc.Pause(self.setting.get("action-delay", 900))
         target = Items.FindBySerial(target.Serial)
         if target is None:

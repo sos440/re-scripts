@@ -1,9 +1,9 @@
 {
     "reportMissingImports": true,
     "reportUndefinedVariable": true,
-    "stubPath": "./stubs",
+    "stubPath": "./.stubs",
     "extraPaths": [
-        "./stubs"
+        "./.stubs"
     ],
     "useLibraryCodeForTypes": true,
     "pythonVersion": "3.9",

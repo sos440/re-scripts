@@ -166,11 +166,11 @@ def move_items():
     if dst_cont is None:
         Misc.SendMessage("Destination container lost!", 0x21)
         return
-    if not Items.WaitForContents(src_cont.Serial, 1000):
+    if not src_cont.ContainerOpened and not Items.WaitForContents(src_cont.Serial, 1000):
         Misc.SendMessage("Failed to find the container contents!", 0x21)
         return
     if len(src_cont.Contains) == 0:
-        Misc.SendMessage("The container is empty!", 0x21)
+        Misc.SendMessage("The container is empty!", 68)
         return
 
     # Display the confirmation gump

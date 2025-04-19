@@ -402,7 +402,7 @@ def scan_target(target) -> List[ParsedItem]:
     if target is None:
         return []
 
-    if not Items.WaitForContents(target.Serial, 1000):
+    if not (target.ContainerOpened or Items.WaitForContents(target.Serial, 1000)):
         return []
 
     Misc.Pause(100)
@@ -768,12 +768,14 @@ def main():
         if 2000 <= gd.buttonid < 3000:
             i = gd.buttonid - 2000
             Items.Move(ctx.items[i].Serial, Player.Backpack.Serial, -1)
+            Misc.Pause(500)
             ctx.items = scan_target(target)
             ctx.sort_items()
             continue
         if 3000 <= gd.buttonid < 4000:
             i = gd.buttonid - 3000
             Player.EquipItem(ctx.items[i].Serial)
+            Misc.Pause(500)
             ctx.items = scan_target(target)
             ctx.sort_items()
             continue
