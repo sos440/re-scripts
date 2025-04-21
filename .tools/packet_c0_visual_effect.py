@@ -137,22 +137,39 @@ def VisualEffectSelf(
     )
 
 
+def SoundEffect(sound_model: int):
+    pos = Player.Position
+    packet = b"\x54"
+    packet += b"\x01"
+    packet += sound_model.to_bytes(2, "big")
+    packet += b"\x00\x00"
+    packet += pos.X.to_bytes(2, "big")
+    packet += pos.Y.to_bytes(2, "big")
+    packet += (pos.Z & 0xFFFF).to_bytes(2, "big")
+    PacketLogger.SendToClient(List[Byte](packet))
+
+
+# Example usage of the VisualEffect functions
 if Player.Connected:
     pos = Player.Position
     x, y, z = pos.X, pos.Y, pos.Z
     
+    SoundEffect(0x29)  # thundr02.wav
+    VisualEffectLightning(Player.Serial)
+    Misc.Pause(1000)
+    
+    SoundEffect(0x101)  # sfx16_l.wav
     VisualEffectMissile((x - 10, y - 10, z + 10), Player.Serial, 14036, 3, 12, 1152, 3)
     VisualEffectMissile((x - 15, y - 10, z + 10), Player.Serial, 14036, 3, 12, 1152, 3)
     VisualEffectMissile((x - 10, y - 15, z + 10), Player.Serial, 14036, 3, 12, 1152, 3)
     Misc.Pause(1500)
     
-    VisualEffectLightning(Player.Serial)
-    Misc.Pause(500)
-    
+    SoundEffect(0x207)  # explode.wav
     VisualEffectStatic((x + 1, y, z), 14120, 13, 253, 2)
     VisualEffectStatic((x, y + 1, z), 14120, 13, 253, 2)
     VisualEffectStatic((x - 1, y, z), 14120, 13, 253, 2)
     VisualEffectStatic((x, y - 1, z), 14120, 13, 253, 2)
-    Misc.Pause(500)
+    Misc.Pause(750)
     
+    SoundEffect(0x208)  # framstrk.wav
     VisualEffectSelf(Player.Serial, 14089, 30, 1152, 0)

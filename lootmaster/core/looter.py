@@ -126,7 +126,11 @@ class Looter:
         action_performed = False
         cont_opened = target.ContainerOpened
         if not cont_opened:
+            Journal.Clear()
             cont_opened = Items.WaitForContents(target.Serial, 1000)
+            if Journal.Search("You did not earn the right to loot this"):
+                cur_mem.lootable = False
+                return True, []
             action_performed = True
         if not cont_opened:
             cur_mem.attempts += 1

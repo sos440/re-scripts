@@ -314,7 +314,7 @@ def highlight_ignored(ignore_list):
         dist = max(abs(dx), abs(dy))
         if dist >= 28:
             continue
-        VisualEffectStatic((x, y, z), tile_id, 45, 253, 0)
+        VisualEffectStatic((x, y, z), tile_id, 255, 1165, 0)
 
 
 deplete_list = load_history()
@@ -334,7 +334,7 @@ while True:
     Journal.Clear()
     if HIGHLIGHT_DEPLETE:
         x, y, z, tile_id = tree
-        VisualEffectStatic((x, y, z), tile_id, 45, 88, 0)
+        VisualEffectStatic((x, y, z), tile_id, 10, 88, 2)
     use_axe_on(*tree)
     
     # Process the response

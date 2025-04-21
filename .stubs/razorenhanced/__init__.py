@@ -4,6 +4,7 @@ from misc import Misc
 from items import Items
 from spells import Spells
 from target import Target
+from journal import Journal
 
 __all__ = [
     "Gumps",
@@ -12,4 +13,5 @@ __all__ = [
     "Items",
     "Spells",
     "Target",
+    "Journal",
 ]
