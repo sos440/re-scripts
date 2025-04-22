@@ -2,8 +2,10 @@ import threading
 import time
 import os
 import sys
+from System.Collections.Generic import List as GenList  # type: ignore
+from System import Byte  # type: ignore
 from enum import Enum
-from typing import List, Dict, Tuple, Any, Optional, Callable
+from typing import List, Dict, Tuple, Any, Optional, Callable, Union
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -16,20 +18,117 @@ sys.path.append(PATH)
 from core.summary import ItemSummary
 from core.match import LootProfile, LootRules, LootMatch
 
+
+################################################################################
+# Helper Functions
+################################################################################
+
+
+class PacketBuilder:
+    def __init__(self, header: int) -> None:
+        self.header = header
+        self.packet = bytearray()
+
+    def add_byte(self, value: int) -> None:
+        self.packet.append(value & 0xFF)
+
+    def add_short(self, value: int) -> None:
+        value &= 0xFFFF
+        self.packet += value.to_bytes(2, "big")
+
+    def add_int(self, value: int) -> None:
+        value &= 0xFFFFFFFF
+        self.packet += value.to_bytes(4, "big")
+
+    def add_bytes(self, value: bytes) -> None:
+        self.packet += value
+
+    def __len__(self) -> int:
+        return len(self.packet) + 1
+
+    def build(self, prefix: Optional[bytes] = None) -> bytes:
+        if prefix is None:
+            prefix = bytes()
+        return bytes(self.header.to_bytes(1, "big") + prefix + self.packet)
+
+
+def render_object(
+    serial: int,
+    itemid: int,
+    x: int,
+    y: int,
+    z: int,
+    amount: int = 1,
+    color: int = 0,
+    flag: int = 0,
+    facing: int = 0,
+    itemid_inc: int = 0,
+    data_type: int = 0,
+):
+    assert data_type in [0, 2], "Invalid data type. Must be 0 or 2."
+
+    packet = PacketBuilder(0xF3)
+    packet.add_short(0x0001)
+    packet.add_byte(data_type)
+    packet.add_int(serial)
+    packet.add_short(itemid)
+    packet.add_byte(itemid_inc)
+    packet.add_short(amount)
+    packet.add_short(amount)
+    packet.add_short(x)
+    packet.add_short(y)
+    packet.add_byte(z)
+    packet.add_byte(facing)
+    packet.add_short(color)
+    packet.add_byte(flag)
+    packet.add_bytes(b"\x00\x00")
+
+    PacketLogger.SendToClient(GenList[Byte](packet.build()))
+
+
+def root_dist_to_player(serial) -> Union[int, float]:
+    """
+    Calculate the distance between the player and the top container of the object with the provided serial.
+    """
+    item = Items.FindBySerial(serial)
+    mob = None
+
+    while item is not None and not item.OnGround:
+        serial = item.RootContainer
+        item = Items.FindBySerial(item.RootContainer)
+
+    player = Mobiles.FindBySerial(Player.Serial)
+    assert player is not None, "Player is not found."
+    if item is None:
+        mob = Mobiles.FindBySerial(serial)
+        if mob is None:
+            return int("inf")
+        else:
+            return mob.DistanceTo(player)
+    else:
+        return int(item.DistanceTo(player))
+
+
 ################################################################################
 # Looting Logic
 ################################################################################
 
 
 IDLIST_CHEST = [
-    0x0E3C, 0x0E3D,  # large crate
-    0x0E3E, 0x0E3F,  # medium crate
-    0x0E7E, 0x09A9,  # small crate
-    0x0E40, 0x0E41,  # fancy metal crate
-    0x0E42, 0x0E43,  # wooden crate
+    0x0E3C,
+    0x0E3D,  # large crate
+    0x0E3E,
+    0x0E3F,  # medium crate
+    0x0E7E,
+    0x09A9,  # small crate
+    0x0E40,
+    0x0E41,  # fancy metal crate
+    0x0E42,
+    0x0E43,  # wooden crate
     0x0E77,  # large barrel
     0x0E7F,  # small barrel
-    0x0E7C, 0x09AB,  # metal crate
+    0x0E7C,
+    0x09AB,  # metal crate
 ]
 
 
@@ -100,6 +199,22 @@ class Looter:
         self.summary_cache[item.Serial] = summary
         return summary
 
+    def dehighlight_finished(self, target):
+        color = self.setting.get("mark-color", 1014)
+        if target.ItemID == 0x2006:
+            render_object(
+                target.Serial,
+                target.ItemID,
+                target.Position.X,
+                target.Position.Y,
+                target.Position.Z,
+                amount=0x33,
+                color=color,
+                facing=(target.Serial % 8),
+            )
+        else:
+            Items.SetColor(target.Serial, color)
+
     def attempt_open(self, target) -> Tuple[bool, List[ItemSummary]]:
         """
         Attempt to open a lootable target and update the looting memory.
@@ -117,8 +232,6 @@ class Looter:
         self.target_cache[target.Serial] = cur_mem
         # If the target is not lootable or has been finished, return False.
         if cur_mem.finished:
-            if self.setting.get("mark-after-finished", False):
-                Items.SetColor(target.Serial, self.setting.get("mark-color", 1014))
             return True, []
         if not cur_mem.lootable:
             return True, []
@@ -150,7 +263,7 @@ class Looter:
         if len(lootables) == 0:
             cur_mem.finished = True
             if self.setting.get("mark-after-finished", False):
-                Items.SetColor(target.Serial, self.setting.get("mark-color", 1014))
+                self.dehighlight_finished(target)
         return True, lootables
 
     def scan(self) -> List[ItemSummary]:
@@ -160,11 +273,19 @@ class Looter:
         if self.scanner is None:
             return []
 
+        # Dehighlight all finished targets.
+        if self.setting.get("mark-after-finished", False):
+            for target in self.scanner():
+                cur_mem = self.target_cache.get(target.Serial, None)
+                if cur_mem is None or not cur_mem.finished:
+                    continue
+                self.dehighlight_finished(target)
+
         is_greedy = self.setting.get("greedy-looting", False)
         # In the greedy mode, we only scan for the first lootable item.
         if is_greedy:
             lootables = []
-            for target in self.scanner():
+            for target in self.scan_nearby_targets():
                 lootables.extend([self.summarize(item) for item in target.Contains])
             lootables = [item for item in lootables if self.profile.test(item)]
             if len(lootables) > 0:
@@ -174,7 +295,7 @@ class Looter:
         needs_scan = True
         while needs_scan:
             needs_scan = False
-            for target in self.scanner():
+            for target in self.scan_nearby_targets():
                 success, cur_lootables = self.attempt_open(target)
                 if not success:
                     needs_scan = True
@@ -183,7 +304,7 @@ class Looter:
 
         # Scan all the lootable items in the targets.
         lootables = []
-        for target in self.scanner():
+        for target in self.scan_nearby_targets():
             lootables.extend([self.summarize(item) for item in target.Contains])
         lootables = [item for item in lootables if self.profile.test(item)]
         return lootables
@@ -283,9 +404,17 @@ class Looter:
     def is_running(self) -> bool:
         return self.mode != LootingMode.STOPPED and self._thread is not None
 
+    def scan_nearby_targets(self):
+        if self.scanner is None:
+            return []
+
+        target_list = self.scanner()
+        target_list = [target for target in target_list if root_dist_to_player(target.Serial) <= 2]
+        return target_list
+
     @classmethod
     def scanner_basic(cls):
-        scan_corpse = Items.FindAllByID(0x2006, -1, -1, 2)
+        scan_corpse = Items.FindAllByID(0x2006, -1, -1, 256)
         scan_t_chest = Items.FindAllByID(IDLIST_CHEST, -1, -1, 2)
         scan_t_chest = [chest for chest in scan_t_chest if "treasure chest" in chest.Name.lower()]
         return scan_corpse + scan_t_chest

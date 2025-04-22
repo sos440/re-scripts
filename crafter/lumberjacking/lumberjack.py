@@ -1,9 +1,13 @@
-from System.Collections.Generic import List
-from System import Byte
-from typing import Union, Tuple
 import time
 import json
 import os
+from System.Collections.Generic import List as GenList  # type: ignore
+from System import Byte  # type: ignore
+from typing import Union, Tuple
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from razorenhanced import *
 
 
 # Highlights the depleted trees
@@ -89,7 +93,7 @@ def VisualEffect(
     packet += hue.to_bytes(4, "big")
     packet += render_mode.to_bytes(4, "big")
 
-    PacketLogger.SendToClient(List[Byte](packet))
+    PacketLogger.SendToClient(GenList[Byte](packet))
 
 
 def VisualEffectMissile(

@@ -29,12 +29,12 @@ class ArmorRefinement:
     bonus_type: str
     level: int
     
-    def __init__(self, base: str, armor_type: str, bonus_type: str, level: int, serial: int):
+    def __init__(self, base: str, armor_type: str, bonus_type: str, level: int, item):
         self.base = base
         self.armor_type = armor_type
         self.bonus_type = bonus_type
         self.level = level
-        self.serial = serial
+        self.item = item
     
     @property
     def sort_key(self) -> str:
@@ -45,10 +45,14 @@ def amalgamate(amal_serial: int, entries: List[ArmorRefinement]):
     Items.UseItem(amal_serial)
 
     for entry in entries:
+        item = entry.item
+        if item.RootContainer != Player.Backpack.Serial:
+            Misc.Pause(1000)
+            Items.Move(item.Serial, Player.Backpack.Serial, -1)
         if not Target.WaitForTarget(1000, False):
-            return False
-        Target.TargetExecute(entry.serial)
-
+            break
+        Target.TargetExecute(item.Serial)   
+        
     Target.Cancel()
     return True
 
@@ -61,22 +65,23 @@ def test(serial):
     if not cont.IsContainer:
         Misc.SendMessage("This is not a container.", 33)
         return False
-    if cont.RootContainer != Player.Backpack.Serial:
-        Misc.SendMessage("This is not in your backpack.", 33)
-        return False
     if not (cont.ContainerOpened or Items.WaitForContents(serial, 1000)):
         Misc.SendMessage("Failed to open the container.", 33)
         return False
     
-    amalgamator = Items.FindByID(0x9966, 0x0480, cont.Serial, 2, False)
+    amalgamator = Items.FindByID(0x9966, 0x0480, Player.Backpack.Serial, 3, False)
     if amalgamator is None:
         Misc.SendMessage("An amalgamator must be in the selected container.", 33)
         return False
+        
 
     refines = {}
     
+    item_list = list(cont.Contains)
+    item_list.extend(list(Player.Backpack.Contains))
+    
     # Scan
-    for item in cont.Contains:
+    for item in item_list:
         name_words = item.Name.lower().split()
         if len(name_words) != 3:
             continue
@@ -104,7 +109,7 @@ def test(serial):
         if armor_type is None or bonus_type is None:
             continue
 
-        entry = ArmorRefinement(base, armor_type, bonus_type, level, item.Serial)
+        entry = ArmorRefinement(base, armor_type, bonus_type, level, item)
         refines.setdefault(entry.sort_key, []).append(entry)
 
     # Perform amalgamation
@@ -134,9 +139,9 @@ def test(serial):
             # Compute the position and move
             cur_x = 50 + 10 * cur_col
             cur_y = HEIGHT_MAP.get(entry.base, 0)
-            obj = Items.FindBySerial(entry.serial)
-            if obj.Position.X != cur_x or obj.Position.Y != cur_y:
-                Items.Move(obj.Serial, obj.Container, -1, cur_x, cur_y)
+            item = entry.item
+            if item.Position.X != cur_x or item.Position.Y != cur_y or item.Container != cont.Serial:
+                Items.Move(item.Serial, cont.Serial, -1, cur_x, cur_y)
             # Update the history
             cols[entry.base] = cur_col + 1
             lasts[entry.base] = entry

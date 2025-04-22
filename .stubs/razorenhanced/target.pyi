@@ -1,3 +1,13 @@
+from typing import Tuple
+from placeholders import Point3D
+
+
 class Target:
     @classmethod
+    def PromptGroundTarget(cls, message: str, color: int) -> Point3D: ...
+    @classmethod
     def PromptTarget(cls, message: str, color: int) -> int: ...
+    @classmethod
+    def WaitForTarget(cls, delay: int, noshow: bool = False) -> bool: ...
+    @classmethod
+    def TargetExecute(cls, x: int, y: int, z: int, staticid: int) -> None: ...
