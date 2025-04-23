@@ -23,6 +23,7 @@ SAVE_HISTORY = True
 ################################################################################
 
 
+import threading
 import time
 import os
 import xml.etree.ElementTree as ET
@@ -673,29 +674,42 @@ def highlight_cooldown(history: TreeHistoryDict):
         Effects.AtFixedPos(entry.pos, entry.tileid, 60, 1165)
 
 
-def gump_menu():
-    Gumps.CloseGump(GUMP_MENU)
-
-    # Create the gump
-    gd = Gumps.CreateGump(movable=True)
-    Gumps.AddPage(gd, 0)
-    Gumps.AddBackground(gd, 0, 0, 146, 90, 30546)
-    Gumps.AddAlphaRegion(gd, 0, 0, 146, 90)
-
-    Gumps.AddHtml(gd, 10, 5, 126, 18, GUMP_BUTTONTEXT_WRAP.format(text="Lumberjack's Note"), False, False)
-
-    Gumps.AddButton(gd, 10, 30, 40021, 40031, 1001, 1, 0)
-    Gumps.AddHtml(gd, 10, 32, 126, 18, GUMP_BUTTONTEXT_WRAP.format(text="Mark as Depleted"), False, False)
-
-    Gumps.AddButton(gd, 10, 55, 40297, 40298, 1002, 1, 0)
-    Gumps.AddHtml(gd, 10, 57, 126, 18, GUMP_BUTTONTEXT_WRAP.format(text="Remove Mark"), False, False)
-
-    # Send the gump and listen for the response
-    Gumps.SendGump(GUMP_MENU, Player.Serial, 100, 100, gd.gumpDefinition, gd.gumpStrings)
+def get_last_target(delay: int = 1000):
+    def delayed_last():
+        Target.WaitForTarget(delay, True)
+        Target.Last()
+    daemon_thread = threading.Thread(target=delayed_last)
+    daemon_thread.daemon = True
+    daemon_thread.start()
+    res = Target.PromptGroundTarget("")
+    daemon_thread.join()
+    return res
 
 
-gump_menu()
-while True:
+# def gump_menu():
+#     Gumps.CloseGump(GUMP_MENU)
+
+#     # Create the gump
+#     gd = Gumps.CreateGump(movable=True)
+#     Gumps.AddPage(gd, 0)
+#     Gumps.AddBackground(gd, 0, 0, 146, 90, 30546)
+#     Gumps.AddAlphaRegion(gd, 0, 0, 146, 90)
+
+#     Gumps.AddHtml(gd, 10, 5, 126, 18, GUMP_BUTTONTEXT_WRAP.format(text="Lumberjack's Note"), False, False)
+
+#     Gumps.AddButton(gd, 10, 30, 40021, 40031, 1001, 1, 0)
+#     Gumps.AddHtml(gd, 10, 32, 126, 18, GUMP_BUTTONTEXT_WRAP.format(text="Mark as Depleted"), False, False)
+
+#     Gumps.AddButton(gd, 10, 55, 40297, 40298, 1002, 1, 0)
+#     Gumps.AddHtml(gd, 10, 57, 126, 18, GUMP_BUTTONTEXT_WRAP.format(text="Remove Mark"), False, False)
+
+#     # Send the gump and listen for the response
+#     Gumps.SendGump(GUMP_MENU, Player.Serial, 100, 100, gd.gumpDefinition, gd.gumpStrings)
+
+
+Journal.Clear()
+# gump_menu()
+while Player.Connected:
     if HIGHLIGHT_DEPLETE:
         highlight_cooldown(history)
 
@@ -711,14 +725,9 @@ while True:
             entry.time_highlight = time.time() + 1.0
 
     
-    if not Gumps.WaitForGump(GUMP_MENU, 100):
-        continue
-
-    gd = Gumps.GetGumpData(GUMP_MENU)
-    if gd is None or gd.buttonid == 0:
-        pass
-    elif gd.buttonid == 1001:
-        target = Target.PromptGroundTarget("Choose the tree to mark as depleted.", 0x47E)
+    if Journal.WaitJournal("There's not enough wood here to harvest.", 250):
+        Journal.Clear()
+        target = get_last_target()
         target = (target.X, target.Y, target.Z)
         if target == (-1, -1, 0):
             pass
@@ -729,18 +738,40 @@ while True:
             else:
                 history[tree.hash].depleted = True
                 history[tree.hash].time_depleted = time.time()
-                save_history(history)
-    elif gd.buttonid == 1002:
-        target = Target.PromptGroundTarget("Choose the tree to remove the mark.", 0x47E)
-        target = (target.X, target.Y, target.Z)
-        if target == (-1, -1, 0):
-            pass
-        else:
-            tree = find_trees_at(*target)
-            if tree is None:
-                Misc.SendMessage("No tree found at the target location.", 0x21)
-            else:
-                history[tree.hash].depleted = False
-                save_history(history)
+                if SAVE_HISTORY:
+                    save_history(history)
 
-    gump_menu()
+    
+    # if not Gumps.WaitForGump(GUMP_MENU, 100):
+    #     continue
+
+    # gd = Gumps.GetGumpData(GUMP_MENU)
+    # if gd is None or gd.buttonid == 0:
+    #     pass
+    # elif gd.buttonid == 1001:
+    #     target = Target.PromptGroundTarget("Choose the tree to mark as depleted.", 0x47E)
+    #     target = (target.X, target.Y, target.Z)
+    #     if target == (-1, -1, 0):
+    #         pass
+    #     else:
+    #         tree = find_trees_at(*target)
+    #         if tree is None:
+    #             Misc.SendMessage("No tree found at the target location.", 0x21)
+    #         else:
+    #             history[tree.hash].depleted = True
+    #             history[tree.hash].time_depleted = time.time()
+    #             save_history(history)
+    # elif gd.buttonid == 1002:
+    #     target = Target.PromptGroundTarget("Choose the tree to remove the mark.", 0x47E)
+    #     target = (target.X, target.Y, target.Z)
+    #     if target == (-1, -1, 0):
+    #         pass
+    #     else:
+    #         tree = find_trees_at(*target)
+    #         if tree is None:
+    #             Misc.SendMessage("No tree found at the target location.", 0x21)
+    #         else:
+    #             history[tree.hash].depleted = False
+    #             save_history(history)
+
+    # gump_menu()

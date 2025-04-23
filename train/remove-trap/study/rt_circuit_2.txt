@@ -1,0 +1,29 @@
+gumppic 110 135 2152
+gumppic 150 135 9720
+gumppic 190 135 9720
+gumppic 230 135 9720
+gumppic 270 135 9720
+
+gumppic 110 175 9720
+gumppic 150 175 9720
+gumppic 190 175 9720
+gumppic 230 175 9720
+gumppic 270 175 9720
+
+gumppic 110 215 9720
+gumppic 150 215 9720
+gumppic 190 215 9720
+gumppic 230 215 9720
+gumppic 270 215 9720
+
+gumppic 110 255 9720
+gumppic 150 255 9720
+gumppic 190 255 9720
+gumppic 230 255 9720
+gumppic 270 255 9720
+
+gumppic 110 295 9720
+gumppic 150 295 9720
+gumppic 190 295 9720
+gumppic 230 295 9720
+gumppic 270 295 2472

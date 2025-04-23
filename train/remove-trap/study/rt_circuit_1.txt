@@ -1,0 +1,11 @@
+gumppic 110 135 2152  # blue gem
+gumppic 150 135 9720  # grey gem
+gumppic 190 135 9720  # grey gem
+
+gumppic 110 175 9720  # grey gem
+gumppic 150 175 9720  # grey gem
+gumppic 190 175 9720  # grey gem
+
+gumppic 110 215 9720  # grey gem
+gumppic 150 215 9720  # grey gem
+gumppic 190 215 2472  # red gem

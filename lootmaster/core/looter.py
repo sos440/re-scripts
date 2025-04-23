@@ -324,11 +324,23 @@ class Looter:
             return False
 
         # TODO: Add weight/count check
+        inventory = ItemSummary(Player.Backpack)
+        if inventory.content_count >= inventory.content_maxcount:
+            Misc.SendMessage("Looter> Inventory is full.")
+            return False
         for i, rule in enumerate(self.profile.rules):
             # Sort the lootables based on the rule
             item_to_loot = None
             for item in lootables:
                 if rule.test(item):
+                    # Skip if the item is too heavy for the player
+                    # This is only a temporary solution, and should be improved later.
+                    if item.weight + Player.Weight > Player.MaxWeight:
+                        Items.SetColor(item.serial, 33)
+                        continue
+                    if item.weight + inventory.content_weight > inventory.content_maxweight:
+                        Items.SetColor(item.serial, 33)
+                        continue
                     if rule.highlight:
                         Items.SetColor(item.serial, rule.highlight_color)
                     item_to_loot = item
@@ -339,6 +351,8 @@ class Looter:
             if rule.lootbag is not None:
                 for item in Player.Backpack.Contains:
                     summary = self.summarize(item)
+                    if summary.content_count >= summary.content_maxcount:
+                        continue
                     if rule.lootbag.test(summary):
                         lootbag = item.Serial
                         break

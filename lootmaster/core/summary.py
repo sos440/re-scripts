@@ -19,16 +19,20 @@ sys.path.append(PATH)
 
 
 RARITY_MAP = {
-    "minor magic item": 0,
-    "lesser magic item": 1,
-    "greater magic item": 2,
-    "major magic item": 3,
-    "minor artifact": 4,
-    "lesser artifact": 5,
-    "greater artifact": 6,
-    "major artifact": 7,
-    "legendary artifact": 8,
+    "Minor Magic Item": 0,
+    "Lesser Magic Item": 1,
+    "Greater Magic Item": 2,
+    "Major Magic Item": 3,
+    "Minor Artifact": 4,
+    "Lesser Artifact": 5,
+    "Greater Artifact": 6,
+    "Major Artifact": 7,
+    "Legendary Artifact": 8,
 }
+
+
+def proper_case(text: str) -> str:
+    return " ".join(word.capitalize() for word in text.split())
 
 
 def parse_magic_prop_db(xml_data: str) -> dict:
@@ -100,26 +104,33 @@ class ItemSummary:
         self.props = Items.GetPropStringList(item.Serial)
 
         for prop in self.props:
-            prop = prop.lower()
+            prop = proper_case(prop)
 
             # find content
-            res = re.search(r"^contents: (\d+)/(\d+) items, (\d+)/(\d+) stones", prop)
+            res = re.search(r"^Contents: (\d+)/(\d+) Items, (\d+)/(\d+) Stones", prop)
             if res is not None:
                 self.content_count = int(res.group(1))
                 self.content_maxcount = int(res.group(2))
                 self.content_weight = int(res.group(3))
-                self.content_maxweight = int(res.group(3))
+                self.content_maxweight = int(res.group(4))
+                continue
+            res = re.search(r"^Contents: (\d+)/(\d+) Items, (\d+) Stones", prop)
+            if res is not None:
+                self.content_count = int(res.group(1))
+                self.content_maxcount = int(res.group(2))
+                self.content_weight = int(res.group(3))
+                self.content_maxweight = 400
                 continue
 
             # find damage min/max
-            res = re.search(r"^weapon damage (\d+) - (\d+)", prop)
+            res = re.search(r"^Weapon Damage (\d+) - (\d+)", prop)
             if res is not None:
                 self.damage_min = int(res.group(1))
                 self.damage_max = int(res.group(2))
                 continue
 
             # find weapon speed
-            res = re.search(r"^weapon speed ([\d\.]+)s", prop)
+            res = re.search(r"^Weapon Speed ([\d\.]+)s", prop)
             if res is not None:
                 self.weapon_speed = float(res.group(1))
                 continue
@@ -130,17 +141,16 @@ class ItemSummary:
                 continue
 
             # determine slayer property
-            res = re.match(r"^(.+) slayer$", prop)
+            res = re.match(r"^(.+) Slayer$", prop)
             if res is not None:
                 self.magic_props["Slayer"] = res.group(1)
                 continue
-            elif prop == "silver":
-                self.magic_props["Slayer"] = "undead"
+            elif prop == "Silver":
+                self.magic_props["Slayer"] = "Undead"
                 continue
 
             # determine magic properties
             for magic_prop, prop_data in MAGIC_PROPERTY_DATA.items():
-                magic_prop = magic_prop.lower()
                 if not prop.startswith(magic_prop):
                     continue
                 if prop_data["type"] == "percent":

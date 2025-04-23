@@ -1,0 +1,98 @@
+nomove
+resizepic 25 0 83 500 410
+gumppic 62 20 103
+xmfhtmlgump 80 36 110 70 1018309 1 0
+xmfhtmlgump 214 26 270 90 1018310 1 1
+
+# Left Column
+resizepic 62 130 5100 30 30
+tilepic 55 140 6255
+button 100 139 5032 1209 1 0 10
+resizepic 62 180 5100 30 30
+tilepic 55 190 6250
+button 100 189 5032 1209 1 0 11
+resizepic 62 230 5100 30 30
+tilepic 55 240 6251
+button 100 239 5032 1209 1 0 12
+resizepic 62 280 5100 30 30
+tilepic 55 290 6252
+button 100 289 5032 1209 1 0 13
+
+# Right Column
+resizepic 451 130 5100 30 30
+tilepic 444 140 6253
+button 425 139 5032 1209 1 0 14
+resizepic 451 180 5100 30 30
+tilepic 444 190 6254
+button 425 189 5032 1209 1 0 15
+resizepic 451 230 5100 30 30
+tilepic 444 240 6249
+button 425 239 5032 1209 1 0 16
+resizepic 451 280 5100 30 30
+tilepic 444 290 6256
+button 425 289 5032 1209 1 0 17
+
+
+xmfhtmlgump 160 125 230 24 1018308 0 0  # Lockpicking hint:
+resizepic 159 150 5100 230 95
+
+xmfhtmlgump 165 157 200 40 1018312 0 0  # In the first slot:
+tilepic 350 165 6256
+
+xmfhtmlgump 165 197 200 40 1018313 0 0  # Used in unknown slot:
+tilepic 350 200 6249
+tilepic 350 212 6252
+tilepic 350 224 6254
+
+
+xmfhtmlgump 127 249 170 20 1018311 0 0 # Previous guess
+resizepic 290 247 5100 115 25
+tilepic 281 254 6256
+tilepic 303 254 6249
+tilepic 334 254 3699
+tilepic 356 254 3699
+tilepic 378 254 3699
+
+# Slot 1
+tilepic 140 270 2832
+tilepic 117 282 2834
+tilepic 163 282 2835
+tilepic 140 293 2833
+tilepic 140 272 1306
+tilepic 139 289 6256
+radio 147 335 2151 2154 1 0
+
+# Slot 2
+tilepic 195 270 2832
+tilepic 172 282 2834
+tilepic 218 282 2835
+tilepic 195 293 2833
+tilepic 195 272 1306
+tilepic 194 289 6249
+radio 202 335 2151 2154 0 1
+
+# Slot 3
+tilepic 250 270 2832
+tilepic 227 282 2834
+tilepic 273 282 2835
+tilepic 250 293 2833
+tilepic 250 272 1313
+radio 257 335 2151 2154 0 2
+
+# Slot 4
+tilepic 305 270 2832
+tilepic 282 282 2834
+tilepic 328 282 2835
+tilepic 305 293 2833
+tilepic 305 272 1313
+radio 312 335 2151 2154 0 3
+
+# Slot 5
+tilepic 360 270 2832
+tilepic 337 282 2834
+tilepic 383 282 2835
+tilepic 360 293 2833
+tilepic 360 272 1313
+radio 367 335 2151 2154 0 4
+
+button 258 370 4005 4007 1 0 1

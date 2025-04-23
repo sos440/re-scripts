@@ -9,6 +9,7 @@ from mobiles import Mobiles
 from packetlogger import PacketLogger
 from statics import Statics
 from sound import Sound
+from re_timer import Timer
 
 __all__ = [
     "Gumps",
@@ -22,4 +23,5 @@ __all__ = [
     "PacketLogger",
     "Statics",
     "Sound",
+    "Timer",
 ]
