@@ -1,6 +1,7 @@
 from System.Collections.Generic import List
 from System import Byte, Int32
 import re
+import random
 
 
 # Your maximum allowed weight minus this value will be used as the threshold for "overweight"
@@ -9,6 +10,9 @@ WEIGHT_BUFFER = 48
 
 # Serial number for your faithful pack animal, set to 0 if none available
 MULE = 0
+
+# Drop ores if no forges or packies are available
+DROP_ORES = True
 
 
 ################################################################################
@@ -28,6 +32,22 @@ VALUABLE_ORES = {
     2425: {"max-skill": 115, "metal": "agapite"},
     2207: {"max-skill": 120, "metal": "verite"},
     2219: {"max-skill": 124, "metal": "valorite"},
+}
+
+# Neighborhoods
+NEIGHBORHOOD = [
+    (1, 0), (1, 1), (0, 1), (-1, 1), 
+    (-1, 0), (-1, -1), (0, -1), (1, -1),
+]
+DIR_POS_MAP = {
+    "North": (0, -1),
+    "Right": (1, -1),
+    "East": (1, 0),
+    "Down": (1, 1),
+    "South": (0, 1),
+    "Left": (-1, 1),
+    "West": (-1, 0),
+    "Up": (-1, -1),
 }
 
 # Some constants
@@ -102,6 +122,13 @@ def find_enemy():
     return Mobiles.ApplyFilter(enemy)
 
 
+def find_backpack_or_ground(itemid, color):
+    scan = []
+    scan.extend(Items.FindAllByID(itemid, color, BACKPACK, 0))
+    scan.extend(Items.FindAllByID(itemid, color, -1, 2, 0))
+    return scan
+
+
 def use_ore_onto(ore, target_serial):
     Items.UseItem(ore.Serial)
     Target.WaitForTarget(400, True)
@@ -113,7 +140,7 @@ def use_ore_onto(ore, target_serial):
 def merge_valuable() -> bool:
     # Scan for small ores with valuable colors
     for color in get_valuable_ores():
-        scan_ores = Items.FindAllByID(ORE_SMALL, color, BACKPACK, 0)
+        scan_ores = find_backpack_or_ground(ORE_SMALL, color)
         
         # Attempt to merge ores with amounts other than 2
         scan_merge = [ore for ore in scan_ores if ore.Amount != 2]
@@ -135,7 +162,7 @@ def merge_valuable() -> bool:
             continue
         
         # Attempt to merge ores
-        for ore in Items.FindAllByID(ORE_LARGE, color, BACKPACK, 0):
+        for ore in find_backpack_or_ground(ORE_LARGE, color):
             use_ore_onto(ore, ore_merger)
             return True
     return False
@@ -145,7 +172,7 @@ def smelt_small() -> bool:
     FORGE = find_forge()
     if FORGE == 0:
         return False
-    for ore in Items.FindAllByID(ORE_SMALL, -1, BACKPACK, 0):
+    for ore in find_backpack_or_ground(ORE_SMALL, -1):
         if ore.Amount < 2:
             continue
         if ore.Amount > 3 and ore.Color in get_valuable_ores():
@@ -156,7 +183,7 @@ def smelt_small() -> bool:
 
 
 def split_small_valuable() -> bool:
-    for ore in Items.FindAllByID(ORE_SMALL, -1, BACKPACK, 0):
+    for ore in find_backpack_or_ground(ORE_SMALL, -1):
         if ore.Amount > 3 and ore.Color in get_valuable_ores():
             Items.Move(ore.Serial, BACKPACK, 2, 0, 0)
             Misc.Pause(800)
@@ -168,7 +195,7 @@ def smelt_large() -> bool:
     FORGE = find_forge()
     if FORGE == 0:
         return False
-    for ore in Items.FindAllByID(ORE_LARGE, -1, BACKPACK, 0):
+    for ore in find_backpack_or_ground(ORE_LARGE, -1):
         if ore.Amount > 1 and ore.Color in get_valuable_ores():
             continue
         use_ore_onto(ore, FORGE)
@@ -177,7 +204,7 @@ def smelt_large() -> bool:
 
 
 def split_large_valuable() -> bool:
-    for ore in Items.FindAllByID(ORE_LARGE, -1, BACKPACK, 0):
+    for ore in find_backpack_or_ground(ORE_LARGE, -1):
         if ore.Color in get_valuable_ores():
             Items.Move(ore.Serial, BACKPACK, 1, 0, 0)
             Misc.Pause(800)
@@ -185,31 +212,63 @@ def split_large_valuable() -> bool:
     return False
 
 
+def drop_ores(
+    serial: int,
+    max_attempts: int = 3,
+) -> bool:
+    ore = Items.FindBySerial(serial)
+    if ore is None:
+        return False
+    
+    choice = -1
+    for attempt in range(max_attempts):
+        ore_ground = Items.FindByID(ore.ItemID, ore.Color, -1, 2)
+        if ore_ground is not None:
+            Items.Move(serial, ore_ground.Serial, -1)
+        else:
+            dx, dy = DIR_POS_MAP[Player.Direction]
+            x = Player.Position.X - dx
+            y = Player.Position.Y - dy
+            z = Player.Position.Z
+            Items.MoveOnGround(serial, -1, x, y, z)
+        
+        Misc.Pause(800)
+
+        ore = Items.FindBySerial(serial)
+        if ore is None:
+            return True
+        if ore.Container == 0:
+            return True
+
 def reduce_weight():
     Misc.Pause(800)
     
     # Attempt to smelt ores
     FORGE = find_forge()
-    if FORGE == 0:
-        return False
-    while is_near(FORGE):
-        if merge_valuable():
-            continue
-        if smelt_small():
-            continue
-        if split_small_valuable():
-            continue
-        if smelt_large():
-            continue
-        if split_large_valuable():
-            continue
-        break
+    if FORGE != 0:
+        while is_near(FORGE):
+            if merge_valuable():
+                continue
+            if smelt_small():
+                continue
+            if split_small_valuable():
+                continue
+            if smelt_large():
+                continue
+            if split_large_valuable():
+                continue
+            break
     
     # Attempt to transfer items to mule
     for ore in Items.FindAllByID(MINING_RES, -1, BACKPACK, 0):
         if is_near(MULE):
             Items.Move(ore.Serial, MULE, -1)
             Misc.Pause(800)
+    
+    # Attempt to drop ores on ground
+    if DROP_ORES:
+        for ore in Items.FindAllByID(ORE, -1, BACKPACK, 0):
+            drop_ores(ore.Serial)
 
 
 # Dismount if the player is currently mounted

@@ -370,7 +370,7 @@ class Looter:
         """
         delay_refresh = self.setting.get("refresh-rate", 500)
         delay_action = self.setting.get("action-delay", 900)
-        while Player.Connected and not self._stop_event.is_set():
+        while Player.Connected and (not Player.IsGhost) and (not self._stop_event.is_set()):
             if self.mode == LootingMode.STOPPED:
                 break
 

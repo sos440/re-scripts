@@ -1,0 +1,8 @@
+{
+    "python.autoComplete.extraPaths": [
+        "C:/Users/sosin/AppData/Local/Programs/Microsoft VS Code/ironpython-stubs-master"
+    ],
+    "python.analysis.extraPaths": [
+        "D:/UOAlive_Package/Part 1 Launcher/ClassicUO/Data/Plugins/RazorEnhanced-0.8.2.242/Config"
+    ]
+}

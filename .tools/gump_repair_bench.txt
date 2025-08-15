@@ -1,0 +1,56 @@
+page 0
+resizepic 0 0 1755 370 470
+gumppic 82 0 1764
+xmfhtmltok 10 10 350 18 0 0 0 1114513 @#1158860@
+xmfhtmltok 70 57 120 20 0 0 32736 1114513 @#1158878@
+xmfhtmlgumpcolor 213 57 190 20 1158879 0 0 32736
+tilepic 20 80 7864
+tooltip 1044097
+button 70 97 5601 5605 1 0 12
+text 113 97 95 0
+text 218 97 95 1
+button 318 97 10006 10006 1 0 22
+tilepic 20 125 4020
+tooltip 1044067
+button 70 137 5601 5605 1 0 10
+text 113 137 95 2
+text 218 137 95 3
+button 318 137 10006 10006 1 0 20
+tilepic 20 170 4148
+tooltip 1044071
+button 70 177 5601 5605 1 0 13
+text 113 177 95 0
+text 218 177 95 4
+button 318 177 10006 10006 1 0 23
+tilepic 20 215 3997
+tooltip 1044094
+button 70 217 5601 5605 1 0 11
+text 113 217 95 5
+text 218 217 95 6
+button 318 217 10006 10006 1 0 21
+tilepic 20 260 4787
+tooltip 1072392
+button 70 257 5601 5605 1 0 15
+text 113 257 95 0
+text 218 257 95 7
+button 318 257 10006 10006 1 0 25
+tilepic 20 305 6189
+tooltip 1072393
+button 70 297 5601 5605 1 0 16
+text 113 297 95 0
+text 218 297 95 8
+button 318 297 10006 10006 1 0 26
+tilepic 20 350 4130
+tooltip 1015156
+button 70 337 5601 5605 1 0 14
+text 113 337 95 0
+text 218 337 95 9
+button 318 337 10006 10006 1 0 24
+button 70 377 5601 5605 1 0 30
+htmlgump 95 377 200 30 10 0 0
+button 70 407 5601 5605 1 0 1
+xmfhtmlgumpcolor 95 407 200 30 1153100 0 0 32767
+
+gd.gumpData = List[str](['7864', '120.0', '3203', '4020', '100.0', '44', '4148', '120.0', '9342', '3997', '0.0', '0', '4787', '120.0', '9895', '6189', '120.0', '9981', '4130', '120.0', '9490', '<basefont color=#FFFFFF>Repair All</basefont>'])
+gd.gumpStrings = List[str]()
+gd.gumpText = List[str](['<DIV ALIGN=CENTER>~1_TOKEN~</DIV>', '<DIV ALIGN=CENTER>~1_TOKEN~</DIV>', 'Tinkering', 'Blacksmithing', 'Carpentry', 'Tailoring', 'Masonry', 'Glassblowing', 'Fletching', 'Add Charges'])

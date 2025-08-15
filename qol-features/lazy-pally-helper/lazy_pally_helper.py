@@ -42,27 +42,84 @@ DEBUFFS_TO_REMOVE = [
 # Script starts here
 ################################################################################
 
-from System.Collections.Generic import List
-from System import Byte
+from System.Collections.Generic import List  # type: ignore
+from System import Byte  # type: ignore
 import time
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from razorenhanced import *
 
 
 VERSION = "1.1.0"
 GUMP_MENU = 0x123546AC
 GUMP_BUTTONTEXT_WRAP = """<CENTER><BASEFONT COLOR="#FFFFFF">{text}</BASEFONT></CENTER>"""
 is_running = True
-t_attack = time.time()
-t_cast = time.time()
 
 
 # Mobile class
 Mobile = type(Mobiles.FindBySerial(Player.Serial))
 
 
-def dist(entry):
-    d_x = Player.Position.X - entry.Position.X
-    d_y = Player.Position.Y - entry.Position.Y
-    return max(abs(d_x), abs(d_y))
+def set_cr_timer():
+    delay = 2000 - 250 * min(6, Player.FasterCastRecovery)
+    Timer.Create("casting-recovery", delay)
+
+
+SPELL_DATABASE = {
+    "Close Wounds": {"cost": 10, "casting-time": 1500, "word": "Obsu Vulni"},
+    "Consecrate Weapon": {"cost": 10, "casting-time": 500, "word": "Consecrus Arma"},
+    "Divine Fury": {"cost": 10, "casting-time": 1000, "word": "Divinum Furis"},
+    "Remove Curse": {"cost": 20, "casting-time": 2000, "word": "Extermo Vomica"},
+}
+
+
+def get_mana_cost(spell: str) -> int:
+    cost = 20
+    if spell in SPELL_DATABASE:
+        cost = SPELL_DATABASE[spell]["cost"]
+    reduce = int(cost * 0.01 * min(40, Player.LowerManaCost))
+    return cost - reduce
+
+
+def can_cast(spell: str) -> bool:
+    assert spell in SPELL_DATABASE
+    if Timer.Check("casting-delay"):
+        return False
+    if Timer.Check("casting-recovery"):
+        return False
+    if Player.Mana < get_mana_cost(spell):
+        return False
+    return True
+
+
+def wait_for_word(spell: str, delay: int) -> bool:
+    assert spell in SPELL_DATABASE
+    word = SPELL_DATABASE[spell]["word"]
+    Journal.Clear()
+    t = time.time()
+    Timer.Create("wait-for-word", delay)
+    while Timer.Check("wait-for-word"):
+        for entry in Journal.GetJournalEntry(t):
+            if entry.Name == Player.Name and entry.Text.strip() == word:
+                return True
+        Journal.Clear()
+        Misc.Pause(100)
+    return False
+
+
+def safe_cast(spell: str) -> bool:
+    assert spell in SPELL_DATABASE
+    if not can_cast(spell):
+        return False
+    Journal.Clear()
+    Spells.Cast(spell)
+    Timer.Create("casting-delay", 500 + SPELL_DATABASE[spell]["casting-time"])
+    if wait_for_word(spell, 500):
+        return True
+    else:
+        Timer.Create("casting-delay", 1)
+        return False
 
 
 def gump_menu() -> None:
@@ -97,25 +154,37 @@ while Player.Connected:
             is_running = True
         gump_menu()
 
+    # If the player is ghost, skip
+    if Player.IsGhost:
+        Misc.Pause(100)
+        continue
+
     # Heal self
     if (Player.Hits < Player.HitsMax or Player.Poisoned) and not Player.BuffsExist("Healing"):
         bandage = Items.FindByID(0x0E21, -1, Player.Backpack.Serial, 2)
         if bandage is not None:
             Items.UseItem(bandage.Serial)
-            Target.WaitForTarget(1000, True)
+            if not Target.WaitForTarget(500, True):
+                continue
             Target.Self()
-            Misc.Pause(500)
+            Misc.Pause(250)
             continue
 
     # Clear debuffs
-    if (Player.Hits >= (DEBUFF_THRESHOLD * Player.HitsMax / 100)) and (Player.Mana >= 20):
+    if (Player.Hits >= (DEBUFF_THRESHOLD * Player.HitsMax / 100)) and can_cast("Remove Curse"):
+        updated = False
         for debuff in DEBUFFS_TO_REMOVE:
-            if Player.BuffsExist(debuff) and time.time() >= t_cast:
-                Spells.Cast("Remove Curse")
-                if Target.WaitForTarget(3000, True):
-                    Target.Self()
-                    t_cast = time.time() + (SPELL_DELAY / 1000)
+            if not Player.BuffsExist(debuff):
+                continue
+            updated = True
+            if not safe_cast("Remove Curse"):
                 break
+            if Target.WaitForTarget(2500, True):
+                Target.Self()
+                set_cr_timer()
+            break
+        if updated:
+            continue
 
     # If it's not running, skip below
     if not is_running:
@@ -131,17 +200,21 @@ while Player.Connected:
     find_enemy = Mobiles.ApplyFilter(enemy)
     if len(find_enemy) > 0:
         # Attack the nearest mobile
-        if time.time() >= t_attack:
-            enemy_near = [enemy for enemy in find_enemy if dist(enemy) <= 1]
+        if not Timer.Check("attack-delay"):
+            enemy_near = [enemy for enemy in find_enemy if Player.DistanceTo(enemy) <= 1]
             if len(enemy_near) > 0:
                 next_emeny = Mobiles.Select(List[Mobile](enemy_near), ATTACK_PRIORITY)
+                assert next_emeny is not None
                 Player.Attack(next_emeny)
-            t_attack = time.time() + 0.5
+                Timer.Create("attack-delay", 500)
         # Keep buffs
         for buff in BUFFS_TO_KEEP:
-            if not Player.BuffsExist(buff) and time.time() >= t_cast:
-                Spells.Cast(buff)
-                t_cast = time.time() + (SPELL_DELAY / 1000)
-                break
+            if Player.BuffsExist(buff):
+                continue
+            if not can_cast(buff):
+                continue
+            safe_cast(buff)
+            set_cr_timer()
+            break
 
     Misc.Pause(100)

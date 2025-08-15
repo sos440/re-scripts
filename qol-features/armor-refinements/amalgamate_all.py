@@ -15,9 +15,18 @@ HEIGHT_MAP = {
     "wash": 59,
     "cure": 92,
     "gloss": 111,
-    "varnish": 130,
-    "polish": 158,
-    "scour": 177,
+    "varnish": 59,
+    "polish": 87,
+    "scour": 106,
+}
+
+CONT_MAP = {
+    "wash": 0x40127DBC,
+    "cure": 0x40127DBC,
+    "gloss": 0x40127DBC,
+    "varnish": 0x5C2260DA,
+    "polish": 0x5C2260DA,
+    "scour": 0x5C2260DA,
 }
 
 COL_SEP = 10
@@ -57,28 +66,29 @@ def amalgamate(amal_serial: int, entries: List[ArmorRefinement]):
     return True
 
 
-def test(serial):
-    cont = Items.FindBySerial(serial)
-    if cont is None:
-        Misc.SendMessage("Failed to find the target.", 33)
-        return False
-    if not cont.IsContainer:
-        Misc.SendMessage("This is not a container.", 33)
-        return False
-    if not (cont.ContainerOpened or Items.WaitForContents(serial, 1000)):
-        Misc.SendMessage("Failed to open the container.", 33)
-        return False
+def test():
+    item_list = list(Player.Backpack.Contains)
+    for serial in set(CONT_MAP.values()):
+        cont = Items.FindBySerial(serial)
+        if cont is None:
+            Misc.SendMessage("Failed to find the container.", 33)
+            return False
+        if not cont.IsContainer:
+            Misc.SendMessage("This is not a container.", 33)
+            return False
+        if not (cont.ContainerOpened or Items.WaitForContents(serial, 1000)):
+            Misc.SendMessage("Failed to open the container.", 33)
+            return False
+        
+        item_list.extend(list(cont.Contains))
     
     amalgamator = Items.FindByID(0x9966, 0x0480, Player.Backpack.Serial, 3, False)
     if amalgamator is None:
-        Misc.SendMessage("An amalgamator must be in the selected container.", 33)
+        Misc.SendMessage("An amalgamator must be in your backpack.", 33)
         return False
-        
 
     refines = {}
     
-    item_list = list(cont.Contains)
-    item_list.extend(list(Player.Backpack.Contains))
     
     # Scan
     for item in item_list:
@@ -132,6 +142,7 @@ def test(serial):
     for key in sorted(refines.keys()):
         for entry in refines[key]:
             # Compute the current column
+            cur_cont = CONT_MAP.get(entry.base)
             cur_col = cols.get(entry.base, 0)
             last = lasts.get(entry.base, None)
             if last is not None and last.armor_type != entry.armor_type:
@@ -140,8 +151,8 @@ def test(serial):
             cur_x = 50 + 10 * cur_col
             cur_y = HEIGHT_MAP.get(entry.base, 0)
             item = entry.item
-            if item.Position.X != cur_x or item.Position.Y != cur_y or item.Container != cont.Serial:
-                Items.Move(item.Serial, cont.Serial, -1, cur_x, cur_y)
+            if item.Position.X != cur_x or item.Position.Y != cur_y or item.Container != cur_cont:
+                Items.Move(item.Serial, cur_cont, -1, cur_x, cur_y)
             # Update the history
             cols[entry.base] = cur_col + 1
             lasts[entry.base] = entry
@@ -150,12 +161,7 @@ def test(serial):
 
 
 def main():
-    serial = Target.PromptTarget("")
-    if serial == 0:
-        Misc.SendMessage("You did not choose a target.", 68)
-        return
-
-    while test(serial):
+    while test():
         pass
 
     Misc.SendMessage("Done", 68)

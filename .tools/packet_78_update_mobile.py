@@ -1,6 +1,6 @@
 from System.Collections.Generic import List as GenList  # type: ignore
 from System import Byte  # type: ignore
-from typing import Union, Tuple, Optional
+from typing import Union, Tuple, Optional, List
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -49,22 +49,9 @@ class PacketBuilder:
         return bytes(self.header.to_bytes(1, "big") + packet)
 
 
-# 78    : Command
-# 00 17 : Length
-# 06 BA 03 75 : Serial
-# 01 2E : Body
-# 03 BA : X
-# 01 61 : Y
-# A8    : Z
-# 06    : Direction
-# 00 00 : Color
-# 00    : Flags
-# 03    : Notoriety
-# 00 00 00 00 : Layers terminator
-
-def render_object(mob):
+def render_object(mob, layers: Optional[List] = None):
     packet = PacketBuilder(0x78)
-    
+
     packet.add_int(mob.Serial)
     packet.add_short(0x191)
     packet.add_short(mob.Position.X)
@@ -74,11 +61,20 @@ def render_object(mob):
     packet.add_short(mob.Hue)
     packet.add_byte(0)
     packet.add_byte(mob.Notoriety)
+
+    if layers is None:
+        layers = []
+    for layer in layers:
+        packet.add_int(layer["serial"])
+        packet.add_short(layer["graphic"])
+        packet.add_byte(layer["layer"])
+        packet.add_short(layer["hue"])
+
     packet.add_int(0)
-    
+
     packet_built = packet.build(True)
     print(" ".join(f"{v:02X}" for v in packet_built))
-    
+
     PacketLogger.SendToClient(GenList[Byte](packet_built))
 
 
