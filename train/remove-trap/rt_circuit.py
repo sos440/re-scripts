@@ -1,13 +1,9 @@
+from AutoComplete import *
 import sys
 from System import Byte, Int32  # type: ignore
 from enum import Enum
 from queue import Queue
 from typing import List, Tuple, Set, Any, Optional
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from razorenhanced import *
 
 
 ################################################################################
@@ -277,7 +273,7 @@ class CircuitAgent:
         if delay == 0:
             if CT_GUMP_ID == 0:
                 CT_GUMP_ID = _get_gump_by_text("Use the Directional Controls to")
-            return Gumps.HasGump(CT_GUMP_ID)
+            return Gumps.HasGump(CT_GUMP_ID)  # type: ignore
         else:
             if CT_GUMP_ID == 0:
                 CT_GUMP_ID = _wait_for_gump_by_text("Use the Directional Controls to", delay)
@@ -287,7 +283,7 @@ class CircuitAgent:
     @classmethod
     def Open(cls) -> None:
         if cls.WaitForGump(0):
-            Gumps.SendAction(CT_GUMP_ID, 0)
+            Gumps.SendAction(CT_GUMP_ID, 0)  # type: ignore
 
         Gumps.ResetGump()
 
@@ -307,20 +303,20 @@ class CircuitAgent:
     def Command(cls, move: CircuitMoves) -> None:
         assert CT_GUMP_ID != 0, "Gump ID is not set."
         if move == CircuitMoves.UP:
-            Gumps.SendAction(CT_GUMP_ID, 1)
+            Gumps.SendAction(CT_GUMP_ID, 1)  # type: ignore
         elif move == CircuitMoves.RIGHT:
-            Gumps.SendAction(CT_GUMP_ID, 2)
+            Gumps.SendAction(CT_GUMP_ID, 2)  # type: ignore
         elif move == CircuitMoves.DOWN:
-            Gumps.SendAction(CT_GUMP_ID, 3)
+            Gumps.SendAction(CT_GUMP_ID, 3)  # type: ignore
         elif move == CircuitMoves.LEFT:
-            Gumps.SendAction(CT_GUMP_ID, 4)
+            Gumps.SendAction(CT_GUMP_ID, 4)  # type: ignore
 
     @classmethod
     def ParseGump(cls) -> CircuitProjection:
         """
         Parse the gump data and return the current state of the puzzle.
         """
-        gd = Gumps.GetGumpData(CT_GUMP_ID)
+        gd = Gumps.GetGumpData(CT_GUMP_ID)  # type: ignore
         if gd is None:
             raise cls.GumpNotFoundException("Failed to get the gump data.")
 
@@ -359,9 +355,7 @@ class CircuitAgent:
     def ValidatePuzzle(cls, puzzle: CircuitPuzzle, end: Optional[int] = None) -> None:
         cur_proj = cls.ParseGump()
         if cur_proj != puzzle.project(end):
-            raise cls.StateMismatchException(
-                "The current state of the board does not match the agent's internal state."
-            )
+            raise cls.StateMismatchException("The current state of the board does not match the agent's internal state.")
 
     @classmethod
     def WaitForResult(cls, puzzle: CircuitPuzzle, move: CircuitMoves) -> "CircuitAgent.Result":
@@ -375,9 +369,9 @@ class CircuitAgent:
                 puzzle.moves.append(move)
                 cls.ValidatePuzzle(puzzle)
                 return cls.Result.MoveFound
-            if Journal.Search("You successfully disarm the trap!"):
+            if Journal.Search("You successfully disarm the trap!"):  # type: ignore
                 return cls.Result.PuzzleSolved
-            if Journal.Search("You fail to disarm the trap and reset it."):
+            if Journal.Search("You fail to disarm the trap and reset it."):  # type: ignore
                 Misc.Pause(9000)  # You already know you need to wait 9 seconds
                 cls.Open()
                 for j, move in enumerate(puzzle.moves):
@@ -403,10 +397,10 @@ class CircuitAgent:
         while not puzzle.is_solved():
             if not cls.WaitForGump(0):
                 raise cls.GumpNotFoundException("This should never happen by the logic. Something is wrong.")
-            
+
             cls.Display(puzzle)
             for i, move in enumerate(puzzle.get_next_moves()):
-                Journal.Clear()
+                Journal.Clear()  # type: ignore
                 cls.Command(move)
 
                 res = cls.WaitForResult(puzzle, move)
@@ -415,7 +409,7 @@ class CircuitAgent:
                     break
                 elif res == cls.Result.PuzzleSolved:
                     Misc.SendMessage("Puzzle solved!", 0x47E)
-                    Gumps.CloseGump(cls.DisplayID)
+                    Gumps.CloseGump(cls.DisplayID)  # type: ignore
                     return
                 elif res == cls.Result.MoveNotFound:
                     continue
@@ -425,8 +419,8 @@ class CircuitAgent:
     # Display
     @classmethod
     def Display(cls, puzzle: CircuitPuzzle) -> None:
-        Gumps.CloseGump(cls.DisplayID)
-        gd = Gumps.CreateGump(movable=True)
+        Gumps.CloseGump(cls.DisplayID)  # type: ignore
+        gd = Gumps.CreateGump(movable=True)  # type: ignore
 
         # Draw bg
         cell_size = 30
@@ -468,7 +462,7 @@ class CircuitAgent:
                 raise ValueError("Invalid move.")
             Gumps.AddImage(gd, cx, cy, grp, 1152)
 
-        Gumps.SendGump(cls.DisplayID, Player.Serial, 100, 100, gd.gumpDefinition, gd.gumpStrings)
+        Gumps.SendGump(cls.DisplayID, Player.Serial, 100, 100, gd.gumpDefinition, gd.gumpStrings)  # type: ignore
 
 
 ################################################################################
@@ -479,7 +473,7 @@ class CircuitAgent:
 if __name__ == "__main__":
     # Set the training kit
     if CT_KIT_SERIAL == 0x00000000:
-        target_id = Target.PromptTarget("Choose a circuit trap training kit.", 0x47E)
+        target_id = Target.PromptTarget("Choose a circuit trap training kit.", 0x47E)  # type: ignore
         if target_id == 0:
             Misc.SendMessage("Targeting cancelled.", 0x47E)
             sys.exit(99)
@@ -503,33 +497,19 @@ if __name__ == "__main__":
         if cur_skill >= 100.0:
             Misc.SendMessage("You are a grandmaster!", 0x47E)
             sys.exit(99)
-        # elif cur_skill >= 100.0:
-        #     CT_DIM = 5
-        # elif cur_skill >= 80.0:
-        #     CT_DIM = 4
-        # else:
-        #     CT_DIM = 3
 
         try:
             CircuitAgent.Solve()
         except CircuitPuzzle.InvalidException as e:
-            Misc.SendMessage("Something went wrong within the internal puzzle-solving logic.", 0x21)
+            Misc.SendMessage("Something went wrong with the internal puzzle-solving logic.", 0x21)
         except CircuitAgent.GumpNotFoundException as e:
-            Misc.SendMessage("I've waited long but failed to detect the gump. Well, let's start over!", 0x21)
+            Misc.SendMessage("I've waited a long time but failed to detect the gump. Let's start over!", 0x21)
         except CircuitAgent.GumpParseException as e:
-            Misc.SendMessage(
-                "Failed to parse the gump. This should not happen, so shame the developer! Also, let's start over!",
-                0x21,
-            )
+            Misc.SendMessage("Failed to parse the gump. This should not happen, so blame the developer! Let's start over!", 0x21)
         except CircuitAgent.StateMismatchException as e:
-            Misc.SendMessage(
-                "The state of the gump does not match the internal state. This can happen, but anyway, let's start over!",
-                0x21,
-            )
+            Misc.SendMessage("The state of the gump does not match the internal state. This can happen, but anyway, let's start over!", 0x21)
         except CircuitAgent.ResultNotFoundException as e:
-            Misc.SendMessage(
-                "Failed to determine what came out of the last attempt. I'm lost, so let's start over!", 0x21
-            )
+            Misc.SendMessage("Failed to determine the result of the last attempt. I'm lost, so let's start over!", 0x21)
         except Exception as e:
             Misc.SendMessage(f"Error: {e}")
 

@@ -42,26 +42,24 @@ DEBUFFS_TO_REMOVE = [
 # Script starts here
 ################################################################################
 
-from System.Collections.Generic import List  # type: ignore
+from AutoComplete import *
+from System.Collections.Generic import List as CList  # type: ignore
 from System import Byte  # type: ignore
 import time
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from razorenhanced import *
+from typing import cast
 
 
 VERSION = "1.1.0"
-GUMP_MENU = 0x123546AC
-GUMP_BUTTONTEXT_WRAP = """<CENTER><BASEFONT COLOR="#FFFFFF">{text}</BASEFONT></CENTER>"""
+GUMP_MENU = cast("UInt32", hash("LazyPallyHelperGump") & 0xFFFFFFFF)
+GUMP_WRAPTXT = """<CENTER><BASEFONT COLOR="#FFFFFF">{text}</BASEFONT></CENTER>"""
 is_running = True
 
 
-# Mobile class
 Mobile = type(Mobiles.FindBySerial(Player.Serial))
 
 
 def set_cr_timer():
+    """Set the casting recovery timer."""
     delay = 2000 - 250 * min(6, Player.FasterCastRecovery)
     Timer.Create("casting-recovery", delay)
 
@@ -75,6 +73,7 @@ SPELL_DATABASE = {
 
 
 def get_mana_cost(spell: str) -> int:
+    """Compute the mana cost of a spell."""
     cost = 20
     if spell in SPELL_DATABASE:
         cost = SPELL_DATABASE[spell]["cost"]
@@ -83,6 +82,7 @@ def get_mana_cost(spell: str) -> int:
 
 
 def can_cast(spell: str) -> bool:
+    """Check if the player can cast a spell."""
     assert spell in SPELL_DATABASE
     if Timer.Check("casting-delay"):
         return False
@@ -94,6 +94,7 @@ def can_cast(spell: str) -> bool:
 
 
 def wait_for_word(spell: str, delay: int) -> bool:
+    """Wait for the spell's incantation to be spoken."""
     assert spell in SPELL_DATABASE
     word = SPELL_DATABASE[spell]["word"]
     Journal.Clear()
@@ -109,6 +110,7 @@ def wait_for_word(spell: str, delay: int) -> bool:
 
 
 def safe_cast(spell: str) -> bool:
+    """Attempt to cast a spell safely."""
     assert spell in SPELL_DATABASE
     if not can_cast(spell):
         return False
@@ -131,14 +133,14 @@ def gump_menu() -> None:
     Gumps.AddBackground(gd, 0, 0, 146, 65, 30546)
     Gumps.AddAlphaRegion(gd, 0, 0, 146, 65)
 
-    Gumps.AddHtml(gd, 10, 5, 126, 18, GUMP_BUTTONTEXT_WRAP.format(text="Lazy Pally Helper"), False, False)
+    Gumps.AddHtml(gd, 10, 5, 126, 18, GUMP_WRAPTXT.format(text="Lazy Pally Helper"), False, False)
 
     if is_running:
         Gumps.AddButton(gd, 10, 30, 40297, 40298, 1, 1, 0)
-        Gumps.AddHtml(gd, 10, 32, 126, 18, GUMP_BUTTONTEXT_WRAP.format(text="Disable Helper"), False, False)
+        Gumps.AddHtml(gd, 10, 32, 126, 18, GUMP_WRAPTXT.format(text="Disable"), False, False)
     else:
         Gumps.AddButton(gd, 10, 30, 40021, 40031, 2, 1, 0)
-        Gumps.AddHtml(gd, 10, 32, 126, 18, GUMP_BUTTONTEXT_WRAP.format(text="Enable Helper"), False, False)
+        Gumps.AddHtml(gd, 10, 32, 126, 18, GUMP_WRAPTXT.format(text="Enable"), False, False)
 
     # Send the gump and listen for the response
     Gumps.SendGump(GUMP_MENU, Player.Serial, 100, 100, gd.gumpDefinition, gd.gumpStrings)
@@ -160,8 +162,8 @@ while Player.Connected:
         continue
 
     # Heal self
-    if (Player.Hits < Player.HitsMax or Player.Poisoned) and not Player.BuffsExist("Healing"):
-        bandage = Items.FindByID(0x0E21, -1, Player.Backpack.Serial, 2)
+    if (Player.Hits < Player.HitsMax or Player.Poisoned) and not Player.BuffsExist("Healing", True):
+        bandage = Items.FindByID(0x0E21, -1, Player.Backpack.Serial, 2, False)
         if bandage is not None:
             Items.UseItem(bandage.Serial)
             if not Target.WaitForTarget(500, True):
@@ -174,7 +176,7 @@ while Player.Connected:
     if (Player.Hits >= (DEBUFF_THRESHOLD * Player.HitsMax / 100)) and can_cast("Remove Curse"):
         updated = False
         for debuff in DEBUFFS_TO_REMOVE:
-            if not Player.BuffsExist(debuff):
+            if not Player.BuffsExist(debuff, True):
                 continue
             updated = True
             if not safe_cast("Remove Curse"):
@@ -194,7 +196,7 @@ while Player.Connected:
     # Detect enemies
     enemy = Mobiles.Filter()
     enemy.Enabled = True
-    enemy.Notorieties = List[Byte](b"\x03\x04\x05\x06")
+    enemy.Notorieties = CList[Byte](b"\x03\x04\x05\x06")
     enemy.RangeMax = DETECT_RANGE
     enemy.Warmode = True
     find_enemy = Mobiles.ApplyFilter(enemy)
@@ -203,13 +205,13 @@ while Player.Connected:
         if not Timer.Check("attack-delay"):
             enemy_near = [enemy for enemy in find_enemy if Player.DistanceTo(enemy) <= 1]
             if len(enemy_near) > 0:
-                next_emeny = Mobiles.Select(List[Mobile](enemy_near), ATTACK_PRIORITY)
+                next_emeny = Mobiles.Select(CList[Mobile](enemy_near), ATTACK_PRIORITY)
                 assert next_emeny is not None
                 Player.Attack(next_emeny)
                 Timer.Create("attack-delay", 500)
         # Keep buffs
         for buff in BUFFS_TO_KEEP:
-            if Player.BuffsExist(buff):
+            if Player.BuffsExist(buff, True):
                 continue
             if not can_cast(buff):
                 continue

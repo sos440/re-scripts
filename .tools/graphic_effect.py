@@ -1,11 +1,8 @@
+from AutoComplete import *
 from enum import Enum
-from System.Collections.Generic import List as GenList  # type: ignore
+from System.Collections.Generic import List as CList  # type: ignore
 from System import Byte  # type: ignore
-from typing import Union, Optional, Any, Tuple
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from razorenhanced import *
+from typing import Union, Optional, Any, Tuple, TypeAlias
 
 
 ################################################################################
@@ -169,12 +166,12 @@ class GraphicEffectArgs:
 
 
 class Effects:
-    Type = GraphicEffectType
-    BlendMode = GraphicEffectBlendMode
-    Args = GraphicEffectArgs
+    Type: TypeAlias = GraphicEffectType
+    BlendMode: TypeAlias = GraphicEffectBlendMode
+    Args: TypeAlias = GraphicEffectArgs
 
-    @classmethod
-    def Render(cls, args: Args) -> None:
+    @staticmethod
+    def Render(args: Args) -> None:
         packet = PacketBuilder(0xC0)
         packet.add_byte(args.type.value)
         packet.add_int(args.src_serial)
@@ -194,7 +191,7 @@ class Effects:
         packet.add_byte(int(args.explodes))
         packet.add_int(args.hue)
         packet.add_int(args.blend_mode.value)
-        PacketLogger.SendToClient(GenList[Byte](packet.build()))
+        PacketLogger.SendToClient(CList[Byte](packet.build()))
 
     @classmethod
     def Moving(
@@ -352,8 +349,8 @@ class Effects:
             )
         )
 
-    @classmethod
-    def SoundEffect(cls, sound_model: int):
+    @staticmethod
+    def SoundEffect(sound_model: int):
         """
         Plays a sound effect at the player's position.
 
@@ -367,7 +364,7 @@ class Effects:
         packet.add_short(Player.Position.Y)
         packet.add_short(Player.Position.Z)
 
-        PacketLogger.SendToClient(GenList[Byte](packet.build()))
+        PacketLogger.SendToClient(CList[Byte](packet.build()))
 
 
 if __name__ == "__main__":

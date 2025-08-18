@@ -1,7 +1,7 @@
-from System.Collections.Generic import List
-from System import Byte, Int32
+from AutoComplete import *
+from System.Collections.Generic import CList  # type: ignore
+from System import Byte, Int32  # type: ignore
 import re
-import random
 
 
 # Your maximum allowed weight minus this value will be used as the threshold for "overweight"
@@ -34,11 +34,7 @@ VALUABLE_ORES = {
     2219: {"max-skill": 124, "metal": "valorite"},
 }
 
-# Neighborhoods
-NEIGHBORHOOD = [
-    (1, 0), (1, 1), (0, 1), (-1, 1), 
-    (-1, 0), (-1, -1), (0, -1), (1, -1),
-]
+# Direction-to-position
 DIR_POS_MAP = {
     "North": (0, -1),
     "Right": (1, -1),
@@ -74,8 +70,8 @@ def is_overweight() -> bool:
         weight = int(match_res.group(1))
         max_weight = int(match_res.group(2))
         break
-    
-    if weight is not None and weight >= max_weight - 24:
+
+    if weight is not None and max_weight is not None and weight >= max_weight - 24:
         return True
     return Player.Weight >= Player.MaxWeight - WEIGHT_BUFFER
 
@@ -83,12 +79,12 @@ def is_overweight() -> bool:
 def is_near(target_serial: int) -> bool:
     if target_serial == 0:
         return False
-    
+
     player = Mobiles.FindBySerial(Player.Serial)
     target = Items.FindBySerial(target_serial) or Mobiles.FindBySerial(target_serial)
     if target is None:
         return False
-    
+
     return target.DistanceTo(player) <= 2
 
 
@@ -103,8 +99,8 @@ def find_tool():
 def find_forge():
     filter = Mobiles.Filter()
     filter.RangeMax = 2
-    filter.Hues = List[Int32]([0x0489])
-    filter.Bodies = List[Int32]([0x00A9])
+    filter.Hues = CList[Int32]([0x0489])
+    filter.Bodies = CList[Int32]([0x00A9])
     filter.Enabled = True
     fire_beetle = Mobiles.ApplyFilter(filter)
     if len(fire_beetle) > 0:
@@ -116,7 +112,7 @@ def find_forge():
 def find_enemy():
     enemy = Mobiles.Filter()
     enemy.Enabled = True
-    enemy.Notorieties = List[Byte](b"\x03\x04\x05\x06")
+    enemy.Notorieties = CList[Byte](b"\x03\x04\x05\x06")
     enemy.RangeMax = 20
     enemy.Warmode = True
     return Mobiles.ApplyFilter(enemy)
@@ -125,7 +121,7 @@ def find_enemy():
 def find_backpack_or_ground(itemid, color):
     scan = []
     scan.extend(Items.FindAllByID(itemid, color, BACKPACK, 0))
-    scan.extend(Items.FindAllByID(itemid, color, -1, 2, 0))
+    scan.extend(Items.FindAllByID(itemid, color, -1, 2))
     return scan
 
 
@@ -141,17 +137,17 @@ def merge_valuable() -> bool:
     # Scan for small ores with valuable colors
     for color in get_valuable_ores():
         scan_ores = find_backpack_or_ground(ORE_SMALL, color)
-        
+
         # Attempt to merge ores with amounts other than 2
         scan_merge = [ore for ore in scan_ores if ore.Amount != 2]
         if len(scan_merge) > 1:
             Items.Move(scan_merge[0].Serial, scan_merge[1].Serial, -1)
             Misc.Pause(800)
             return True
-        
+
         # Merging larger piles into smaller ones is disabled
         continue
-        
+
         # Set the ore to be merged
         ore_merger = None
         if len(scan_merge) > 0:
@@ -160,7 +156,7 @@ def merge_valuable() -> bool:
             ore_merger = scan_ores[0].Serial
         if ore_merger is None:
             continue
-        
+
         # Attempt to merge ores
         for ore in find_backpack_or_ground(ORE_LARGE, color):
             use_ore_onto(ore, ore_merger)
@@ -219,7 +215,7 @@ def drop_ores(
     ore = Items.FindBySerial(serial)
     if ore is None:
         return False
-    
+
     choice = -1
     for attempt in range(max_attempts):
         ore_ground = Items.FindByID(ore.ItemID, ore.Color, -1, 2)
@@ -231,7 +227,7 @@ def drop_ores(
             y = Player.Position.Y - dy
             z = Player.Position.Z
             Items.MoveOnGround(serial, -1, x, y, z)
-        
+
         Misc.Pause(800)
 
         ore = Items.FindBySerial(serial)
@@ -239,10 +235,13 @@ def drop_ores(
             return True
         if ore.Container == 0:
             return True
+    
+    return False
+
 
 def reduce_weight():
     Misc.Pause(800)
-    
+
     # Attempt to smelt ores
     FORGE = find_forge()
     if FORGE != 0:
@@ -258,13 +257,13 @@ def reduce_weight():
             if split_large_valuable():
                 continue
             break
-    
+
     # Attempt to transfer items to mule
     for ore in Items.FindAllByID(MINING_RES, -1, BACKPACK, 0):
         if is_near(MULE):
             Items.Move(ore.Serial, MULE, -1)
             Misc.Pause(800)
-    
+
     # Attempt to drop ores on ground
     if DROP_ORES:
         for ore in Items.FindAllByID(ORE, -1, BACKPACK, 0):
@@ -284,20 +283,19 @@ while Player.Connected:
             Mobiles.UseMobile(FORGE)
         Misc.Pause(200)
         continue
-    
-    
+
     if is_overweight():
         Player.HeadMessage(0x47E, "Overweight!")
         reduce_weight()
         if is_overweight():
             break
-    
+
     # Use mining tool
     tool = find_tool()
     if tool is None:
         Player.HeadMessage(0x21, "I don't have any tools for mining!")
         break
-        
+
     Journal.Clear()
     Items.UseItem(tool)
     if not Target.WaitForTarget(250, True):
@@ -305,7 +303,7 @@ while Player.Connected:
     Misc.Pause(200)
     Target.TargetResource(tool, "ore")
     Misc.Pause(200)
-    
+
     # Process journal messages
     if Journal.Search("There is no metal here to mine"):
         Player.HeadMessage(0x47E, "Depleted!")

@@ -1,3 +1,0 @@
-class Sound:
-    @staticmethod
-    def WaitForSound(sound: int, delay: int) -> bool: ...

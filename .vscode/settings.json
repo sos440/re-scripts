@@ -3,6 +3,12 @@
         "C:/Users/sosin/AppData/Local/Programs/Microsoft VS Code/ironpython-stubs-master"
     ],
     "python.analysis.extraPaths": [
-        "D:/UOAlive_Package/Part 1 Launcher/ClassicUO/Data/Plugins/RazorEnhanced-0.8.2.242/Config"
-    ]
+        "D:\\UOAlive_Package\\Part 1 Launcher\\ClassicUO\\Data\\Plugins\\RazorEnhanced-0.8.2.242\\Scripts\\mine\\.stubs"
+    ],
+    "black-formatter.args": [
+        "--line-length",
+        "1000"
+    ],
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true
 }

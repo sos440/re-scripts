@@ -1,9 +1,0 @@
-from typing import Optional
-
-class Timer:
-    @classmethod
-    def Check(cls, name: str) -> bool: ...
-    @classmethod
-    def Create(cls, name: str, delay: int, msg: Optional[str] = None) -> None: ...
-    @classmethod
-    def Remaining(cls, name: str) -> int: ...
