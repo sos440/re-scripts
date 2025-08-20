@@ -1,4 +1,4 @@
-ACTION_DELAY = 900  # Delay between item moves in milliseconds
+ACTION_DELAY = 450  # Delay between item moves in milliseconds
 RETRY_DELAY = 250  # Delay between re-trials to move each item
 MAX_TRIAL = 3  # Maximum number of trials to move items
 
@@ -118,7 +118,7 @@ def gump_prompt(src_cont, dst_cont):
             Gumps.AddItem(gd, x + 5, y + 5, item.ItemID, item.Color)
 
     # Footer
-    Gumps.AddCheck(gd, 10, 366, 210, 211, True, 2)
+    Gumps.AddCheck(gd, 10, 366, 210, 211, False, 2)
     Gumps.AddHtml(
         gd, 35, 368, 200, 18, """<basefont color="#FFFFFF">Preserves the relative location</basefont>""", False, False
     )

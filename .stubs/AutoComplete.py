@@ -7874,7 +7874,8 @@ class Target:
         """
         ...
 
-    def PromptGroundTarget(self, message: str, color: int) -> "Point3D":
+    @staticmethod
+    def PromptGroundTarget(message: str, color: int) -> "Point3D":
         """Prompt a target in-game, wait for the Player to select the ground. Can also specific a text message for prompt.
 
         Parameters
@@ -7892,7 +7893,8 @@ class Target:
         """
         ...
 
-    def PromptTarget(self, message: str, color: int) -> int:
+    @staticmethod
+    def PromptTarget(message: str, color: int) -> int:
         """Prompt a target in-game, wait for the Player to select an Item or a Mobile. Can also specific a text message for prompt.
 
         Parameters

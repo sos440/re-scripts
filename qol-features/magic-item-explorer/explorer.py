@@ -1,11 +1,8 @@
+from AutoComplete import *
 import os
 import re
 import xml.etree.ElementTree as ET
 from typing import Dict, List, Tuple, Any, Union, Optional
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from razorenhanced import *
 
 
 ################################################################################
@@ -381,9 +378,7 @@ class ParsedItem:
         if len(self.Properties) == 0:
             return "<i>No Properties</i>"
 
-        return f'<basefont color="#FFFF00">{to_proper_case(self.Properties[0])}</basefont>' + "".join(
-            [f"<br />{to_proper_case(line)}" for line in self.Properties[1:]]
-        )
+        return f'<basefont color="#FFFF00">{to_proper_case(self.Properties[0])}</basefont>' + "".join([f"<br />{to_proper_case(line)}" for line in self.Properties[1:]])
 
 
 ################################################################################
@@ -584,9 +579,7 @@ def gump_menu(ctx: ViewerContext) -> None:
     Gumps.AddPage(gd, 0)
     Gumps.AddBackground(gd, 0, 0, WIDTH, HEIGHT, 30546)
     # Gumps.AddAlphaRegion(gd, 0, 0, WIDTH, HEIGHT)
-    Gumps.AddHtml(
-        gd, 10, 10, 780, 18, '<center><basefont color="#FFFFFF">Magic Item Explorer</basefont></center>', False, False
-    )
+    Gumps.AddHtml(gd, 10, 10, 780, 18, '<center><basefont color="#FFFFFF">Magic Item Explorer</basefont></center>', False, False)
 
     # Header
     # Column - Item Graphic
