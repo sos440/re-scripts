@@ -4,6 +4,7 @@ This class is NOT intended to be used as code, but to provice autocomplete in ex
 """
 
 from typing import List, Set, Tuple, Dict, Any, Union, Optional, TypeAlias
+from enum import Enum
 from datetime import datetime
 
 String: TypeAlias = str
@@ -21,7 +22,32 @@ Double: TypeAlias = float
 DateTime: TypeAlias = datetime
 
 
-class Bitmap: ...
+class Bitmap:
+    Width: int
+    Height: int
+
+    def GetPixel(self, x: int, y: int) -> "Color":
+        """Get the color of the pixel at the specified coordinates.
+
+        Parameters
+        ----------
+        x: int
+                The x-coordinate of the pixel.
+        y: int
+                The y-coordinate of the pixel.
+
+        Returns
+        -------
+        Color
+                The color of the pixel.
+        """
+        ...
+
+
+class Color:
+    R: int
+    G: int
+    B: int
 
 
 class AutoLoot:
@@ -1409,7 +1435,9 @@ class Gumps:
         x: "UInt32"
         y: "UInt32"
 
-    GumpButtonType: TypeAlias = int
+    class GumpButtonType(Enum):
+        Page = 0
+        Reply = 1
 
 
 class HotKeyEvent:

@@ -7,17 +7,8 @@ MAX_TRIAL = 3  # Maximum number of trials to move items
 # Move Items Script
 ################################################################################
 
+from AutoComplete import *
 from typing import Tuple, Optional
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from razorenhanced import *
-
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from razorenhanced import *
 
 
 GUMP_MAIN = hash("MoveItemMainGump") & 0xFFFFFFFF
