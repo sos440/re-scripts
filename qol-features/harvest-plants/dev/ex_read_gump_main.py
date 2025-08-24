@@ -13,7 +13,7 @@ for gumpid in Gumps.AllGumpIDs():
     match = re.search(r"tilepichue 130 96 (\d+) (\d+)", gd.gumpLayout)
     if match is None:
         continue
-    
+
     print(f"Gump ID: 0x{gumpid:X}")
     print(f"Plant: {match.group(1)}")
     print(f"Color: {match.group(2)}")

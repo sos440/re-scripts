@@ -1,4 +1,4 @@
-ACTION_DELAY = 450  # Delay between item moves in milliseconds
+ACTION_DELAY = 900  # Delay between item moves in milliseconds
 RETRY_DELAY = 250  # Delay between re-trials to move each item
 MAX_TRIAL = 3  # Maximum number of trials to move items
 
