@@ -1,0 +1,32 @@
+[
+    {
+        "color": 2419,
+        "serial": 1085106278,
+        "name": "Area Attack",
+        "type": 11571
+    },
+    {
+        "color": 0,
+        "serial": 1079465043,
+        "name": "Reptile",
+        "type": 3937
+    },
+    {
+        "color": 0,
+        "serial": 1082967935,
+        "name": "Dragon",
+        "type": 3937
+    },
+    {
+        "color": 2419,
+        "serial": 1082942870,
+        "name": "Area Silver",
+        "type": 11571
+    },
+    {
+        "color": 0,
+        "serial": 1504421778,
+        "name": "Silver",
+        "type": 3937
+    }
+]

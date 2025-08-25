@@ -1,5 +1,5 @@
 from AutoComplete import *
-from System.Collections.Generic import CList  # type: ignore
+from System.Collections.Generic import List as CList  # type: ignore
 from System import Byte, Int32  # type: ignore
 import re
 
@@ -113,8 +113,8 @@ def find_enemy():
     enemy = Mobiles.Filter()
     enemy.Enabled = True
     enemy.Notorieties = CList[Byte](b"\x03\x04\x05\x06")
-    enemy.RangeMax = 20
-    enemy.Warmode = True
+    enemy.RangeMax = 2
+    # enemy.Warmode = True
     return Mobiles.ApplyFilter(enemy)
 
 
@@ -276,45 +276,58 @@ if Player.Mount is not None:
     Misc.Pause(800)
 
 # Main loop
-while Player.Connected:
-    if len(find_enemy()) > 0:
-        FORGE = find_forge()
-        if FORGE != 0:
-            Mobiles.UseMobile(FORGE)
-        Misc.Pause(200)
-        continue
+def main():
+    while Player.Connected:
+        if len(find_enemy()) > 0:
+            while True:
+                Target.Cancel()
+                FORGE = find_forge()
+                if FORGE == 0:
+                    break
+                Mobiles.UseMobile(FORGE)
+                Misc.Pause(200)
+            Target.Cancel()
+            Player.HeadMessage(0x47E, "Ready for your battle!")
+            return
 
-    if is_overweight():
-        Player.HeadMessage(0x47E, "Overweight!")
-        reduce_weight()
         if is_overweight():
+            Player.HeadMessage(0x47E, "Overweight!")
+            reduce_weight()
+            if is_overweight():
+                return
+
+        # Use mining tool
+        tool = find_tool()
+        if tool is None:
+            Player.HeadMessage(0x21, "I don't have any tools for mining!")
             break
 
-    # Use mining tool
-    tool = find_tool()
-    if tool is None:
-        Player.HeadMessage(0x21, "I don't have any tools for mining!")
-        break
+        Journal.Clear()
+        Items.UseItem(tool)
+        if not Journal.WaitJournal("Where do you wish to dig?", 900):
+            continue
+        if not Target.WaitForTarget(900, False):
+            continue
+        Target.TargetResource(tool, "ore")
+        Misc.Pause(900)
+        if Target.HasTarget("Any"):
+            Target.Cancel()
 
-    Journal.Clear()
-    Items.UseItem(tool)
-    if not Target.WaitForTarget(250, True):
-        continue
-    Misc.Pause(200)
-    Target.TargetResource(tool, "ore")
-    Misc.Pause(200)
+        # Process journal messages
+        if Journal.Search("There is no metal here to mine"):
+            Player.HeadMessage(0x47E, "Depleted!")
+            break
+        if Journal.Search("Target cannot be seen"):
+            break
+        if Journal.Search("You can't mine"):
+            break
+        if Journal.Search("You can't dig while riding or flying"):
+            break
 
-    # Process journal messages
-    if Journal.Search("There is no metal here to mine"):
-        Player.HeadMessage(0x47E, "Depleted!")
-        break
-    if Journal.Search("Target cannot be seen"):
-        break
-    if Journal.Search("You can't mine"):
-        break
-    if Journal.Search("You can't dig while riding or flying"):
-        break
+    reduce_weight()
+    Target.Cancel()
+    Player.HeadMessage(0x47E, "Done!")
 
-reduce_weight()
-Target.Cancel()
-Player.HeadMessage(0x47E, "Done!")
+
+if __name__ == "__main__":
+    main()

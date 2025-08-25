@@ -50,7 +50,7 @@ from typing import cast
 
 
 VERSION = "1.1.0"
-GUMP_MENU = cast("UInt32", hash("LazyPallyHelperGump") & 0xFFFFFFFF)
+GUMP_MENU = hash("LazyPallyHelperGump") & 0xFFFFFFFF
 GUMP_WRAPTXT = """<CENTER><BASEFONT COLOR="#FFFFFF">{text}</BASEFONT></CENTER>"""
 is_running = True
 
