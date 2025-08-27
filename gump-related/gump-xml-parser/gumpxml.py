@@ -1,10 +1,7 @@
+from AutoComplete import *
 import xml.etree.ElementTree as ET
 import re
 from typing import Any, Optional, Tuple, List, Dict, Callable, Union
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from razorenhanced import *
 
 
 ################################################################################
@@ -21,9 +18,7 @@ def _float_with_default(val: Optional[str], default: float) -> float:
         return default
 
 
-def _parse_padmargin_with_default(
-    padmargin: Optional[str], default: Tuple[float, float, float, float]
-) -> Tuple[float, float, float, float]:
+def _parse_padmargin_with_default(padmargin: Optional[str], default: Tuple[float, float, float, float]) -> Tuple[float, float, float, float]:
     """Parse padding/margin string into four floats."""
     if padmargin is None:
         return default

@@ -12,6 +12,9 @@ ATTACK_PRIORITY = "Weakest"
 # Spell delay in milliseconds.
 SPELL_DELAY = 1000
 
+# Remove curse will be casted after you are safe for this duration.
+REMOVE_CURSE_DELAY = 3000
+
 # Only the enemies within this distance will be scanned.
 DETECT_RANGE = 8
 
@@ -45,8 +48,8 @@ DEBUFFS_TO_REMOVE = [
 from AutoComplete import *
 from System.Collections.Generic import List as CList  # type: ignore
 from System import Byte  # type: ignore
+from typing import List
 import time
-from typing import cast
 
 
 VERSION = "1.1.0"
@@ -146,6 +149,24 @@ def gump_menu() -> None:
     Gumps.SendGump(GUMP_MENU, Player.Serial, 100, 100, gd.gumpDefinition, gd.gumpStrings)
 
 
+def enemy_include(enemy: "Mobile") -> bool:  # type: ignore
+    """Check if an enemy should be included."""
+    if enemy.Body == 0x33:  # if it's a nature's fury
+        return False
+    return True
+
+
+def find_enemies() -> List["Mobile"]:  # type: ignore
+    enemy = Mobiles.Filter()
+    enemy.Enabled = True
+    enemy.Notorieties = CList[Byte](b"\x03\x04\x05\x06")
+    enemy.RangeMax = DETECT_RANGE
+    enemy.Warmode = True
+    enemies = Mobiles.ApplyFilter(enemy)
+    enemies = [e for e in enemies if enemy_include(e)]
+    return enemies
+
+
 gump_menu()
 while Player.Connected:
     if Gumps.WaitForGump(GUMP_MENU, 1):
@@ -163,17 +184,21 @@ while Player.Connected:
 
     # Heal self
     if (Player.Hits < Player.HitsMax or Player.Poisoned) and not Player.BuffsExist("Healing", True):
+        # If you're damaged, reset the safe timer
+        Timer.Create("safe", REMOVE_CURSE_DELAY)
         bandage = Items.FindByID(0x0E21, -1, Player.Backpack.Serial, 2, False)
         if bandage is not None:
+            Target.Cancel()
             Items.UseItem(bandage.Serial)
             if not Target.WaitForTarget(500, True):
                 continue
             Target.Self()
+            Target.Cancel()
             Misc.Pause(250)
             continue
 
     # Clear debuffs
-    if (Player.Hits >= (DEBUFF_THRESHOLD * Player.HitsMax / 100)) and can_cast("Remove Curse"):
+    if not Timer.Check("safe") and (Player.Hits >= (DEBUFF_THRESHOLD * Player.HitsMax / 100)) and can_cast("Remove Curse"):
         updated = False
         for debuff in DEBUFFS_TO_REMOVE:
             if not Player.BuffsExist(debuff, True):
@@ -194,16 +219,14 @@ while Player.Connected:
         continue
 
     # Detect enemies
-    enemy = Mobiles.Filter()
-    enemy.Enabled = True
-    enemy.Notorieties = CList[Byte](b"\x03\x04\x05\x06")
-    enemy.RangeMax = DETECT_RANGE
-    enemy.Warmode = True
-    find_enemy = Mobiles.ApplyFilter(enemy)
-    if len(find_enemy) > 0:
+    enemies = find_enemies()
+    # If you're surrounded by multiple enemies, wait before removing curses
+    if len(enemies) > 1:
+        Timer.Create("safe", REMOVE_CURSE_DELAY)
+    if len(enemies) > 0:
         # Attack the nearest mobile
         if not Timer.Check("attack-delay"):
-            enemy_near = [enemy for enemy in find_enemy if Player.DistanceTo(enemy) <= 1]
+            enemy_near = [enemy for enemy in enemies if Player.DistanceTo(enemy) <= 1]
             if len(enemy_near) > 0:
                 next_emeny = Mobiles.Select(CList[Mobile](enemy_near), ATTACK_PRIORITY)
                 assert next_emeny is not None

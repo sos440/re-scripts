@@ -2656,7 +2656,7 @@ class Journal:
         ...
 
     @staticmethod
-    def WaitJournal(text: Union[str, "List[String]"], delay: int) -> Union[bool, str]:
+    def WaitJournal(text: Union[str, "List[String]"], delay: int) -> Tuple[bool, str]:
         """Pause script and wait for maximum amount of time, for a specific text to appear in Journal. (case sensitive)
 
 
@@ -7072,7 +7072,7 @@ class Spells:
     @staticmethod
     def CastChivalry(
         SpellName: str,
-        target: Union["UInt32", "Mobile", int],
+        target: Union["UInt32", "Mobile", int, None] = None,
         wait: Union[bool, None] = None,
         waitAfter: Union[int, None] = None,
     ):

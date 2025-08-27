@@ -1,8 +1,5 @@
+from AutoComplete import *
 import os
-from typing import Dict, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from razorenhanced import *
 
 PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -23,8 +20,8 @@ GUMPID_VIEWER = hash("GumpViewer") & 0xFFFFFFFF
 
 class GumpComponent:
     class Base:
-        def __init__(self) -> None:
-            ...
+        def __init__(self) -> None: ...
+
 
 class GumpDesigner:
     def __init__(self) -> None:

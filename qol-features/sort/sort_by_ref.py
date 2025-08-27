@@ -76,6 +76,8 @@ settings = {
     0x1AE1: SortCriteria(sort_key=[SortKey.COLOR], dx=5, dy=10, line_size=40),
     # primer
     0x1E22: SortCriteria(sort_key=[SortKey.NAME], dir=SortDir.RightThenUp, dx=20, dy=10, line_size=40),
+    # Rune
+    0x1F14: SortCriteria(sort_key=[SortKey.COLOR], dx=5, dy=6, line_size=20),
 }
 
 

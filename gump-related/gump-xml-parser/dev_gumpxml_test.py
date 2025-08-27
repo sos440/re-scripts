@@ -1,11 +1,6 @@
+from AutoComplete import *
 import os
 import sys
-from typing import Dict, TYPE_CHECKING
-
-# This code is purely for type hinting and will not be executed in the actual environment.
-# If you are not using type hinting, you can safely remove the following lines.
-if TYPE_CHECKING:
-    from razorenhanced import *
 
 # This allows the RazorEnhanced to correctly identify the path of the gumpxml module.
 PATH = os.path.dirname(os.path.abspath(__file__))
@@ -191,7 +186,7 @@ def main():
             cur_rule = int(e["index"] or -1)
             if cur_rule != -1:
                 rules[cur_rule]["enabled"] = e.checked
-        
+
         def f_profile_rename(e: GumpDOMNode):
             nonlocal profile_name
             changed, profile_name = GumpPresets.prompt("Enter new profile name:", 350, 100, value=profile_name)
@@ -199,31 +194,31 @@ def main():
                 Misc.SendMessage("Profile renamed.")
             else:
                 Misc.SendMessage("Renaming cancelled.")
-        
+
         def f_add_rule(e: GumpDOMNode):
             nonlocal selected_rule, selected_page
             selected_rule = len(rules)
             selected_page = 1 + (max(0, selected_rule) // d)
             rules.append({"name": "(Unnamed)", "enabled": True, "notify": False, "highlight": False})
-        
+
         def f_delete_rule(e: GumpDOMNode):
             nonlocal selected_rule, selected_page
             if selected_rule >= 0:
                 del rules[selected_rule]
                 selected_rule = min(selected_rule, len(rules) - 1)
                 selected_page = 1 + (max(0, selected_rule) // d)
-        
+
         def f_prev_page(e: GumpDOMNode):
             nonlocal selected_page
             if selected_page > 1:
                 selected_page -= 1
-        
+
         def f_next_page(e: GumpDOMNode):
             nonlocal selected_page
             max_pg = 1 + (max(len(rules) - 1, 0) // d)
             if selected_page < max_pg:
                 selected_page += 1
-                
+
         g.add_event_listener("rule_apply_chg", f_apply_changes)
         g.add_event_listener("profile_rename", f_profile_rename)
         g.add_event_listener("rule_add", f_add_rule)
