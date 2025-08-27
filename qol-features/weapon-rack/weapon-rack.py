@@ -2,6 +2,9 @@ REFRESH_DURATION = 500
 """Duration (in milliseconds) between refreshes of the durability information."""
 
 
+DELAY_BETWEEN_EQUIPS = 500
+"""Delay between successive equip/unequip commands."""
+
 ################################################################################
 # Header
 ################################################################################
@@ -22,7 +25,7 @@ sys.path.append(PATH)
 # Settings
 ################################################################################
 
-VERSION = "1.0.1"
+VERSION = "1.0.4"
 SETTING_FILEDIR = os.path.join(PATH, "data")
 SETTING_FILEPATH = os.path.join(SETTING_FILEDIR, f"{Player.Name} ({Player.Serial}).json")
 
@@ -164,6 +167,9 @@ IDMOD_MAIN_EDIT = 2000
 # Gump formats
 GUMP_CB = """<CENTER><BASEFONT COLOR="#FFFFFF">{text}</BASEFONT></CENTER>"""
 
+# Last left hand (shield, for example)
+LAST_LEFT_HAND = 0
+
 
 def gump_edit(rack: List[RackEntry], idx: int) -> None:
     assert 0 <= idx < len(rack)
@@ -208,9 +214,14 @@ def gump_edit(rack: List[RackEntry], idx: int) -> None:
 
 def gump_main(rack: List[RackEntry], mode: str = "view") -> None:
     # parse mode
-    if mode == "edit":
+    if mode == "edit-all":
         IDMOD_BUTTON = IDMOD_MAIN_EDIT
         INNER_WIDTH = max((len(rack) + 1) * 80, 142)
+        INNER_HEIGHT = 18 + 60 + 36
+    elif mode == "edit":
+        rack_filter = [entry for entry in rack if entry.state in ["ready", "equipped"]]
+        IDMOD_BUTTON = IDMOD_MAIN_EDIT
+        INNER_WIDTH = max((len(rack_filter) + 1) * 80, 142)
         INNER_HEIGHT = 18 + 60 + 36
     elif mode == "view":
         rack_filter = [entry for entry in rack if entry.state in ["ready", "equipped"]]
@@ -237,15 +248,15 @@ def gump_main(rack: List[RackEntry], mode: str = "view") -> None:
     y = 2 + 18
     for idx, entry in enumerate(rack):
         px, py = GumpTools.get_centering_pos(entry.type, x, y, 80, 60, abs=False)
-        if entry.state == "not found" and mode == "edit":
+        if entry.state == "not found" and mode == "edit-all":
             Gumps.AddHtml(gd, x, y + 60, 80, 36, GUMP_CB.format(text=entry.name), False, False)
-            Gumps.AddImageTiledButton(gd, x, y, 2329, 2329, IDMOD_BUTTON + idx, Gumps.GumpButtonType.Reply, 0, entry.type, 33, px, py)
+            Gumps.AddImageTiledButton(gd, x, y, 2328, 2329, IDMOD_BUTTON + idx, Gumps.GumpButtonType.Reply, 0, entry.type, 33, px, py)
             Gumps.AddTooltip(gd, "Weapon not found.")
             Gumps.AddLabelCropped(gd, x + 28, y + 21, 40, 18, 1153, "EDIT")
             x += 80
-        elif entry.state == "inaccessible" and mode == "edit":
+        elif entry.state == "inaccessible" and mode == "edit-all":
             Gumps.AddHtml(gd, x, y + 60, 80, 36, GUMP_CB.format(text=entry.name), False, False)
-            Gumps.AddImageTiledButton(gd, x, y, 2329, 2329, IDMOD_BUTTON + idx, Gumps.GumpButtonType.Reply, 0, entry.type, entry.color, px, py)
+            Gumps.AddImageTiledButton(gd, x, y, 2328, 2329, IDMOD_BUTTON + idx, Gumps.GumpButtonType.Reply, 0, entry.type, entry.color, px, py)
             Gumps.AddTooltip(gd, entry.serial)
             Gumps.AddLabelCropped(gd, x + 28, y + 21, 40, 18, 1153, "EDIT")
             x += 80
@@ -268,10 +279,13 @@ def gump_main(rack: List[RackEntry], mode: str = "view") -> None:
     if mode == "edit":
         Gumps.AddButton(gd, x, y, 2328, 2329, ID_MAIN_ADD, 1, 0)
         Gumps.AddLabelCropped(gd, x + 28, y + 21, 40, 18, 1153, "ADD")
+        Gumps.AddButton(gd, WIDTH - 16, y - 16, 1209, 1210, 0, 1, 0)
+        Gumps.AddTooltip(gd, "Click this to finish editing.")
 
     # Edit button
     if mode == "view":
         Gumps.AddButton(gd, WIDTH - 16, y - 16, 1209, 1210, ID_MAIN_EDIT, 1, 0)
+        Gumps.AddTooltip(gd, "Click this to edit the weapon rack.")
 
     # Send the gump and listen for the response
     gd_def = GumpTools.tooltip_to_itemproperty(gd)
@@ -289,6 +303,7 @@ def prompt_rack_entry() -> Optional[RackEntry]:
 
 
 def equip_entry(entry: RackEntry) -> None:
+    global LAST_LEFT_HAND
     entry = RackEntry.from_entry(entry)
     if entry.state == "not found":
         Misc.SendMessage("The item is not found.", 0x21)
@@ -299,7 +314,28 @@ def equip_entry(entry: RackEntry) -> None:
     if entry.state == "inaccessible":
         Misc.SendMessage("The item must be in your inventory.", 0x21)
         return
-    Player.EquipUO3D([entry.serial])
+    item = Items.FindBySerial(entry.serial)
+    left_hand = Player.GetItemOnLayer("LeftHand")
+    right_hand = Player.GetItemOnLayer("RightHand")
+    if item.IsTwoHanded:
+        to_unequip = []
+        if left_hand is not None:
+            LAST_LEFT_HAND = left_hand.Serial
+            to_unequip.append("LeftHand")
+        if right_hand is not None:
+            to_unequip.append("RightHand")
+        if len(to_unequip) > 0:
+            Player.UnEquipUO3D(to_unequip)
+            Misc.Pause(DELAY_BETWEEN_EQUIPS)
+        Player.EquipUO3D([entry.serial])
+    else:
+        to_equip = [entry.serial]
+        if LAST_LEFT_HAND != 0:
+            to_equip.append(LAST_LEFT_HAND)
+        if left_hand is not None and left_hand.IsTwoHanded:
+            Player.UnEquipUO3D(["LeftHand"])
+            Misc.Pause(DELAY_BETWEEN_EQUIPS)
+        Player.EquipUO3D(to_equip)
     Misc.SendMessage(f"Equipping: {entry.name}", 68)
     Misc.Pause(450)
 
@@ -331,7 +367,7 @@ if __name__ == "__main__":
         if gd is None or gd.buttonid == 0:
             mode = "view"
             return
-        
+
         if gd.buttonid == ID_MAIN_EDIT:
             mode = "edit"
             return
@@ -345,6 +381,7 @@ if __name__ == "__main__":
                 Misc.SendMessage("The item is already in the rack.", 0x3B2)
                 return
             rack.append(new_entry)
+            gump_edit(rack, len(rack) - 1)
             _save_settings()
             return
 
@@ -357,7 +394,7 @@ if __name__ == "__main__":
         if 0 <= entry_id < len(rack):
             gump_edit(rack, entry_id)
             _save_settings()
-            mode = "view"
+            # mode = "view"
             return
 
     _load_settings()

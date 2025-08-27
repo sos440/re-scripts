@@ -2,7 +2,7 @@
     {
         "color": 2419,
         "serial": 1085106278,
-        "name": "Area Attack",
+        "name": "Area",
         "type": 11571
     },
     {
@@ -28,5 +28,59 @@
         "serial": 1504421778,
         "name": "Silver",
         "type": 3937
+    },
+    {
+        "color": 0,
+        "serial": 1495605488,
+        "name": "Repond",
+        "type": 3937
+    },
+    {
+        "color": 0,
+        "serial": 2132421982,
+        "name": "Slime",
+        "type": 5119
+    },
+    {
+        "color": 0,
+        "serial": 1084211010,
+        "name": "Area Daemon",
+        "type": 11571
+    },
+    {
+        "color": 0,
+        "serial": 1085963224,
+        "name": "Elly",
+        "type": 3937
+    },
+    {
+        "color": 0,
+        "serial": 1086371749,
+        "name": "Area Dragon",
+        "type": 11571
+    },
+    {
+        "color": 0,
+        "serial": 1088280039,
+        "name": "Herding",
+        "type": 3713
+    },
+    {
+        "color": 0,
+        "serial": 1607722803,
+        "name": "Lumber",
+        "type": 3907
+    },
+    {
+        "color": 0,
+        "serial": 1086395411,
+        "name": "Area Slime",
+        "type": 11571
+    },
+    {
+        "color": 0,
+        "serial": 1988047101,
+        "name": "Elly",
+        "type": 3913
     }
 ]
