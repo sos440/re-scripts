@@ -3,61 +3,61 @@ import re
 from typing import List, Tuple, Optional
 
 
-GUMP_ID = 0
+GUMP_MOVETO_ID = 0
 
 
 class RunicAtlasActions:
     @classmethod
     def close(cls):
-        Gumps.CloseGump(GUMP_ID)
+        Gumps.CloseGump(GUMP_MOVETO_ID)
 
     @classmethod
     def rename(cls):
-        Gumps.SendAction(GUMP_ID, 1)
+        Gumps.SendAction(GUMP_MOVETO_ID, 1)
 
     @classmethod
     def set_default(cls):
-        Gumps.SendAction(GUMP_ID, 2)
+        Gumps.SendAction(GUMP_MOVETO_ID, 2)
 
     @classmethod
     def drop_rune(cls):
-        Gumps.SendAction(GUMP_ID, 3)
+        Gumps.SendAction(GUMP_MOVETO_ID, 3)
 
     @classmethod
     def replace_rune(cls):
-        Gumps.SendAction(GUMP_ID, 8)
+        Gumps.SendAction(GUMP_MOVETO_ID, 8)
 
     @classmethod
     def recall(cls):
-        Gumps.SendAction(GUMP_ID, 4)
+        Gumps.SendAction(GUMP_MOVETO_ID, 4)
 
     @classmethod
     def gate_travel(cls):
-        Gumps.SendAction(GUMP_ID, 6)
+        Gumps.SendAction(GUMP_MOVETO_ID, 6)
 
     @classmethod
     def sacred_journey(cls):
-        Gumps.SendAction(GUMP_ID, 7)
+        Gumps.SendAction(GUMP_MOVETO_ID, 7)
 
     @classmethod
     def next_page(cls):
-        Gumps.SendAction(GUMP_ID, 1150)
+        Gumps.SendAction(GUMP_MOVETO_ID, 1150)
 
     @classmethod
     def prev_page(cls):
-        Gumps.SendAction(GUMP_ID, 1151)
+        Gumps.SendAction(GUMP_MOVETO_ID, 1151)
 
     @classmethod
     def select_rune(cls, index: int):
-        Gumps.SendAction(GUMP_ID, 100 + index)
+        Gumps.SendAction(GUMP_MOVETO_ID, 100 + index)
 
     @classmethod
     def move_up(cls, index: int):
-        Gumps.SendAction(GUMP_ID, 2000 + index)
+        Gumps.SendAction(GUMP_MOVETO_ID, 2000 + index)
 
     @classmethod
     def move_down(cls, index: int):
-        Gumps.SendAction(GUMP_ID, 3000 + index)
+        Gumps.SendAction(GUMP_MOVETO_ID, 3000 + index)
 
 
 class Rune:
@@ -211,19 +211,19 @@ def find_runic_atlas_gump() -> Optional[Gumps.GumpData]:
 
 
 def wait_for_runic_atlas_gump(delay: int = 1500) -> Optional[Gumps.GumpData]:
-    global GUMP_ID
+    global GUMP_MOVETO_ID
 
     # If the gump ID is already known
-    if GUMP_ID != 0:
-        if not Gumps.WaitForGump(GUMP_ID, delay):
+    if GUMP_MOVETO_ID != 0:
+        if not Gumps.WaitForGump(GUMP_MOVETO_ID, delay):
             return None
-        return Gumps.GetGumpData(GUMP_ID)
+        return Gumps.GetGumpData(GUMP_MOVETO_ID)
 
     # Otherwise, use some tricks to identify the gump
     for _ in range(delay // 100):
         gd = find_runic_atlas_gump()
         if gd is not None:
-            GUMP_ID = gd.gumpId
+            GUMP_MOVETO_ID = gd.gumpId
             return gd
         Misc.Pause(100)
 

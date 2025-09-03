@@ -1,11 +1,4 @@
 ################################################################################
-# Settings
-################################################################################
-
-VERSION = "2.0.1"
-
-
-################################################################################
 # Imports
 ################################################################################
 
@@ -106,25 +99,6 @@ class BaseProp(Generic[CT]):
         :return: The sorted item property sheet.
         """
         return sorted(sheet, key=self.key, reverse=reverse)
-
-
-class DerivedProp(BaseProp[CT]):
-    """
-    This represents a derived property, computed using the basic properties.
-    """
-
-    def parse(self, prop: str) -> None:
-        """
-        Derived properties cannot be parsed from strings, and has no intrinsic value.
-        """
-        return
-
-    def stringify(self, row: ItemPropRow) -> Optional[str]:
-        value = self.key(row)
-        return str(value) if value is not None else None
-
-    def key(self, row: ItemPropRow) -> Any:
-        raise NotImplementedError("Subclasses should implement this method.")
 
 
 class ComparableProp(BaseProp[CT]):
@@ -271,9 +245,6 @@ class MatchProp(BaseProp[CT]):
 class ComparableMatchProp(MatchProp[CT], ComparableProp[CT]): ...
 
 
-class ComparableDerivedProp(DerivedProp[CT], ComparableProp[CT]): ...
-
-
 class BooleanProp(MatchProp[bool]):
     """
     This represents a boolean property that can be parsed from a string.
@@ -370,86 +341,6 @@ class EnumProp(ComparableProp[int]):
         if row.has(self.id):
             return self.value_to_str.get(row[self.id], None)
         return None
-
-
-class AnyProp(DerivedProp[bool]):
-    """
-    This property matches any of the specified boolean property IDs.
-
-    This does not check if the provided keys actually exist in the row
-    or they are actually boolean values.
-    """
-
-    def __init__(self, name: str, id: str, prop_ids: List[str]):
-        super().__init__(name, id)
-        self.prop_ids = prop_ids
-
-    def key(self, row: ItemPropRow) -> bool:
-        return any(row[prop_id] for prop_id in self.prop_ids)
-
-
-class AllProp(DerivedProp[bool]):
-    """
-    This property matches all of the specified boolean property IDs.
-
-    This does not check if the provided keys actually exist in the row
-    or they are actually boolean values.
-    """
-
-    def __init__(self, name: str, id: str, prop_ids: List[str]):
-        super().__init__(name, id)
-        self.prop_ids = prop_ids
-
-    def key(self, row: ItemPropRow) -> bool:
-        return all(row[prop_id] for prop_id in self.prop_ids)
-
-
-class IntegerSumProp(DerivedProp[int]):
-    """
-    This property calculates the sum of the specified integer property IDs.
-
-    This does not check if the provided keys actually exist in the row
-    or they are actually integer values.
-    """
-
-    def __init__(self, name: str, id: str, prop_ids: List[str]):
-        super().__init__(name, id)
-        self.prop_ids = prop_ids
-
-    def key(self, row: ItemPropRow) -> int:
-        return sum(row[prop_id] or 0 for prop_id in self.prop_ids)
-
-
-class IntegerMaxProp(DerivedProp[int]):
-    """
-    This property calculates the maximum of the specified integer property IDs.
-
-    This does not check if the provided keys actually exist in the row
-    or they are actually integer values.
-    """
-
-    def __init__(self, name: str, id: str, prop_ids: List[str]):
-        super().__init__(name, id)
-        self.prop_ids = prop_ids
-
-    def key(self, row: ItemPropRow) -> int:
-        return max(row[prop_id] or 0 for prop_id in self.prop_ids)
-
-
-class IntegerMinProp(DerivedProp[int]):
-    """
-    This property calculates the minimum of the specified integer property IDs.
-
-    This does not check if the provided keys actually exist in the row
-    or they are actually integer values.
-    """
-
-    def __init__(self, name: str, id: str, prop_ids: List[str]):
-        super().__init__(name, id)
-        self.prop_ids = prop_ids
-
-    def key(self, row: ItemPropRow) -> int:
-        return min(row[prop_id] or 0 for prop_id in self.prop_ids)
 
 
 class PropGroup:
@@ -620,8 +511,6 @@ class PropMaster:
                     IntegerProp("Strength Bonus", "Str", "Strength Bonus"),
                     IntegerProp("Dexterity Bonus", "Dex", "Dexterity Bonus"),
                     IntegerProp("Intelligence Bonus", "Int", "Intelligence Bonus"),
-                    IntegerSumProp("Total Stats Bonus", "SumStat", ["Str", "Dex", "Int"]),
-                    IntegerMaxProp("Max Stats Bonus", "MaxStat", ["Str", "Dex", "Int"]),
                     IntegerProp("Hit Point Increase", "Hits", "Hit Point Increase"),
                     IntegerProp("Hit Point Regeneration", "HitsRegen", "Hit Point Regeneration"),
                     IntegerProp("Stamina Increase", "Stam", "Stamina Increase"),
@@ -634,8 +523,6 @@ class PropMaster:
                     PercentageProp("Fire Resist", "FireRes", "Fire Resist"),
                     PercentageProp("Poison Resist", "PoisonRes", "Poison Resist"),
                     PercentageProp("Energy Resist", "EnergyRes", "Energy Resist"),
-                    IntegerSumProp("Total Resist", "SumRes", ["PhysRes", "ColdRes", "FireRes", "PoisonRes", "EnergyRes"]),
-                    IntegerMaxProp("Max Resist", "MaxRes", ["PhysRes", "ColdRes", "FireRes", "PoisonRes", "EnergyRes"]),
                 ],
             ),
             PropGroup(
@@ -694,70 +581,6 @@ class PropMaster:
                     IntegerProp("Forensic Evaluation", "Forensic", "Forensic Evaluation"),
                     IntegerProp("Item Identification", "ItemID", "Item Identification"),
                     IntegerProp("Taste Identification", "TasteID", "Taste Identification"),
-                    IntegerMaxProp(
-                        "Max Skill",
-                        "MaxSkill",
-                        [
-                            "Arms Lore",
-                            "Begging",
-                            "Camping",
-                            "Cartography",
-                            "Forensic",
-                            "ItemID",
-                            "TasteID",
-                            "Anatomy",
-                            "Archery",
-                            "Fencing",
-                            "Focus",
-                            "Healing",
-                            "MaceFighting",
-                            "Parrying",
-                            "Swordsmanship",
-                            "Tactics",
-                            "Throwing",
-                            "Wrestling",
-                            "Alchemy",
-                            "Smithy",
-                            "Fletching",
-                            "Carpentry",
-                            "Cooking",
-                            "Inscription",
-                            "Lumberjacking",
-                            "Mining",
-                            "Tailoring",
-                            "Tinkering",
-                            "Bushido",
-                            "Chivalry",
-                            "EvalInt",
-                            "Imbuing",
-                            "Magery",
-                            "Meditation",
-                            "Mysticism",
-                            "Necromancy",
-                            "Ninjitsu",
-                            "ResistSpell",
-                            "Spellweaving",
-                            "SpiritSpeak",
-                            "Animal Lore",
-                            "Animal Taming",
-                            "Fishing",
-                            "Herding",
-                            "Tracking",
-                            "Veterinary",
-                            "Detect Hidden",
-                            "Hiding",
-                            "Lockpicking",
-                            "Poisoning",
-                            "Remove Trap",
-                            "Snooping",
-                            "Stealing",
-                            "Stealth",
-                            "Discordance",
-                            "Musicianship",
-                            "Peacemaking",
-                            "Provocation",
-                        ],
-                    ),
                 ],
             ),
             PropGroup(
@@ -890,7 +713,7 @@ class PropMaster:
                 "Slayers",
                 "Slayers",
                 [
-                    ComparableMatchProp("Slayer", "Slayer", r"^(Silver|.* Slayer)$", str),  # TODO: Allow matching multiple slayers
+                    ComparableMatchProp("Slayer", "Slayer", r"^(Silver|.* Slayer)$", str),
                     ComparableMatchProp("Arachnid Slayer", "Arachnid Slayer", r"^(Arachnid Slayer)$", str),
                     ComparableMatchProp("Demon Slayer", "Demon Slayer", r"^(Demon Slayer)$", str),
                     ComparableMatchProp("Elemental Slayer", "Elemental Slayer", r"^(Elemental Slayer)$", str),
@@ -1176,7 +999,6 @@ class GumpTools:
 MAIN_GUMP_ID = GumpTools.hashname("ExplorerMainGump")
 ACTION_GUMP_ID = GumpTools.hashname("ExplorerActionGump")
 FILTER_GUMP_ID = GumpTools.hashname("ExplorerFilterGump")
-GUMP_EDIT_SAVE = GumpTools.hashname("ExplorerEditSaveGump")
 SHORTCUT_GUMP_ID = GumpTools.hashname("ExplorerShortcutGump")
 
 # Explorer gump settings
@@ -1203,10 +1025,6 @@ ID_ACTION_EQUIP = 1002
 ID_FILTER_REMOVE = 10001
 IDMOD_FILTER_GROUP = 11000
 IDMOD_FILTER_CHANGE = 12000
-
-ID_EDITSAVE_FILENAME = 1
-ID_EDITSAVE_SAVE = 2
-ID_EDITSAVE_RENAME = 3
 
 ID_SHORTCUT_INSPECT = 1
 
@@ -1330,46 +1148,6 @@ class ExplorerDialog:
         Gumps.SendGump(FILTER_GUMP_ID, Player.Serial, 100, 100, gd.gumpDefinition, gd.gumpStrings)
 
     @staticmethod
-    def show_edit(sheet: Sheet) -> str:
-        Gumps.CloseGump(GUMP_EDIT_SAVE)
-
-        # Create the gump
-        gd = Gumps.CreateGump(movable=True)
-        Gumps.AddPage(gd, 0)
-        Gumps.AddBackground(gd, 0, 0, 398, 100, 30546)
-        Gumps.AddAlphaRegion(gd, 0, 0, 398, 100)
-        Gumps.AddHtml(gd, 10, 5, 378, 18, GUMP_WT.format(text="Sheet/File Name:"), False, False)
-        Gumps.AddTextEntry(gd, 10, 35, 280, 20, 1153, ID_EDITSAVE_FILENAME, sheet.name)
-
-        Gumps.AddButton(gd, 10, 65, 40021, 40031, ID_EDITSAVE_SAVE, 1, 0)
-        Gumps.AddHtml(gd, 10, 67, 126, 18, GUMP_WT.format(text="Export"), False, False)
-
-        Gumps.AddButton(gd, 136, 65, 40020, 40033, ID_EDITSAVE_RENAME, 1, 0)
-        Gumps.AddHtml(gd, 136, 67, 126, 18, GUMP_WT.format(text="Rename"), False, False)
-
-        Gumps.AddButton(gd, 262, 65, 40297, 40298, 0, 1, 0)
-        Gumps.AddHtml(gd, 262, 67, 126, 18, GUMP_WT.format(text="Cancel"), False, False)
-
-        Gumps.SendGump(GUMP_EDIT_SAVE, Player.Serial, 100, 100, gd.gumpDefinition, gd.gumpStrings)
-
-        if not Gumps.WaitForGump(GUMP_EDIT_SAVE, 60000):
-            return "unknown"
-
-        gd = Gumps.GetGumpData(GUMP_EDIT_SAVE)
-        if gd is None or gd.buttonid == 0:
-            return "cancel"
-
-        if gd.buttonid == ID_EDITSAVE_SAVE and len(gd.text) > 0:
-            sheet.name = gd.text[0]
-            return "export"
-
-        if gd.buttonid == ID_EDITSAVE_RENAME:
-            sheet.name = gd.text[0]
-            return "rename"
-
-        return "unknown"
-
-    @staticmethod
     def show_sheet(sheet: Optional[Sheet] = None) -> Optional[Sheet]:
         Gumps.CloseGump(MAIN_GUMP_ID)
         gd = Gumps.CreateGump(True)
@@ -1394,12 +1172,10 @@ class ExplorerDialog:
             return
 
         # Sort the columns according to the update time
-        col_sorted = sorted(enumerate(sheet.columns), key=lambda c: c[1].metadata.get("update_time", 0))
-        col_prec: List[Optional[int]] = [None] * len(col_sorted)  # Column precedence
-        for i, idx_col in enumerate(col_sorted):
-            if "update_time" in idx_col[1].metadata:
-                col_prec[idx_col[0]] = len(col_sorted) - i
-                sheet = idx_col[1].filter(sheet)
+        col_sorted = sorted(sheet.columns, key=lambda c: c.metadata.get("update_time", 0))
+        for col in col_sorted:
+            if "update_time" in col.metadata:
+                sheet = col.filter(sheet)
 
         # Menubar
         x = BORDER_WIDTH
@@ -1412,9 +1188,9 @@ class ExplorerDialog:
         Gumps.AddLabelCropped(gd, x + 25, y + 2, 100, 18, 0, "Refresh")
         x += 100
         Gumps.AddButton(gd, x, y, 1533, 1534, ID_MAIN_EXPORT, 1, 0)
-        Gumps.AddLabelCropped(gd, x + 25, y + 2, 100, 18, 0, "Rename/Export")
-        x += 150
-        Gumps.AddLabelCropped(gd, x, y + 2, 250, 18, 0, f"Name: {sheet.name}")
+        Gumps.AddLabelCropped(gd, x + 25, y + 2, 100, 18, 0, "Export")
+        x += 100
+        Gumps.AddTextEntry(gd, x, y + 2, 200, 18, 0, ID_MAIN_TITLE, sheet.name)
 
         # Column headers
         x = BORDER_WIDTH
@@ -1428,19 +1204,10 @@ class ExplorerDialog:
             Gumps.AddImageTiled(gd, x, y, COL_WIDTH - 1, HEADER_HEIGHT, 9354)
             Gumps.AddButton(gd, x + 4, y + dy + 2, 1209, 1210, IDMOD_MAIN_FILTER + i, 1, 0)
             Gumps.AddLabelCropped(gd, x + 22, y + dy, COL_WIDTH - 30, 18, 0, col.id)
-            Gumps.AddTooltip(gd, col.name)
             if col.is_reverse():
                 Gumps.AddButton(gd, x + COL_WIDTH - 15, y + dy + 4, 2437, 2438, IDMOD_MAIN_SORT + i, 1, 0)
-                if col_prec[i] is None:
-                    Gumps.AddTooltip(gd, f"Not sorted")
-                else:
-                    Gumps.AddTooltip(gd, f"Order: Descending<BR>Precedence: {col_prec[i]}")
             else:
                 Gumps.AddButton(gd, x + COL_WIDTH - 15, y + dy + 4, 2435, 2436, IDMOD_MAIN_SORT + i, 1, 0)
-                if col_prec[i] is None:
-                    Gumps.AddTooltip(gd, f"Not sorted")
-                else:
-                    Gumps.AddTooltip(gd, f"Order: Ascending<BR>Precedence: {col_prec[i]}")
             x += COL_WIDTH
         Gumps.AddImageTiled(gd, x, y, 22, HEADER_HEIGHT, 9354)
         Gumps.AddButton(gd, x + 4, y + dy + 2, 1209, 1210, IDMOD_MAIN_FILTER + len(sheet.columns), 1, 0)
@@ -1592,18 +1359,14 @@ class ExplorerHandlers:
             # Write rows
             for row in sheet.rows:
                 csvwriter.writerow([col.read(row) for col in sheet.columns])
-        Misc.SendMessage(f"The sheet has been exported to: {filepath}", 68)
+        Misc.SendMessage(f"The sheet has been exported to: {filepath}", 1153)
 
     @staticmethod
     def explorer(serial: int, old_sheet: Optional[Sheet] = None) -> Optional[Sheet]:
         cont = Items.FindBySerial(serial)
         if cont is None:
             return None
-        if cont.ItemID in (0x9F1C, 0x9F1D):
-            Items.UseItem(cont)
-            Misc.Pause(500)
-        else:
-            Items.WaitForContents(serial, 1000)
+        Items.WaitForContents(serial, 1000)
 
         # Show the loading screen
         ExplorerDialog.show_sheet()
@@ -1636,6 +1399,7 @@ class ExplorerHandlers:
         if not gd:
             return
 
+        sheet.name = gd.text[0]
         if gd.buttonid == 0:
             return
 
@@ -1643,15 +1407,7 @@ class ExplorerHandlers:
             return sheet
 
         if gd.buttonid == ID_MAIN_EXPORT:
-            choice = ExplorerDialog.show_edit(filtered_sheet)
-            if choice == "export":
-                ExplorerHandlers.export_to_csv(filtered_sheet)
-                sheet.name = filtered_sheet.name
-            elif choice == "rename":
-                sheet.name = filtered_sheet.name
-                Misc.SendMessage(f"The sheet has been renamed to: {sheet.name}", 68)
-            elif choice == "cancel":
-                Misc.SendMessage("The edit/export has been cancelled.", 0x3B2)
+            ExplorerHandlers.export_to_csv(filtered_sheet)
             return sheet
 
         id_action = gd.buttonid - IDMOD_MAIN_ACTION

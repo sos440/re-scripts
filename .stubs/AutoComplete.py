@@ -7922,7 +7922,7 @@ class Target:
         ...
 
     @staticmethod
-    def PromptTarget(message: str, color: int) -> int:
+    def PromptTarget(message: str, color: Optional[int] = None) -> int:
         """Prompt a target in-game, wait for the Player to select an Item or a Mobile. Can also specific a text message for prompt.
 
         Parameters

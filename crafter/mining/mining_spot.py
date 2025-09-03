@@ -270,13 +270,13 @@ def reduce_weight():
             drop_ores(ore.Serial)
 
 
-# Dismount if the player is currently mounted
-if Player.Mount is not None:
-    Mobiles.UseMobile(Player.Serial)
-    Misc.Pause(800)
-
 # Main loop
 def main():
+    # Dismount if the player is currently mounted
+    if Player.Mount is not None:
+        Mobiles.UseMobile(Player.Serial)
+        Misc.Pause(800)
+    
     while Player.Connected:
         if len(find_enemy()) > 0:
             while True:

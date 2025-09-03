@@ -1,5 +1,6 @@
-from System.Collections.Generic import List
-from System import Byte
+from AutoComplete import *
+from System.Collections.Generic import List as CList  # type: ignore
+from System import Byte  # type: ignore
 from typing import Union, Tuple
 
 
@@ -39,7 +40,7 @@ def VisualEffect(
     packet += (hue & 0xFFFFFFFF).to_bytes(4, "big")
     packet += (render_mode & 0xFFFFFFFF).to_bytes(4, "big")
 
-    PacketLogger.SendToClient(List[Byte](packet))
+    PacketLogger.SendToClient(CList[Byte](packet))
 
 
 def VisualEffectMissile(
@@ -79,9 +80,7 @@ def VisualEffectMissile(
     else:
         dst_pos = dst
 
-    VisualEffect(
-        0, src_id, dst_id, tile_type, src_pos, dst_pos, speed, duration, 0, 0, fixed_dir, explodes, hue, render_mode
-    )
+    VisualEffect(0, src_id, dst_id, tile_type, src_pos, dst_pos, speed, duration, 0, 0, fixed_dir, explodes, hue, render_mode)
 
 
 def VisualEffectLightning(src: int):
@@ -132,9 +131,7 @@ def VisualEffectSelf(
     :param hue: The hue of the effect.
     :param render_mode: The render mode of the effect. (0 to 7)
     """
-    VisualEffect(
-        3, src, 0, tile_type, (0, 0, 0), (0, 0, 0), speed, duration, unk1, unk2, False, False, hue, render_mode
-    )
+    VisualEffect(3, src, 0, tile_type, (0, 0, 0), (0, 0, 0), speed, duration, unk1, unk2, False, False, hue, render_mode)
 
 
 def SoundEffect(sound_model: int):
@@ -146,30 +143,30 @@ def SoundEffect(sound_model: int):
     packet += pos.X.to_bytes(2, "big")
     packet += pos.Y.to_bytes(2, "big")
     packet += (pos.Z & 0xFFFF).to_bytes(2, "big")
-    PacketLogger.SendToClient(List[Byte](packet))
+    PacketLogger.SendToClient(CList[Byte](packet))
 
 
 # Example usage of the VisualEffect functions
 if Player.Connected:
     pos = Player.Position
     x, y, z = pos.X, pos.Y, pos.Z
-    
+
     SoundEffect(0x29)  # thundr02.wav
     VisualEffectLightning(Player.Serial)
     Misc.Pause(1000)
-    
+
     SoundEffect(0x101)  # sfx16_l.wav
     VisualEffectMissile((x - 10, y - 10, z + 10), Player.Serial, 14036, 3, 12, 1152, 3)
     VisualEffectMissile((x - 15, y - 10, z + 10), Player.Serial, 14036, 3, 12, 1152, 3)
     VisualEffectMissile((x - 10, y - 15, z + 10), Player.Serial, 14036, 3, 12, 1152, 3)
     Misc.Pause(1500)
-    
+
     SoundEffect(0x207)  # explode.wav
     VisualEffectStatic((x + 1, y, z), 14120, 13, 253, 2)
     VisualEffectStatic((x, y + 1, z), 14120, 13, 253, 2)
     VisualEffectStatic((x - 1, y, z), 14120, 13, 253, 2)
     VisualEffectStatic((x, y - 1, z), 14120, 13, 253, 2)
     Misc.Pause(750)
-    
+
     SoundEffect(0x208)  # framstrk.wav
     VisualEffectSelf(Player.Serial, 14089, 30, 1152, 0)
