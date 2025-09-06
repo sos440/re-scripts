@@ -2,26 +2,32 @@
 # User setting
 ################################################################################
 
-# If it is set to True, you will attack any hostile mobs in war mode.
+# If set to True, you will attack any hostile mobs in war mode.
 ATTACK_NEAR = True
 
-# If it is set to "Weakest", you will attack the one with lowest health.
-# If it is set to "Strongest", you will attack the one with highest health.
+# If set to "Weakest", you will attack the one with the lowest health.
+# If set to "Strongest", you will attack the one with the highest health.
 ATTACK_PRIORITY = "Weakest"
 
 # Spell delay in milliseconds.
 SPELL_DELAY = 1000
 
-# Remove curse will be casted after you are safe for this duration.
+# Remove Curse will be cast after you are safe for this duration.
 REMOVE_CURSE_DELAY = 3000
-
-# Only the enemies within this distance will be scanned.
-DETECT_RANGE = 8
 
 # Attempts to remove debuffs only when your health is above this percentage.
 DEBUFF_THRESHOLD = 90
 
-# List of buffs to keep when you are engaging in a battle.
+# If set to True, a repeating head message will appear on your corpses.
+INFORM_CORPSE_LOCATION = True
+
+# Interval between head messages on your corpses, in milliseconds.
+INFORM_CORPSE_INTERVAL = 1000
+
+# Only enemies within this distance will be scanned.
+DETECT_RANGE = 8
+
+# List of buffs to keep when you are engaged in battle.
 BUFFS_TO_KEEP = [
     "Consecrate Weapon",
     "Divine Fury",
@@ -52,7 +58,7 @@ from typing import List
 import time
 
 
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 GUMP_MENU = hash("LazyPallyHelperGump") & 0xFFFFFFFF
 GUMP_WRAPTXT = """<CENTER><BASEFONT COLOR="#FFFFFF">{text}</BASEFONT></CENTER>"""
 is_running = True
@@ -176,6 +182,17 @@ while Player.Connected:
         elif gd.buttonid == 2:
             is_running = True
         gump_menu()
+
+    # If your corpses should be highlighted, do it here
+    corpse_found = False
+    if INFORM_CORPSE_LOCATION and not Timer.Check("highlight-corpse"):
+        for corpse in Items.FindAllByID(0x2006, -1, -1, 64):
+            if corpse.Name != f"the remains of {Player.Name}":
+                continue
+            corpse_found = True
+            Items.Message(corpse.Serial, 0x472, "▼Your Body▼")
+        if corpse_found:
+            Timer.Create("highlight-corpse", INFORM_CORPSE_INTERVAL)
 
     # If the player is ghost, skip
     if Player.IsGhost:

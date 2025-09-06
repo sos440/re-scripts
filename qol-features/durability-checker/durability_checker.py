@@ -9,7 +9,7 @@ REFRESH_DURATION = 1000
 ALERT_LOW_DURABILITY = True
 """Use the alert system."""
 
-ALERT_THRESHOLD = 20
+ALERT_THRESHOLD = 10
 """Alert when the durability (in percent) is below this threshold."""
 
 
