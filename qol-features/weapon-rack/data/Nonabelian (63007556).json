@@ -82,5 +82,29 @@
         "serial": 1988047101,
         "name": "Elly",
         "type": 3913
+    },
+    {
+        "color": 0,
+        "serial": 2141102440,
+        "name": "Demon",
+        "type": 3937
+    },
+    {
+        "color": 0,
+        "serial": 1414681720,
+        "name": "Area Spider",
+        "type": 11571
+    },
+    {
+        "color": 88,
+        "serial": 1889798044,
+        "name": "Spider",
+        "type": 3937
+    },
+    {
+        "color": 0,
+        "serial": 1091895467,
+        "name": "Fishing",
+        "type": 3520
     }
 ]

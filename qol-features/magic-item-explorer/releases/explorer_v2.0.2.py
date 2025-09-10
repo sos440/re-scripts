@@ -1080,7 +1080,7 @@ class SheetColumn:
     def toggle_reverse(self):
         if self.sort_order == SortOrder.ASCENDING:
             self.sort_order = SortOrder.DESCENDING
-        if self.sort_order == SortOrder.DESCENDING:
+        elif self.sort_order == SortOrder.DESCENDING:
             self.sort_order = SortOrder.ASCENDING
 
     def filter(self, sheet: "Sheet") -> "Sheet":

@@ -9,6 +9,7 @@ MAX_TRIAL = 3  # Maximum number of trials to move items
 
 from AutoComplete import *
 from typing import Tuple, Optional
+import re
 
 
 GUMP_MAIN = hash("MoveItemMainGump") & 0xFFFFFFFF
@@ -129,6 +130,21 @@ def gump_prompt(src_cont, dst_cont):
     return False, False
 
 
+def find_topmost(obj: "Item") -> Optional["Item"]:
+    while obj and obj.RootContainer:
+        if Misc.IsItem(obj.RootContainer):
+            obj = Items.FindBySerial(obj.RootContainer)
+        elif Misc.IsMobile(obj.RootContainer):
+            return Mobiles.FindBySerial(obj.RootContainer)
+    return obj
+
+
+def find_topmost_obj(obj: "Item") -> Optional["Item"]:
+    while obj and obj.RootContainer and Misc.IsItem(obj.RootContainer):
+        obj = Items.FindBySerial(obj.RootContainer)
+    return obj
+
+
 def move_items():
     # Obtain the source container
     src_cont = find_by_target("Choose the source container.", 0x47E)
@@ -174,6 +190,47 @@ def move_items():
     num_total = len(src_cont.Contains)
     Misc.SendMessage(f"Moving {num_total} items...", 68)
     for i, item in enumerate(src_cont.Contains):
+        item = Items.FindBySerial(item.Serial)
+        if item is None:
+            Misc.SendMessage(f"Moving {i + 1} of {num_total}: Failed to find the item!", 33)
+            continue
+            
+        src_topcont = find_topmost(item)
+        if src_topcont is None:
+            Misc.SendMessage(f"Moving {i + 1} of {num_total}: Failed to find the source container!", 33)
+            continue
+        if Player.DistanceTo(src_topcont) > 2:
+            Misc.SendMessage(f"Moving {i + 1} of {num_total}: The source container is too far!", 33)
+            continue
+            
+        dst_cont = Items.FindBySerial(dst_cont.Serial)
+        if dst_cont is None:
+            Misc.SendMessage(f"Moving {i + 1} of {num_total}: Failed to find the destination container!!", 33)
+            continue
+            
+        dst_topcont = find_topmost(dst_cont)
+        if dst_topcont is None:
+            Misc.SendMessage(f"Moving {i + 1} of {num_total}: Failed to find the destination container!!", 33)
+            continue
+        if Player.DistanceTo(dst_topcont) > 2:
+            Misc.SendMessage(f"Moving {i + 1} of {num_total}: The destination container is too far!", 33)
+            continue
+            
+        item_count = 0
+        max_count = 0
+        dst_topcont_obj = find_topmost_obj(dst_cont)
+        Items.WaitForProps(dst_topcont_obj.Serial, 1000)
+        for line in Items.GetPropStringList(dst_topcont_obj.Serial):
+            matchres = re.match(r"^contents: (\d+)/(\d+) items.*", line.lower())
+            if not matchres:
+                continue
+            item_count = int(matchres.group(1))
+            max_count = int(matchres.group(2))
+            break
+        if item_count >= max_count:
+            Misc.SendMessage(f"Moving {i + 1} of {num_total}: The target container is full!", 33)
+            continue
+        
         Misc.SendMessage(f"Moving {i + 1} of {num_total}: {to_proper_case(item.Name)}", 68)
         for trial in range(MAX_TRIAL + 1):
             if trial == MAX_TRIAL:

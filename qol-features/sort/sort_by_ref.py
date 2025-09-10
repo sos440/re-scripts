@@ -6,6 +6,7 @@ from enum import Enum
 class SortKey(Enum):
     COLOR = 1
     NAME = 2
+    TYPE = 2
 
 
 class _Dir(Enum):
@@ -47,11 +48,13 @@ class SortCriteria:
             key.append(item.Color)
         if SortKey.NAME in self.sort_key:
             key.append(item.Name)
+        if SortKey.TYPE in self.sort_key:
+            key.append(item.ItemID)
         return tuple(key)
 
     def categorize(self, items: List["Item"]) -> Dict[Any, List["Item"]]:
         categories = {}
-        items = sorted(items, key=lambda item: (item.Color, item.Name, item.Serial))
+        items = sorted(items, key=lambda item: (item.ItemID, item.Color, item.Name, item.Serial))
         for item in items:
             key = self.get_sort_key(item)
             if key not in categories:
@@ -61,9 +64,10 @@ class SortCriteria:
 
 
 settings = {
-    0x0E75: SortCriteria(sort_key=[SortKey.COLOR], dx=10, dy=22, line_size=15),
+    # backpack
+    0x0E75: SortCriteria(sort_key=[SortKey.COLOR], dx=10, dy=15, line_size=15),
     # mysterious fragment
-    0x1F13: SortCriteria(sort_key=[SortKey.COLOR], dx=5, dy=15, line_size=40),
+    0x1F13: SortCriteria(sort_key=[SortKey.COLOR], dx=10, dy=15, line_size=40),
     # gold-trimmed metal box (facing south)
     0x0E40: SortCriteria(sort_key=[SortKey.COLOR, SortKey.NAME], dir=SortDir.RightThenDown, dx=30, dy=25, line_size=40),
     # dull metal box (facing south)
@@ -78,6 +82,14 @@ settings = {
     0x1E22: SortCriteria(sort_key=[SortKey.NAME], dir=SortDir.RightThenUp, dx=20, dy=10, line_size=40),
     # Rune
     0x1F14: SortCriteria(sort_key=[SortKey.COLOR], dx=5, dy=6, line_size=20),
+    # Present Box
+    0x232A: SortCriteria(sort_key=[SortKey.COLOR], dir=SortDir.RightThenDown, dx=20, dy=20, line_size=5),
+    # Present Box
+    0x232B: SortCriteria(sort_key=[SortKey.COLOR], dir=SortDir.RightThenDown, dx=20, dy=20, line_size=5),
+    # Present Box
+    0x46A2: SortCriteria(sort_key=[SortKey.COLOR], dir=SortDir.RightThenDown, dx=20, dy=20, line_size=5),
+    # Present Box
+    0x9A93: SortCriteria(sort_key=[SortKey.COLOR], dir=SortDir.RightThenDown, dx=20, dy=20, line_size=5),
 }
 
 
@@ -96,8 +108,15 @@ def main():
     y0 = ref.Position.Y
     cont = ref.Container
 
-    criteria = settings.get(ref.ItemID, SortCriteria(sort_key=[SortKey.COLOR]))
-    categories = criteria.categorize(Items.FindAllByID(ref.ItemID, -1, ref.Container, 0))
+    search_key = ref.ItemID
+    criteria = SortCriteria(sort_key=[SortKey.COLOR])
+    for key, crit in settings.items():
+        if isinstance(key, tuple) and ref.ItemID in key:
+            criteria = crit
+            search_key = list(key)
+        elif ref.ItemID == key:
+            criteria = crit
+    categories = criteria.categorize(Items.FindAllByID(search_key, -1, ref.Container, 0))
     dir = criteria.dir.value
 
     # Sort item
@@ -129,9 +148,12 @@ def main():
             elif dir[1] == _Dir.Down:
                 y += pos_j * dy
             # Current item position
-            if (x, y) != (item.Position.X, item.Position.Y):
+            for _ in range(3):
+                if (x, y) == (item.Position.X, item.Position.Y):
+                    break
                 Items.Move(item.Serial, cont, -1, x, y)
                 Misc.Pause(900)
+                item = Items.FindBySerial(item.Serial)
 
             # Update the position arguments
             pos_j += 1

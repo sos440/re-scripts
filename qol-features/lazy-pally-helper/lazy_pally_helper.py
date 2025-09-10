@@ -190,7 +190,7 @@ while Player.Connected:
             if corpse.Name != f"the remains of {Player.Name}":
                 continue
             corpse_found = True
-            Items.Message(corpse.Serial, 0x472, "▼Your Body▼")
+            Items.Message(corpse.Serial, 1153, "▼Your Body▼")
         if corpse_found:
             Timer.Create("highlight-corpse", INFORM_CORPSE_INTERVAL)
 
