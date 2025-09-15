@@ -9,7 +9,7 @@ import re
 WEIGHT_BUFFER = 48
 
 # Serial number for your faithful pack animal, set to 0 if none available
-MULE = 0
+MULE = 0x03FBF97A
 
 # Drop ores if no forges or packies are available
 DROP_ORES = True

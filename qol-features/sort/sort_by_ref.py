@@ -64,6 +64,8 @@ class SortCriteria:
 
 
 settings = {
+    # seed
+    0x0DCF: SortCriteria(sort_key=[SortKey.COLOR], dx=10, dy=10, line_size=15),
     # backpack
     0x0E75: SortCriteria(sort_key=[SortKey.COLOR], dx=10, dy=15, line_size=15),
     # mysterious fragment

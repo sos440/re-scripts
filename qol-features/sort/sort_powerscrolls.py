@@ -87,6 +87,7 @@ def sort_ps():
             print(f"{ps.Name} -> No book found")
             Misc.Pause(1000)
             continue
+        Misc.SendMessage(f"Moving PS: {matchres.group(2)} {matchres.group(1)}", 0x802)
         Items.Move(ps.Serial, book, -1)
         Misc.Pause(1000)
 

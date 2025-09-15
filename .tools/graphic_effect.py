@@ -2,7 +2,7 @@ from AutoComplete import *
 from enum import Enum
 from System.Collections.Generic import List as CList  # type: ignore
 from System import Byte  # type: ignore
-from typing import Union, Optional, Any, Tuple, TypeAlias
+from typing import Union, Optional, Any, Tuple
 
 
 ################################################################################
@@ -166,9 +166,9 @@ class GraphicEffectArgs:
 
 
 class Effects:
-    Type: TypeAlias = GraphicEffectType
-    BlendMode: TypeAlias = GraphicEffectBlendMode
-    Args: TypeAlias = GraphicEffectArgs
+    Type: "TypeAlias" = GraphicEffectType
+    BlendMode: "TypeAlias" = GraphicEffectBlendMode
+    Args: "TypeAlias" = GraphicEffectArgs
 
     @staticmethod
     def Render(args: Args) -> None:

@@ -1889,7 +1889,7 @@ class Items:
         ...
 
     @staticmethod
-    def FindBySerial(serial: int) -> "Item":
+    def FindBySerial(serial: int) -> Optional["Item"]:
         """Search for a specific Item by using it Serial
 
         Parameters

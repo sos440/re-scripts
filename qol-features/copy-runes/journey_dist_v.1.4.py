@@ -2,17 +2,20 @@
 # User Settings
 ################################################################################
 
-CAST_CHIVALRY_SKILL_MIN = 100.0
+CAST_CHIVALRY_SKILL_MIN = 15.0
 """Minimum skill required to cast Sacred Journey"""
 
-CAST_CHIVALRY_MANA_MIN = 5
+CAST_CHIVALRY_MANA_MIN = 10
 """Minimum mana required to cast Sacred Journey"""
 
-CAST_MAGERY_SKILL_MIN = 100.0
+CAST_MAGERY_SKILL_MIN = 24.0
 """Minimum skill required to cast Recall"""
 
-CAST_MAGERY_MANA_MIN = 18
+CAST_MAGERY_MANA_MIN = 11
 """Minimum mana required to cast Recall"""
+
+ENCOUNTER_BUFFER = 2000
+"""Time in milliseconds to wait before recalling, to check if an encounter happens"""
 
 CAST_RECOVERY_TIME = 1500
 """Time in milliseconds to recover from casting"""
@@ -25,8 +28,10 @@ from AutoComplete import *
 import threading
 import re
 from typing import List, Tuple, Optional
+from System.Collections.Generic import List as CList  # type: ignore
+from System import Byte, Int32  # type: ignore
 
-VERSION = "1.2"
+VERSION = "1.4"
 
 ################################################################################
 # Helper functions
@@ -36,7 +41,7 @@ VERSION = "1.2"
 GUMP_RUNIC_ATLAS = 0
 
 
-def _decode_sextant(msg: str) -> Optional[Tuple[int, int]]:
+def _decode_sextant(msg: str, is_t2a: bool = False) -> Optional[Tuple[int, int]]:
     # Constants
     N_WIDTH = 5120
     N_HEIGHT = 4096
@@ -67,8 +72,12 @@ def _decode_sextant(msg: str) -> Optional[Tuple[int, int]]:
         ydegree = -ydegree
 
     # Adjust to Lord British's throne coordinates
-    x = int(round(xdegree * N_WIDTH / 360) + N_CENTER_X) % N_WIDTH
-    y = int(round(ydegree * N_HEIGHT / 360) + N_CENTER_Y) % N_HEIGHT
+    if is_t2a:
+        x = int(round(xdegree * N_WIDTH / 360) + 5936)
+        y = int(round(ydegree * N_HEIGHT / 360) + 3112)
+    else:
+        x = int(round(xdegree * N_WIDTH / 360) + N_CENTER_X) % N_WIDTH
+        y = int(round(ydegree * N_HEIGHT / 360) + N_CENTER_Y) % N_HEIGHT
 
     return x, y
 
@@ -126,6 +135,8 @@ class Rune:
         self.marked = False
         self.x = -1
         self.y = -1
+        self.x_t2a = -1
+        self.y_t2a = -1
         self.facet = -1
 
 
@@ -204,6 +215,7 @@ class RunicAtlasControl:
         Read the current state of the runic atlas from the gump data.
         """
         sextant: Optional[Tuple[int, int]] = None
+        sextant_t2a: Optional[Tuple[int, int]] = None
 
         last_button_id = -1
         last_button_ln = -1
@@ -248,10 +260,14 @@ class RunicAtlasControl:
             elif line_str.startswith("htmlgump 25 254 182 18"):
                 text_id = int(args[5])
                 sextant = _decode_sextant(gd.stringList[text_id])
+                sextant_t2a = _decode_sextant(gd.stringList[text_id], True)
 
         if has_selected_entry and sextant is not None:
             snapshot.runes[snapshot.selected_index].x = sextant[0]
             snapshot.runes[snapshot.selected_index].y = sextant[1]
+        if has_selected_entry and sextant_t2a is not None:
+            snapshot.runes[snapshot.selected_index].x_t2a = sextant_t2a[0]
+            snapshot.runes[snapshot.selected_index].y_t2a = sextant_t2a[1]
 
     @classmethod
     def goto_page(cls, snapshot: RunicAtlasSnapshot, page: int, delay: int = 1500) -> bool:
@@ -335,10 +351,14 @@ IDMOD_JUMP_TO = 100
 class Journey:
     @staticmethod
     def get_best_skill() -> Optional[str]:
-        if Player.GetSkillValue("Chivalry") >= CAST_CHIVALRY_SKILL_MIN:
+        """Choose whichever recall skill is better."""
+        chiv_diff = Player.GetSkillValue("Chivalry") - CAST_CHIVALRY_SKILL_MIN
+        mage_diff = Player.GetSkillValue("Magery") - CAST_MAGERY_SKILL_MIN
+        if chiv_diff < 0 and mage_diff < 0:
+            return None
+        if chiv_diff >= mage_diff:
             return "Chivalry"
-        elif Player.GetSkillValue("Magery") >= CAST_MAGERY_SKILL_MIN:
-            return "Magery"
+        return "Magery"
 
     @staticmethod
     def get_player_pos_2d() -> Tuple[int, int]:
@@ -394,6 +414,7 @@ class Journey:
         :param serial: The serial of the runic atlas.
         :param index: The 0-based index of the rune to move to.
         """
+
         if index < 0 or index >= len(snapshot.runes):
             raise cls.InvalidIndexError("Invalid rune index.")
         if snapshot.runes[index].name == "Empty":
@@ -436,16 +457,50 @@ class Journey:
         else:
             raise cls.NotReadyToRecallException(f"You need either {CAST_CHIVALRY_SKILL_MIN} Chivalry or {CAST_MAGERY_SKILL_MIN} Magery to use this script!")
 
-        Misc.SendMessage(f"Recalling rune: {rune.name} ({rune.x}, {rune.y})", 0x3B2)
+        Misc.SendMessage(f"Rune used: {rune.name}", 0x3B2)
 
         Timer.Create("recall-delay", 3500)
+        success = False
         while Timer.Check("recall-delay"):
-            if cls.get_player_pos_2d() == (rune.x, rune.y):  # We only check 2D position because facet is not reliable
-                Misc.SendMessage("You have arrived at the target location.", 68)
-                return
+            pos = cls.get_player_pos_2d()
+            if pos == (rune.x, rune.y):  # We only check 2D position because facet is not reliable
+                Misc.SendMessage("You have arrived the target location.", 68)
+                success = True
+                break
+            if pos == (rune.x_t2a, rune.y_t2a) and Player.Map in (0, 1) and pos[0] >= 5120:
+                Misc.SendMessage("You have arrived the target location.", 68)
+                success = True
+                break
+            if (-1, -1) == (rune.x_t2a, rune.y_t2a) and Player.Map in (0, 1) and pos[0] >= 5120:
+                Misc.SendMessage("I can't determine the target location. Hope you arrive there!", 68)
+                success = True
+                break
             Misc.Pause(100)
 
-        raise cls.RecallFailedException()
+        if not success:
+            raise cls.RecallFailedException()
+
+    @staticmethod
+    def check_encounter() -> bool:
+        if Journal.Search("You have been ambushed!"):
+            return True
+        if Journal.Search("You found a treasure chest guarded by monsteres!"):
+            return True
+        if Journal.Search("A portal to the abyss has opened nearby!"):
+            return True
+
+        filter = Mobiles.Filter()
+        filter.Enabled = True
+        filter.Notorieties = CList[Byte](b"\x03\x04\x05\x06")
+        filter.RangeMax = 64
+        mobs = Mobiles.ApplyFilter(filter)
+        for mob in mobs:
+            Mobiles.WaitForProps(mob.Serial, 1000)
+            for line in Mobiles.GetPropStringList(mob.Serial):
+                if line.lower() == "encounter enemy":
+                    return True
+
+        return False
 
 
 class JourneyManager:
@@ -701,11 +756,18 @@ class JourneyManager:
                     cls.TRAVEL_ENABLED = False
                 else:
                     Misc.Pause(CAST_RECOVERY_TIME)
+                    Misc.Pause(ENCOUNTER_BUFFER)
                     if Journal.Search("The ground is furiously shaking as you notice"):
                         Misc.SendMessage("Wait, you seem to have found an IDOC!", 68)
+                        Misc.PlaySound(0x41E, *Journey.get_player_pos_3d())
                         cls.TRAVEL_ENABLED = False
                     if Journal.Search("The ground below you is feeling very unstable"):
                         Misc.SendMessage("Wait, you seem to have found an IDOC!", 68)
+                        Misc.PlaySound(0x41E, *Journey.get_player_pos_3d())
+                        cls.TRAVEL_ENABLED = False
+                    if Journey.check_encounter():
+                        Misc.SendMessage("An encounter has been detected! Stopping travel.", 68)
+                        Misc.PlaySound(0x440, *Journey.get_player_pos_3d())
                         cls.TRAVEL_ENABLED = False
             Misc.Pause(100)
 
