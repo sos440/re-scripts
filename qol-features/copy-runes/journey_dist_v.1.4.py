@@ -314,6 +314,8 @@ class RunicAtlasControl:
 
         # Read all coordinates
         if read_coordinates:
+            import json
+
             if not cls.goto_page(snapshot, 1):
                 return None
             prev_page = 0
@@ -327,6 +329,19 @@ class RunicAtlasControl:
                 cls.Buttons.select_rune(index)
                 if not cls.goto_page(snapshot, page):
                     return None
+
+            export = [
+                {
+                    "name": rune.name,
+                    "facet": rune.facet,
+                    "position": [rune.x, rune.y],
+                    "position_t2a": [rune.x_t2a, rune.y_t2a],
+                }
+                for rune in snapshot.runes if rune.name != "Empty"
+            ]
+
+            with open("runic_atlas_export.json", "w") as f:
+                json.dump(export, f, indent=4)
 
         return snapshot
 
@@ -448,13 +463,16 @@ class Journey:
         best_skill = cls.get_best_skill()
         if best_skill == "Chivalry":
             if Player.Mana < CAST_CHIVALRY_MANA_MIN:
+                RunicAtlasControl.close()
                 raise cls.NotReadyToRecallException(f"Not enough mana to cast Sacred Journey. Required: {CAST_CHIVALRY_MANA_MIN}")
             RunicAtlasControl.Buttons.sacred_journey()
         elif best_skill == "Magery":
             if Player.Mana < CAST_MAGERY_MANA_MIN:
+                RunicAtlasControl.close()
                 raise cls.NotReadyToRecallException(f"Not enough mana to cast Recall. Required: {CAST_MAGERY_MANA_MIN}")
             RunicAtlasControl.Buttons.recall()
         else:
+            RunicAtlasControl.close()
             raise cls.NotReadyToRecallException(f"You need either {CAST_CHIVALRY_SKILL_MIN} Chivalry or {CAST_MAGERY_SKILL_MIN} Magery to use this script!")
 
         Misc.SendMessage(f"Rune used: {rune.name}", 0x3B2)
@@ -700,7 +718,7 @@ class JourneyManager:
         RunicAtlasControl.close()
         Items.UseItem(runic_atlas.Serial)
 
-        snapshot = RunicAtlasControl.read_all()
+        snapshot = RunicAtlasControl.read_all(read_coordinates=False)
         if snapshot is None:
             Misc.SendMessage("Failed to read the runic atlas gump.", 33)
             return

@@ -1,0 +1,518 @@
+[
+    {
+        "facet": 3,
+        "position": [
+            918,
+            865
+        ],
+        "name": "49",
+        "position_t2a": [
+            5531,
+            2353
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            791,
+            828
+        ],
+        "name": "50",
+        "position_t2a": [
+            5404,
+            2316
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            682,
+            927
+        ],
+        "name": "51",
+        "position_t2a": [
+            5295,
+            2415
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            736,
+            1020
+        ],
+        "name": "52",
+        "position_t2a": [
+            5349,
+            2508
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            707,
+            1112
+        ],
+        "name": "53",
+        "position_t2a": [
+            5320,
+            2600
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            681,
+            1257
+        ],
+        "name": "54",
+        "position_t2a": [
+            5294,
+            2745
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            822,
+            1199
+        ],
+        "name": "55",
+        "position_t2a": [
+            5435,
+            2687
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            786,
+            1339
+        ],
+        "name": "56",
+        "position_t2a": [
+            5399,
+            2827
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            636,
+            1405
+        ],
+        "name": "57",
+        "position_t2a": [
+            5249,
+            2893
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            860,
+            1458
+        ],
+        "name": "58",
+        "position_t2a": [
+            5473,
+            2946
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            993,
+            1465
+        ],
+        "name": "59",
+        "position_t2a": [
+            5606,
+            2953
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1132,
+            1521
+        ],
+        "name": "60",
+        "position_t2a": [
+            5745,
+            3009
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1091,
+            1314
+        ],
+        "name": "61",
+        "position_t2a": [
+            5704,
+            2802
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            962,
+            1201
+        ],
+        "name": "62",
+        "position_t2a": [
+            5575,
+            2689
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            930,
+            1079
+        ],
+        "name": "63",
+        "position_t2a": [
+            5543,
+            2567
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            854,
+            953
+        ],
+        "name": "64",
+        "position_t2a": [
+            5467,
+            2441
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1043,
+            950
+        ],
+        "name": "65",
+        "position_t2a": [
+            5656,
+            2438
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1047,
+            1071
+        ],
+        "name": "66",
+        "position_t2a": [
+            5660,
+            2559
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1326,
+            1662
+        ],
+        "name": "67",
+        "position_t2a": [
+            5939,
+            3150
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1325,
+            1802
+        ],
+        "name": "68",
+        "position_t2a": [
+            5938,
+            3290
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1483,
+            1805
+        ],
+        "name": "69",
+        "position_t2a": [
+            6096,
+            3293
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1604,
+            1803
+        ],
+        "name": "70 Orcs",
+        "position_t2a": [
+            6217,
+            3291
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1721,
+            1799
+        ],
+        "name": "71",
+        "position_t2a": [
+            6334,
+            3287
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1844,
+            1788
+        ],
+        "name": "72",
+        "position_t2a": [
+            6457,
+            3276
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1936,
+            1650
+        ],
+        "name": "73",
+        "position_t2a": [
+            6549,
+            3138
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            2060,
+            1753
+        ],
+        "name": "74",
+        "position_t2a": [
+            6673,
+            3241
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1883,
+            1526
+        ],
+        "name": "75",
+        "position_t2a": [
+            6496,
+            3014
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1716,
+            1477
+        ],
+        "name": "76",
+        "position_t2a": [
+            6329,
+            2965
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1619,
+            1275
+        ],
+        "name": "77",
+        "position_t2a": [
+            6232,
+            2763
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1772,
+            1289
+        ],
+        "name": "78",
+        "position_t2a": [
+            6385,
+            2777
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1827,
+            1144
+        ],
+        "name": "79",
+        "position_t2a": [
+            6440,
+            2632
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            2004,
+            1208
+        ],
+        "name": "80",
+        "position_t2a": [
+            6617,
+            2696
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            2158,
+            1232
+        ],
+        "name": "81",
+        "position_t2a": [
+            6771,
+            2720
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            2169,
+            1382
+        ],
+        "name": "82",
+        "position_t2a": [
+            6782,
+            2870
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            2049,
+            1473
+        ],
+        "name": "83",
+        "position_t2a": [
+            6662,
+            2961
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            2097,
+            1587
+        ],
+        "name": "84",
+        "position_t2a": [
+            6710,
+            3075
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            2216,
+            1507
+        ],
+        "name": "85",
+        "position_t2a": [
+            6829,
+            2995
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            2347,
+            1569
+        ],
+        "name": "86",
+        "position_t2a": [
+            6960,
+            3057
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            2194,
+            1681
+        ],
+        "name": "87",
+        "position_t2a": [
+            6807,
+            3169
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            2335,
+            1712
+        ],
+        "name": "88",
+        "position_t2a": [
+            6948,
+            3200
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1837,
+            1337
+        ],
+        "name": "89",
+        "position_t2a": [
+            6450,
+            2825
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1762,
+            928
+        ],
+        "name": "90 Labrynth Island",
+        "position_t2a": [
+            6375,
+            2416
+        ]
+    },
+    {
+        "facet": 3,
+        "position": [
+            1628,
+            931
+        ],
+        "name": "91 Labrynth Island",
+        "position_t2a": [
+            6241,
+            2419
+        ]
+    }
+]

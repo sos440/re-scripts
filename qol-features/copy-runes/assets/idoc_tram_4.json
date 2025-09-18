@@ -1,0 +1,578 @@
+[
+    {
+        "facet": 1,
+        "position": [
+            1405,
+            1107
+        ],
+        "name": "145",
+        "position_t2a": [
+            6018,
+            2595
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            1329,
+            893
+        ],
+        "name": "146",
+        "position_t2a": [
+            5942,
+            2381
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            1481,
+            836
+        ],
+        "name": "147",
+        "position_t2a": [
+            6094,
+            2324
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            1532,
+            685
+        ],
+        "name": "148",
+        "position_t2a": [
+            6145,
+            2173
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            1666,
+            635
+        ],
+        "name": "149",
+        "position_t2a": [
+            6279,
+            2123
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            1664,
+            497
+        ],
+        "name": "150",
+        "position_t2a": [
+            6277,
+            1985
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            1789,
+            444
+        ],
+        "name": "151",
+        "position_t2a": [
+            6402,
+            1932
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            1868,
+            314
+        ],
+        "name": "152",
+        "position_t2a": [
+            6481,
+            1802
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            1701,
+            250
+        ],
+        "name": "153",
+        "position_t2a": [
+            6314,
+            1738
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            1917,
+            195
+        ],
+        "name": "154",
+        "position_t2a": [
+            6530,
+            1683
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2021,
+            93
+        ],
+        "name": "155",
+        "position_t2a": [
+            6634,
+            1581
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2128,
+            118
+        ],
+        "name": "156",
+        "position_t2a": [
+            6741,
+            1606
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2134,
+            256
+        ],
+        "name": "157",
+        "position_t2a": [
+            6747,
+            1744
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2048,
+            385
+        ],
+        "name": "158",
+        "position_t2a": [
+            6661,
+            1873
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            1913,
+            514
+        ],
+        "name": "159",
+        "position_t2a": [
+            6526,
+            2002
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            1789,
+            608
+        ],
+        "name": "160",
+        "position_t2a": [
+            6402,
+            2096
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2239,
+            835
+        ],
+        "name": "161",
+        "position_t2a": [
+            6852,
+            2323
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2366,
+            699
+        ],
+        "name": "162",
+        "position_t2a": [
+            6979,
+            2187
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2495,
+            819
+        ],
+        "name": "163",
+        "position_t2a": [
+            7108,
+            2307
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2621,
+            956
+        ],
+        "name": "164",
+        "position_t2a": [
+            7234,
+            2444
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2367,
+            960
+        ],
+        "name": "165",
+        "position_t2a": [
+            6980,
+            2448
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2495,
+            1086
+        ],
+        "name": "166",
+        "position_t2a": [
+            7108,
+            2574
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2339,
+            1149
+        ],
+        "name": "167",
+        "position_t2a": [
+            6952,
+            2637
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2565,
+            1188
+        ],
+        "name": "168",
+        "position_t2a": [
+            7178,
+            2676
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2737,
+            1026
+        ],
+        "name": "169",
+        "position_t2a": [
+            7350,
+            2514
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2623,
+            692
+        ],
+        "name": "170",
+        "position_t2a": [
+            7236,
+            2180
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2724,
+            765
+        ],
+        "name": "171",
+        "position_t2a": [
+            7337,
+            2253
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2762,
+            577
+        ],
+        "name": "172",
+        "position_t2a": [
+            7375,
+            2065
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2698,
+            407
+        ],
+        "name": "173",
+        "position_t2a": [
+            7311,
+            1895
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2586,
+            262
+        ],
+        "name": "174",
+        "position_t2a": [
+            7199,
+            1750
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2446,
+            140
+        ],
+        "name": "175",
+        "position_t2a": [
+            7059,
+            1628
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2622,
+            118
+        ],
+        "name": "176",
+        "position_t2a": [
+            7235,
+            1606
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2815,
+            260
+        ],
+        "name": "177",
+        "position_t2a": [
+            7428,
+            1748
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2885,
+            97
+        ],
+        "name": "178",
+        "position_t2a": [
+            7498,
+            1585
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2918,
+            379
+        ],
+        "name": "179",
+        "position_t2a": [
+            7531,
+            1867
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            3012,
+            250
+        ],
+        "name": "180",
+        "position_t2a": [
+            7625,
+            1738
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            3073,
+            112
+        ],
+        "name": "181",
+        "position_t2a": [
+            7686,
+            1600
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            3173,
+            52
+        ],
+        "name": "182",
+        "position_t2a": [
+            7786,
+            1540
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            3017,
+            644
+        ],
+        "name": "183",
+        "position_t2a": [
+            7630,
+            2132
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            3134,
+            547
+        ],
+        "name": "184",
+        "position_t2a": [
+            7747,
+            2035
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            3163,
+            706
+        ],
+        "name": "185",
+        "position_t2a": [
+            7776,
+            2194
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            3310,
+            647
+        ],
+        "name": "186",
+        "position_t2a": [
+            7923,
+            2135
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            3410,
+            596
+        ],
+        "name": "187",
+        "position_t2a": [
+            8023,
+            2084
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            3391,
+            444
+        ],
+        "name": "188",
+        "position_t2a": [
+            8004,
+            1932
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            3420,
+            298
+        ],
+        "name": "189",
+        "position_t2a": [
+            8033,
+            1786
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            3461,
+            174
+        ],
+        "name": "190",
+        "position_t2a": [
+            8074,
+            1662
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            3182,
+            380
+        ],
+        "name": "191",
+        "position_t2a": [
+            7795,
+            1868
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            3263,
+            246
+        ],
+        "name": "192",
+        "position_t2a": [
+            7876,
+            1734
+        ]
+    }
+]

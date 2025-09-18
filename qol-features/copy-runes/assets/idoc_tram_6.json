@@ -1,0 +1,86 @@
+[
+    {
+        "facet": 1,
+        "position": [
+            2428,
+            1267
+        ],
+        "name": "241 TRAM",
+        "position_t2a": [
+            7041,
+            2755
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            1721,
+            2218
+        ],
+        "name": "242 TRAM",
+        "position_t2a": [
+            6334,
+            3706
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2000,
+            774
+        ],
+        "name": "243 TRAM",
+        "position_t2a": [
+            6613,
+            2262
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2335,
+            153
+        ],
+        "name": "244 TRAM",
+        "position_t2a": [
+            6948,
+            1641
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4336,
+            985
+        ],
+        "name": "245 TRAM MOONGLOW",
+        "position_t2a": [
+            3829,
+            2473
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4139,
+            3288
+        ],
+        "name": "246 TRAM FIRE ISLAND",
+        "position_t2a": [
+            3632,
+            4776
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4100,
+            3401
+        ],
+        "name": "247 TRAM FIRE ISLAND",
+        "position_t2a": [
+            3593,
+            4889
+        ]
+    }
+]

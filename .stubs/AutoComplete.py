@@ -1645,9 +1645,6 @@ class Item(UOEntity):
         ...
 
 
-class ItemData: ...
-
-
 class Items:
     """The Items class provides a wide range of functions to search and interact with Items."""
 
@@ -7502,6 +7499,25 @@ class Spells:
     @staticmethod
     def Interrupt():
         """Interrupt the casting of a spell by performing an equip/unequip."""
+
+
+class TileFlag(Enum): ...
+
+
+class ItemData:
+    Name: str
+    Flags: TileFlag
+    Weight: int
+    Quality: int
+    Quantity: int
+    Value: int
+    Height: int
+    Animation: int
+    Hue: int
+    StackingOffset: int
+    MiscData: int
+    Unk2: int
+    Unk3: int
 
 
 class Statics:

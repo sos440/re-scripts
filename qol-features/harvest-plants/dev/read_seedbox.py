@@ -1,6 +1,7 @@
 from AutoComplete import *
 from typing import Optional, List, Dict, Tuple, Any
 import re
+from enum import Enum
 
 
 ################################################################################
@@ -148,6 +149,13 @@ def parse_seedbox_gump(gd: Gumps.GumpData) -> Tuple[List[SeedboxEntry], bool]:
 # Gump
 ################################################################################
 
+
+class SeedboxStyle(Enum):
+    BLACK = 1
+    WHITE = 2
+    YELLOW = 3
+
+
 GUMP_ID = GumpTools.hashname("SeedboxReimaginedGump")
 GUMP_CELL_W = 125
 GUMP_CELL_H = 150
@@ -155,6 +163,10 @@ GUMP_NUM_ROWS = 5
 GUMP_NUM_COLS = 4
 GUMP_OUTER_BORDER = 10
 GUMP_INNER_BORDER = 5
+
+STYLE_GUMP_ID = GumpTools.hashname("SeedboxReimaginedStyleGump")
+STYLE_CHOICE = SeedboxStyle.BLACK
+STYLE_ALPHA = True
 
 
 def render_new_seedbox_gump(entries: List[SeedboxEntry]):
@@ -165,6 +177,18 @@ def render_new_seedbox_gump(entries: List[SeedboxEntry]):
     GUMP_INNER_H = (GUMP_CELL_H + GUMP_INNER_BORDER) * GUMP_NUM_ROWS + 30  # Extra space for the page text
     GUMP_W = GUMP_INNER_W + GUMP_OUTER_BORDER * 2
     GUMP_H = GUMP_INNER_H + GUMP_OUTER_BORDER * 2
+    GUMP_BG = 2624  # background
+    GUMP_TC = 28539  # text color
+    if STYLE_CHOICE == SeedboxStyle.BLACK:
+        GUMP_BG = 2624
+    elif STYLE_CHOICE == SeedboxStyle.WHITE:
+        GUMP_BG = 9354
+        if not STYLE_ALPHA:
+            GUMP_TC = 0
+    elif STYLE_CHOICE == SeedboxStyle.YELLOW:
+        GUMP_BG = 9304
+        if not STYLE_ALPHA:
+            GUMP_TC = 0
 
     # Create the gump
     gd = Gumps.CreateGump(movable=True)
@@ -174,10 +198,11 @@ def render_new_seedbox_gump(entries: List[SeedboxEntry]):
     for i in range(GUMP_NUM_ROWS):
         for j in range(GUMP_NUM_COLS):
             x = GUMP_OUTER_BORDER + j * (GUMP_CELL_W + GUMP_INNER_BORDER)
-            Gumps.AddImageTiled(gd, x, y, GUMP_CELL_W, GUMP_CELL_H, 2624)
+            Gumps.AddImageTiled(gd, x, y, GUMP_CELL_W, GUMP_CELL_H, GUMP_BG)
         y += GUMP_CELL_H + GUMP_INNER_BORDER
     Gumps.AddImageTiled(gd, GUMP_OUTER_BORDER, y, GUMP_INNER_W, 30, 2624)
-    Gumps.AddAlphaRegion(gd, GUMP_OUTER_BORDER, GUMP_OUTER_BORDER, GUMP_INNER_W, GUMP_INNER_H)
+    if STYLE_ALPHA:
+        Gumps.AddAlphaRegion(gd, GUMP_OUTER_BORDER, GUMP_OUTER_BORDER, GUMP_INNER_W, GUMP_INNER_H)
 
     # Add pages
     num_pages = (len(entries) - 1) // (GUMP_NUM_ROWS * GUMP_NUM_COLS) + 1
@@ -207,7 +232,7 @@ def render_new_seedbox_gump(entries: List[SeedboxEntry]):
                         cliloc = 1113715
                     if entry.graphics == 3230:  # cocoa tree
                         cliloc = 1113716
-                    Gumps.AddHtmlLocalized(gd, x + 5, y, GUMP_CELL_W - 10, 60, cliloc, f"@{'@'.join(args)}@", 28539, False, False)
+                    Gumps.AddHtmlLocalized(gd, x + 5, y, GUMP_CELL_W - 10, 60, cliloc, f"@{'@'.join(args)}@", GUMP_TC, False, False)
                 else:
                     args = [entry.color_cliloc, entry.graphics_cliloc]
                     cliloc = 1061917
@@ -215,7 +240,7 @@ def render_new_seedbox_gump(entries: List[SeedboxEntry]):
                         cliloc = 1095221
                     if entry.graphics == 3230:  # cocoa tree
                         cliloc = 1080533
-                    Gumps.AddHtmlLocalized(gd, x + 5, y, GUMP_CELL_W - 10, 60, cliloc, f"@{'@'.join(args)}@", 28539, False, False)
+                    Gumps.AddHtmlLocalized(gd, x + 5, y, GUMP_CELL_W - 10, 60, cliloc, f"@{'@'.join(args)}@", GUMP_TC, False, False)
 
         # Next / Previous page buttons
         y = GUMP_OUTER_BORDER + GUMP_NUM_ROWS * (GUMP_CELL_H + GUMP_INNER_BORDER)
@@ -225,16 +250,74 @@ def render_new_seedbox_gump(entries: List[SeedboxEntry]):
         if page_1based < num_pages:
             Gumps.AddButton(gd, GUMP_OUTER_BORDER + 105, y + 4, 4005, 4007, 0, 0, page_1based + 1)
             Gumps.AddLabelCropped(gd, GUMP_OUTER_BORDER + 140, y + 6, 100, 18, 1153, "NEXT")
+        Gumps.AddButton(gd, GUMP_OUTER_BORDER + 205, y + 4, 4005, 4007, 1, 1, 0)
+        Gumps.AddLabelCropped(gd, GUMP_OUTER_BORDER + 240, y + 6, 100, 18, 1153, "CHANGE STYLE")
 
     Gumps.SendGump(GUMP_ID, Player.Serial, 100, 100, gd.gumpDefinition, gd.gumpStrings)
+
+
+def render_style_gump():
+    global STYLE_CHOICE, STYLE_ALPHA
+    Gumps.CloseGump(STYLE_GUMP_ID)
+
+    # Calculate gump size
+    GUMP_INNER_W = 200
+    GUMP_INNER_H = 4 + 5 * 26
+    GUMP_W = GUMP_INNER_W + GUMP_OUTER_BORDER * 2
+    GUMP_H = GUMP_INNER_H + GUMP_OUTER_BORDER * 2
+
+    # Create the gump
+    gd = Gumps.CreateGump(movable=True)
+    Gumps.AddPage(gd, 0)
+    Gumps.AddBackground(gd, 0, 0, GUMP_W, GUMP_H, 5054)
+    Gumps.AddImageTiled(gd, GUMP_OUTER_BORDER, GUMP_OUTER_BORDER, GUMP_INNER_W, GUMP_INNER_H, 2624)
+    Gumps.AddAlphaRegion(gd, GUMP_OUTER_BORDER, GUMP_OUTER_BORDER, GUMP_INNER_W, GUMP_INNER_H)
+
+    Gumps.AddGroup(gd, 1)
+    y = GUMP_OUTER_BORDER + 4
+    Gumps.AddRadio(gd, GUMP_OUTER_BORDER + 5, y, 208, 209, STYLE_CHOICE == SeedboxStyle.BLACK, 1)
+    Gumps.AddLabelCropped(gd, GUMP_OUTER_BORDER + 35, y, 100, 18, 1153, "Black")
+    y += 26
+    Gumps.AddRadio(gd, GUMP_OUTER_BORDER + 5, y, 208, 209, STYLE_CHOICE == SeedboxStyle.WHITE, 2)
+    Gumps.AddLabelCropped(gd, GUMP_OUTER_BORDER + 35, y, 100, 18, 1153, "White")
+    y += 26
+    Gumps.AddRadio(gd, GUMP_OUTER_BORDER + 5, y, 208, 209, STYLE_CHOICE == SeedboxStyle.YELLOW, 3)
+    Gumps.AddLabelCropped(gd, GUMP_OUTER_BORDER + 35, y, 100, 18, 1153, "Yellow")
+    y += 26
+    Gumps.AddCheck(gd, GUMP_OUTER_BORDER + 5, y, 210, 211, STYLE_ALPHA, 0)
+    Gumps.AddLabelCropped(gd, GUMP_OUTER_BORDER + 35, y, 200, 18, 1153, "Apply transparency")
+    y += 26
+    Gumps.AddButton(gd, GUMP_OUTER_BORDER + 5, y, 4014, 4016, 1, 1, 0)
+    Gumps.AddLabelCropped(gd, GUMP_OUTER_BORDER + 40, y + 2, 100, 18, 1153, "APPLY")
+
+    Gumps.SendGump(STYLE_GUMP_ID, Player.Serial, 100, 100, gd.gumpDefinition, gd.gumpStrings)
+
+    if not Gumps.WaitForGump(STYLE_GUMP_ID, 3600000):
+        return
+
+    gd = Gumps.GetGumpData(STYLE_GUMP_ID)
+    if gd is None:
+        return
+
+    if gd.buttonid == 1:
+        STYLE_ALPHA = 0 in gd.switches
+        if 1 in gd.switches:
+            STYLE_CHOICE = SeedboxStyle.BLACK
+        elif 2 in gd.switches:
+            STYLE_CHOICE = SeedboxStyle.WHITE
+        elif 3 in gd.switches:
+            STYLE_CHOICE = SeedboxStyle.YELLOW
 
 
 ################################################################################
 # Main
 ################################################################################
 
+SEEDBOX_GUMP_ID = None
 
-def scan_seedbox():
+
+def prompt_seedbox() -> Optional[int]:
+    # Prompt for seedbox
     seedbox_serial = Target.PromptTarget("Target your seedbox.", 0x3B2)
     seedbox = Items.FindBySerial(seedbox_serial)
 
@@ -248,35 +331,69 @@ def scan_seedbox():
         Misc.SendMessage("This is not a seed box.", 33)
         return None
 
-    gump_id = None
+    return seedbox_serial
+
+
+def scan_seedbox(seedbox_serial: int):
+    global SEEDBOX_GUMP_ID
+
+    # Show an empty gump while loading
+    render_new_seedbox_gump([])
+
+    # Read the seedbox gump(s)
     entries: List[SeedboxEntry] = []
 
-    gd = find_seedbox_gump(gump_id, 1000)
+    gd = find_seedbox_gump(SEEDBOX_GUMP_ID, 1000)
     if gd is not None:
-        gump_id = gd.gumpId
-        Gumps.CloseGump(gump_id)
+        SEEDBOX_GUMP_ID = gd.gumpId
+        Gumps.CloseGump(SEEDBOX_GUMP_ID)
 
     Items.UseItem(seedbox_serial)
     while True:
-        gd = find_seedbox_gump(gump_id, 1000)
+        gd = find_seedbox_gump(SEEDBOX_GUMP_ID, 1000)
         if gd is None:
             break
-        gump_id = gd.gumpId
+        SEEDBOX_GUMP_ID = gd.gumpId
         entries_new, is_last_page = parse_seedbox_gump(gd)
         entries.extend(entries_new)
         if is_last_page:
-            Gumps.CloseGump(gump_id)
+            Gumps.CloseGump(SEEDBOX_GUMP_ID)
             break
-        Gumps.SendAction(gump_id, 2)
+        Gumps.SendAction(SEEDBOX_GUMP_ID, 2)
 
     entries = sorted(entries, key=lambda e: e.index)
     if not all(e.index == i for i, e in enumerate(entries)):
         Misc.SendMessage("Failed to parse seed box entries.", 33)
+        return False
 
+    # Show the new gump
     print(f"Found {len(entries)} seed box entries!")
-
     render_new_seedbox_gump(entries)
+
+    # Handle gump actions
+    if not Gumps.WaitForGump(GUMP_ID, 3600000):
+        return False
+
+    gd = Gumps.GetGumpData(GUMP_ID)
+    if gd is None:
+        return False
+
+    if gd.buttonid == 1:
+        render_style_gump()
+        return True
+
+    return False
+
+
+def main():
+    seedbox_serial = prompt_seedbox()
+    if seedbox_serial is None:
+        return
+
+    open_next = True
+    while open_next:
+        open_next = scan_seedbox(seedbox_serial)
 
 
 if __name__ == "__main__":
-    scan_seedbox()
+    main()

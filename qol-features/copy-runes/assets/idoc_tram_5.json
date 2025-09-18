@@ -1,0 +1,578 @@
+[
+    {
+        "facet": 1,
+        "position": [
+            3245,
+            113
+        ],
+        "name": "193",
+        "position_t2a": [
+            7858,
+            1601
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2927,
+            509
+        ],
+        "name": "194",
+        "position_t2a": [
+            7540,
+            1997
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2364,
+            3446
+        ],
+        "name": "195",
+        "position_t2a": [
+            6977,
+            4934
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2192,
+            1997
+        ],
+        "name": "196",
+        "position_t2a": [
+            6805,
+            3485
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4171,
+            417
+        ],
+        "name": "197",
+        "position_t2a": [
+            3664,
+            1905
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4017,
+            272
+        ],
+        "name": "198",
+        "position_t2a": [
+            3510,
+            1760
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            3901,
+            391
+        ],
+        "name": "199",
+        "position_t2a": [
+            3394,
+            1879
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4036,
+            539
+        ],
+        "name": "200",
+        "position_t2a": [
+            3529,
+            2027
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4165,
+            636
+        ],
+        "name": "201",
+        "position_t2a": [
+            3658,
+            2124
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4294,
+            757
+        ],
+        "name": "202",
+        "position_t2a": [
+            3787,
+            2245
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            1087,
+            3143
+        ],
+        "name": "203",
+        "position_t2a": [
+            5700,
+            4631
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2821,
+            3498
+        ],
+        "name": "204 SERPENTS HOLD",
+        "position_t2a": [
+            7434,
+            4986
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            1708,
+            1981
+        ],
+        "name": "205 EIFEL ISLAND (UNOCCUPIED CURRENTLY)",
+        "position_t2a": [
+            6321,
+            3469
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2114,
+            2118
+        ],
+        "name": "206 CLAW ISLAND",
+        "position_t2a": [
+            6727,
+            3606
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4427,
+            3297
+        ],
+        "name": "207 FIRE ISLAND",
+        "position_t2a": [
+            3920,
+            4785
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4497,
+            3153
+        ],
+        "name": "208 FIRE ISLAND",
+        "position_t2a": [
+            3990,
+            4641
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4588,
+            3305
+        ],
+        "name": "209 FIRE ISLAND",
+        "position_t2a": [
+            4081,
+            4793
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4661,
+            3452
+        ],
+        "name": "210 FIRE ISLAND",
+        "position_t2a": [
+            4154,
+            4940
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4508,
+            3451
+        ],
+        "name": "211 FIRE ISLAND",
+        "position_t2a": [
+            4001,
+            4939
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4493,
+            3618
+        ],
+        "name": "212 FIRE ISLAND",
+        "position_t2a": [
+            3986,
+            5106
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4273,
+            3712
+        ],
+        "name": "213 FIRE ISLAND",
+        "position_t2a": [
+            3766,
+            1104
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4548,
+            3735
+        ],
+        "name": "214 FIRE ISLAND",
+        "position_t2a": [
+            4041,
+            1127
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4674,
+            3659
+        ],
+        "name": "215 FIRE ISLAND",
+        "position_t2a": [
+            4167,
+            5147
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4790,
+            3553
+        ],
+        "name": "216 FIRE ISLAND",
+        "position_t2a": [
+            4283,
+            5041
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4843,
+            3678
+        ],
+        "name": "217 FIRE ISLAND",
+        "position_t2a": [
+            4336,
+            1070
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4753,
+            3808
+        ],
+        "name": "218 FIRE ISLAND",
+        "position_t2a": [
+            4246,
+            1200
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4580,
+            3867
+        ],
+        "name": "219 FIRE ISLAND",
+        "position_t2a": [
+            4073,
+            1259
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4495,
+            3945
+        ],
+        "name": "220 FIRE ISLAND",
+        "position_t2a": [
+            3988,
+            1337
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            3704,
+            2113
+        ],
+        "name": "221 MAGINCIA",
+        "position_t2a": [
+            8317,
+            3601
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            3732,
+            2207
+        ],
+        "name": "222 MAGINCIA",
+        "position_t2a": [
+            8345,
+            3695
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            1908,
+            2097
+        ],
+        "name": "223 MARBLE ISLAND",
+        "position_t2a": [
+            6521,
+            3585
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2073,
+            1979
+        ],
+        "name": "224 OCARINA ISLAND",
+        "position_t2a": [
+            6686,
+            3467
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4596,
+            1388
+        ],
+        "name": "225 MOONGLOW",
+        "position_t2a": [
+            4089,
+            2876
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4476,
+            1402
+        ],
+        "name": "226 MOONGLOW",
+        "position_t2a": [
+            3969,
+            2890
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4473,
+            1245
+        ],
+        "name": "227 MOONGLOW",
+        "position_t2a": [
+            3966,
+            2733
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4635,
+            1167
+        ],
+        "name": "228 MOONGLOW",
+        "position_t2a": [
+            4128,
+            2655
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4520,
+            978
+        ],
+        "name": "229 MOONGLOW",
+        "position_t2a": [
+            4013,
+            2466
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4307,
+            1149
+        ],
+        "name": "230 MOONGLOW",
+        "position_t2a": [
+            3800,
+            2637
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            4368,
+            1250
+        ],
+        "name": "231 MOONGLOW",
+        "position_t2a": [
+            3861,
+            2738
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2154,
+            3941
+        ],
+        "name": "232 AMOEBA ISLAND",
+        "position_t2a": [
+            6767,
+            1333
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2122,
+            2706
+        ],
+        "name": "233 ",
+        "position_t2a": [
+            6735,
+            4194
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2136,
+            2798
+        ],
+        "name": "234",
+        "position_t2a": [
+            6749,
+            4286
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2491,
+            4010
+        ],
+        "name": "235 VALOR ISLAND",
+        "position_t2a": [
+            7104,
+            1402
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            1280,
+            546
+        ],
+        "name": "236 VALENTINE ISLAND",
+        "position_t2a": [
+            5893,
+            2034
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            1207,
+            1914
+        ],
+        "name": "237 BRIT FIELDS",
+        "position_t2a": [
+            5820,
+            3402
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2492,
+            956
+        ],
+        "name": "238 nr covetous",
+        "position_t2a": [
+            7105,
+            2444
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2584,
+            806
+        ],
+        "name": "239 TRAM",
+        "position_t2a": [
+            7197,
+            2294
+        ]
+    },
+    {
+        "facet": 1,
+        "position": [
+            2799,
+            438
+        ],
+        "name": "240",
+        "position_t2a": [
+            7412,
+            1926
+        ]
+    }
+]
