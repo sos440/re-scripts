@@ -100,7 +100,7 @@ def wait_until_move(delay: int = 3000):
 
 def recall_by(serial: int, pos: Tuple[int, int, int]):
     """Implement a recall function to a specific serial."""
-    while get_player_pos() != pos:
+    while get_dist_to(pos[0], pos[1]) > 10:
         Spells.Cast("Sacred Journey")
         if not Target.WaitForTarget(3000, False):
             return False
@@ -116,6 +116,8 @@ def find_enemies(include: Set) -> List["Mobile"]:  # type: ignore
         if enemy.Graphics in (0x030D, 0x030E, 0x030F):  # red solen
             return False
         if enemy.Graphics in (0x000B,):  # spiders, ugh
+            return True
+        if enemy.Graphics in (0x0313,):  # and lions
             return True
         if enemy.Serial in include:
             return True

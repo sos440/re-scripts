@@ -1,46 +1,39 @@
-from AutoComplete import *
-from System.Collections.Generic import List as CList  # type: ignore
-from System import Int32  # type: ignore
-from typing import Dict, List, Optional, Any, Tuple
-import re
+################################################################################
+# How to use this script
+################################################################################
 
+"""
+1. Place three chests in your house and set their IDs to the values in CHEST_IDS.
+    Make sure the chests are all accessible from where you will run the script.
+
+2. Put all your plant seeds in those chests or your backpack.
+
+3. Run the script. It will sort the seeds by plant type and color, and arrange them
+    neatly in the chests.
+"""
+
+################################################################################
+# User settings
+################################################################################
 
 # Positioning constants for the seed arrangement
-POS_DX = 25
-POS_DY = 10
+POS_DX = 25  # Horizontal spacing between seeds
+POS_DY = 10  # Vertical spacing between seeds
+
+# IDs for plant chests
+# You need three chests to organize all the seeds
+CHEST_IDS = [
+    # chest for campion flowers, poppies, snowdrops, bulrushes, lilies, pampas grass
+    0x408DBDC1,
+    # chest for rushes, elephant ear plant, fern, ponytail palm, small palm, century plant
+    0x410EDF8D,
+    # chest for water plant, snake plant, prickly pear cactus, barrel cactus, tribarrel cactus
+    0x52547AF3,
+]
 
 
-# A dictionary mapping chest serial to list of plant types it contains
-# Key: chest serial
-plant_map = {
-    0x408DBDC1: [
-        "campion flowers",
-        "poppies",
-        "snowdrops",
-        "bulrushes",
-        "lilies",
-        "pampas grass",
-    ],
-    0x410EDF8D: [
-        "rushes",
-        "elephant ear plant",
-        "fern",
-        "ponytail palm",
-        "small palm",
-        "century plant",
-    ],
-    0x52547AF3: [
-        "water plant",
-        "snake plant",
-        "prickly pear cactus",
-        "barrel cactus",
-        "tribarrel cactus",
-    ],
-}
-
-
-# A list of tuples mapping color code to color name
-# The index in the list is used for sorting
+# List of colors for plant seeds
+# Seeds will be sorted vertically by color in the order defined here
 color_map = [
     (0, "plain"),
     (0x0021, "bright red"),
@@ -64,6 +57,44 @@ color_map = [
 ]
 
 
+################################################################################
+# Script starts here
+################################################################################
+
+from AutoComplete import *
+from typing import Dict, Tuple
+import re
+
+
+# A dictionary mapping chest serial to list of plant types it contains
+# Key: chest serial
+plant_map = {
+    CHEST_IDS[0]: [
+        "campion flowers",
+        "poppies",
+        "snowdrops",
+        "bulrushes",
+        "lilies",
+        "pampas grass",
+    ],
+    CHEST_IDS[1]: [
+        "rushes",
+        "elephant ear plant",
+        "fern",
+        "ponytail palm",
+        "small palm",
+        "century plant",
+    ],
+    CHEST_IDS[2]: [
+        "water plant",
+        "snake plant",
+        "prickly pear cactus",
+        "barrel cactus",
+        "tribarrel cactus",
+    ],
+}
+
+
 # Convert the plant list to a dictionary for easy lookup
 # Key: plant type, Value: container, index
 plant_invmap: Dict[str, Tuple[int, int]] = {}
@@ -76,6 +107,13 @@ for cont_serial, plants in plant_map.items():
 color_invmap: Dict[int, Tuple[int, str]] = {entry[0]: (i, entry[1]) for i, entry in enumerate(color_map)}
 
 
+def is_valid_seed(seed: "Item") -> bool:
+    cont = Items.FindBySerial(seed.Container)
+    if cont is not None and cont.ItemID in (0x4B59, 0x4B5B):
+        return False
+    return True
+
+
 def sort_seeds():
     seeds = []
 
@@ -85,11 +123,14 @@ def sort_seeds():
         Misc.Pause(1000)
     seeds.extend(Items.FindAllByID(0x0DCF, -1, Player.Backpack.Serial, 2))
 
+    seeds = [seed for seed in seeds if is_valid_seed(seed)]
+
     n = len(seeds)
     Misc.SendMessage(f"{n} seeds found!", 0x3B2)
-    
+
     seed_history = set()
     for i, seed in enumerate(seeds):
+
         name = seed.Name.lower().strip()
         if seed.Color not in color_invmap:
             Misc.SendMessage("Unknown seed color: 0x{seed.Color:04X}", 33)
@@ -117,7 +158,7 @@ def sort_seeds():
         else:
             Items.Move(seed.Serial, cont_serial, -1)
         Misc.Pause(1000)
-    
+
     Misc.SendMessage("Done!", 0x3B2)
 
 

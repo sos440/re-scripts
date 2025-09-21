@@ -2,6 +2,7 @@ from AutoComplete import *
 from typing import Optional, List, Dict, Tuple, Any
 import re
 from enum import Enum
+import json
 
 
 ################################################################################
@@ -233,7 +234,7 @@ class SeedViewer:
                     # Amount text
                     if entry.amount > 1:
                         args = [str(entry.amount), entry.color_cliloc, entry.graphics_cliloc]
-                        cliloc = 1113492
+                        cliloc = 1113493 if COLOR_MAP.get(entry.color, 0) in (1, 3, 5, 7, 9, 11) else 1113492  # bright or dull
                         if entry.graphics == 9324:  # sugar cane
                             cliloc = 1113715
                         if entry.graphics == 3230:  # cocoa tree
@@ -241,7 +242,7 @@ class SeedViewer:
                         Gumps.AddHtmlLocalized(gd, x + 5, y, cls.GUMP_CELL_W - 10, 60, cliloc, f"@{'@'.join(args)}@", GUMP_TC, False, False)
                     else:
                         args = [entry.color_cliloc, entry.graphics_cliloc]
-                        cliloc = 1061917
+                        cliloc = 1061918 if COLOR_MAP.get(entry.color, 0) in (1, 3, 5, 7, 9, 11) else 1061917
                         if entry.graphics == 9324:  # sugar cane
                             cliloc = 1095221
                         if entry.graphics == 3230:  # cocoa tree
@@ -341,6 +342,33 @@ COLOR_MAP = {
     1109: 18,
 }
 
+PLANT_MAP = {
+    "bonsai": [10460, 10461, 10462, 10463, 10464, 10465, 10466, 10467],
+    "peculiar group 1": [3273, 6810, 3204, 6815, 3265],
+    "peculiar group 2": [3326, 3215, 3272, 3214],
+    "peculiar group 3": [3365, 3255, 3262, 3521],
+    "peculiar group 4": [3323, 3512, 6817, 9324],
+    "peculiar group 5": [19340],
+    "cocoa": [3230],
+    "campion flower": [3203],
+    "poppies": [3206],
+    "snowdrop": [3208],
+    "bulrushes": [3220],
+    "lilies": [3211],
+    "pampas grass": [3237],
+    "rushes": [3239],
+    "elephant ear plant": [3223],
+    "fern": [3231],
+    "ponytail palm": [3238],
+    "small palm": [3228],
+    "century plant": [3377],
+    "water plant": [3332],
+    "snake plant": [3241],
+    "prickly pear cactus": [3372],
+    "barrel cactus": [3366],
+    "tribarrel cactus": [3367],
+}
+
 
 def is_empty_seedbox(item: "Item") -> bool:
     return item.ItemID in (0x4B58, 0x4B5A)
@@ -398,6 +426,7 @@ def scan_container(serial: int) -> Optional[List[SeedEntry]]:
         Misc.SendMessage("Invalid container.", 33)
         return None
 
+    Items.WaitForContents(cont.Serial, 1000)
     for item in cont.Contains:
         if item.ItemID != 0x0DCF:
             continue
@@ -412,11 +441,15 @@ def scan_container(serial: int) -> Optional[List[SeedEntry]]:
         entry.color = item.Color
         # Multiple seeds
         if cliloc in (1113492, 1113493, 1113715, 1113716):
+            if len(args) < 3:
+                continue
             entry.color_cliloc = args[1]
             entry.graphics_cliloc = args[2]
             entry.graphics = int(args[2].strip("#@")) - 1020000
         # Single seed
         elif cliloc in (1061917, 1061918, 1095221, 1080533):
+            if len(args) < 2:
+                continue
             entry.color_cliloc = args[0]
             entry.graphics_cliloc = args[1]
             entry.graphics = int(args[1].strip("#@")) - 1020000
@@ -449,8 +482,18 @@ def show_seed_viewer(serial):
         Misc.SendMessage("Failed to read the container.", 33)
         return
     if not entries:
-        Misc.SendMessage("The container has no seeds.", 33)
+        Misc.SendMessage("The container has no identified seeds.", 33)
         return
+
+    with open("Data/plants.json", "r") as f:
+        data = json.load(f)
+
+    for entry in entries:
+        if entry.graphics not in data:
+            data.append(entry.graphics)
+
+    with open("Data/plants.json", "w") as f:
+        json.dump(data, f)
 
     # Show the new gump
     print(f"Found {len(entries)} seeds!")

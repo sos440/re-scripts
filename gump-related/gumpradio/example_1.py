@@ -2,16 +2,24 @@ from AutoComplete import *
 from typing import Optional, Tuple
 from enum import Enum
 import re
+import sys
+import os
+
+# Ensure the current directory is in the system path for module resolution
+sys.path.append(os.path.dirname(__file__))
+
+# Import gumpradio after modifying sys.path
+import gumpradio
 
 
 class SkillGroup(Enum):
-    MELEE = 1
-    MAGIC = 2
-    ROGUE = 3
-    BARD = 4
-    TAMING = 5
-    CRAFTING = 6
-    MISC = 7
+    MELEE = "Melee"
+    MAGIC = "Magic"
+    ROGUE = "Rogue"
+    BARD = "Bard"
+    TAMING = "Taming"
+    CRAFTING = "Crafting"
+    MISC = "Misc."
 
 
 class PSBook:
@@ -250,8 +258,19 @@ class OldPSGumpManager:
         return ps_book
 
 
-def unit_test():
+PS_BOOK_EXAMINED = set()
+
+
+def obtain_ps() -> Optional[PSBook]:
+    """
+    Obtain the contents of a Power Scroll Book by targeting it.
+    """
+    global PS_BOOK_EXAMINED
+
     serial = Target.PromptTarget("Target the Power Scroll Book", 0x3B2)
+    if serial in PS_BOOK_EXAMINED:
+        Misc.SendMessage("This Power Scroll Book has already been examined.", 0x21)
+        return
     item = Items.FindBySerial(serial)
     if item is None:
         Misc.SendMessage("Invalid item.", 0x21)
@@ -262,13 +281,98 @@ def unit_test():
 
     try:
         ps_book = OldPSGumpManager.read_all(serial)
+        PS_BOOK_EXAMINED.add(serial)
+        return ps_book
     except ValueError as e:
         Misc.SendMessage(f"Error: {e}", 0x21)
         return
-    Misc.SendMessage(f"Total Power Scrolls: {ps_book.count}", 0x481)
-    for skill, vals in ps_book.skills.items():
-        Misc.SendMessage(f"Skill: {skill}, 105: {vals.level_105}, 110: {vals.level_110}, 115: {vals.level_115}, 120: {vals.level_120}", 0x481)
+
+
+def main():
+    # Empty PS Book
+    ps_book = PSBook(0)
+
+    # Initialize CraftingGumpBuilder
+    gb = gumpradio.CraftingGumpBuilder()
+
+    # Current skill group to display
+    cur_group = None
+
+    # Button groups
+    btn_view_group = {}
+
+    # Build the main frame
+    with gb.MainFrame(spacing=5):
+        # Title
+        with gb.ShadedColumn(halign="center"):
+            gb.Html("POWER SCROLL BOOK SUMMARY", width=300, color="#FFFFFF", centered=True)
+        # Body
+        with gb.Row(spacing=5):
+            # Left menu column
+            with gb.ShadedColumn():
+                # Skill group buttons
+                for group in SkillGroup:
+                    btn_cur_group = gb.LabeledButton(f"{group.value} Skills")
+                    btn_view_group[btn_cur_group] = group
+            # PS summary of the selected group
+            with gb.ShadedColumn(spacing=5) as s:
+                # We will populate this section later
+                summary = s
+        # Action buttons
+        with gb.ShadedRow():
+            btn_ask_ps = gb.LabeledButton("Choose PS Book").on_click(obtain_ps)
+            btn_exit = gb.LabeledButton("Exit", up=4017, down=4019)
+
+    # Main loop
+    while True:
+        # Clear previous summary
+        summary.clear_children()
+
+        # Set current scope to summary
+        gb.current = summary
+
+        # Display header
+        with gb.Row():
+            gb.Html("Skill", width=150, color="#21EC61")
+            gb.Html("105", width=70, color="#21EC61")
+            gb.Html("110", width=70, color="#21EC61")
+            gb.Html("115", width=70, color="#21EC61")
+            gb.Html("120", width=70, color="#21EC61")
+
+        # Display PS summary for the selected group
+        for skill in sorted(ps_book.skills.keys()):
+            vals = ps_book.skills[skill]
+            if skill not in PSBook.SKILL_LIST:
+                continue
+            group = PSBook.SKILL_LIST[skill]
+            if group != cur_group:
+                continue
+            # Write the skill row
+            with gb.Row():
+                
+                gb.Html(skill, width=150, color="#FFFFFF")
+                gb.Html(f"{vals.level_105}", width=70, color="#FFFFFF")
+                gb.Html(f"{vals.level_110}", width=70, color="#FFFFFF")
+                gb.Html(f"{vals.level_115}", width=70, color="#FFFFFF")
+                gb.Html(f"{vals.level_120}", width=70, color="#FFFFFF")
+
+        # Launch the gump and wait for user interaction
+        # The return value is a tuple of (clicked_block, result)
+        block, result = gb.launch()
+
+        # Handle the result of the gump
+        if block in btn_view_group:
+            cur_group = btn_view_group[block]
+            continue
+        if block == btn_ask_ps and isinstance(result, PSBook):
+            # Update the PS book summary
+            ps_book += result
+            continue
+        if block == btn_exit:
+            # Exit the loop and end the program
+            Misc.SendMessage("Bye!", 68)
+            break
 
 
 if __name__ == "__main__":
-    unit_test()
+    main()

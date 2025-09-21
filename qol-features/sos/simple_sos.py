@@ -52,16 +52,16 @@ def read_loc(item: "Item") -> Optional[Tuple[int, int]]:
     return None
 
 
-def get_nearest_sos(x, y) -> Tuple[Optional["Item"], float]:
+def iter_sos():
     filter = Items.Filter()
     filter.Enabled = True
     filter.Graphics = CList[Int32]([0x14EE])
     sos_all = Items.ApplyFilter(filter)
 
-    sos_nearest = None
-    min_dist = float("inf")
     for sos in sos_all:
         cont = Items.FindBySerial(sos.RootContainer)
+        if cont is None:
+            continue
         is_owned = cont.Serial == Player.Backpack.Serial
         if cont is None:
             continue
@@ -70,9 +70,32 @@ def get_nearest_sos(x, y) -> Tuple[Optional["Item"], float]:
         if not is_owned and Player.DistanceTo(cont) > 2:
             continue
 
+        yield sos
+
+
+def export_sos_map():
+    with open("Data/Client/SOS.map", "w") as f:
+        f.write("3\n")
+        for sos in iter_sos():
+            loc = read_loc(sos)
+            if loc is None:
+                continue
+            if sos.Color == 0x0481:
+                f.write(f"+SOSA: {loc[0]} {loc[1]} 0 Ancient SOS\n")
+                f.write(f"+SOSA: {loc[0]} {loc[1]} 1 Ancient SOS\n")
+            else:
+                f.write(f"+SOS: {loc[0]} {loc[1]} 0 SOS\n")
+                f.write(f"+SOS: {loc[0]} {loc[1]} 1 SOS\n")
+
+
+def get_nearest_sos(x, y) -> Tuple[Optional["Item"], float]:
+    sos_nearest = None
+    min_dist = float("inf")
+    for sos in iter_sos():
         loc = read_loc(sos)
         if loc is None:
             continue
+
         dist = Misc.Distance(x, y, loc[0], loc[1])
         if dist < min_dist:
             min_dist = dist
@@ -85,7 +108,12 @@ if __name__ == "__main__":
     while Player.Connected:
         show_gump()
 
-        if not Gumps.WaitForGump(GUMP_ID, 3600000):
+        while not Gumps.WaitForGump(GUMP_ID, 1000):
+            for mast in Items.FindAllByID([0x4030, 0x4031, 0x4032, 0x4033], -1, -1, 10):
+                if Player.DistanceTo(mast) <= 10:
+                    REF_POS = (Player.Position.X, Player.Position.Y)
+                    show_gump()
+                    break
             continue
 
         gd = Gumps.GetGumpData(GUMP_ID)
@@ -128,6 +156,7 @@ if __name__ == "__main__":
             if REF_POS == (-1, -1):
                 Misc.SendMessage("No reference position set.", 33)
                 continue
+            export_sos_map()
             sos_nearest, dist = get_nearest_sos(REF_POS[0], REF_POS[1])
             if sos_nearest is None:
                 Misc.SendMessage("No SOS found nearby.", 33)
