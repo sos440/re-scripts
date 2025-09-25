@@ -4,6 +4,8 @@ from System import Int32  # type: ignore
 import re
 from typing import Optional, Tuple
 
+# User Constants
+SOS_CONT = [0x40FA12E4, 0x404311A6]
 
 # Gump constants
 GUMP_ID = hash("SOSGump") & 0xFFFFFFFF
@@ -111,7 +113,10 @@ if __name__ == "__main__":
         while not Gumps.WaitForGump(GUMP_ID, 1000):
             for mast in Items.FindAllByID([0x4030, 0x4031, 0x4032, 0x4033], -1, -1, 10):
                 if Player.DistanceTo(mast) <= 10:
-                    REF_POS = (Player.Position.X, Player.Position.Y)
+                    new_pos = (Player.Position.X, Player.Position.Y)
+                    if REF_POS == new_pos:
+                        continue
+                    REF_POS = new_pos
                     show_gump()
                     break
             continue
@@ -156,7 +161,17 @@ if __name__ == "__main__":
             if REF_POS == (-1, -1):
                 Misc.SendMessage("No reference position set.", 33)
                 continue
+            if IS_TRACKING:
+                Player.TrackingArrow(TRACKING_POS[0], TRACKING_POS[1], False, 0)
+                IS_TRACKING = False
+                Misc.SendMessage("Tracking stopped.", 68)
+            # Load the contents
+            for cont in SOS_CONT:
+                Items.WaitForContents(cont, 1000)
+                Misc.Pause(1000)
+            # Export SOS locations
             export_sos_map()
+            # Find the nearest and pick up
             sos_nearest, dist = get_nearest_sos(REF_POS[0], REF_POS[1])
             if sos_nearest is None:
                 Misc.SendMessage("No SOS found nearby.", 33)

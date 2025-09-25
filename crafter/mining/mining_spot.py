@@ -14,6 +14,9 @@ MULE = 0x03FBF97A
 # Drop ores if no forges or packies are available
 DROP_ORES = True
 
+# Merge ores in backpack to save weight
+MERGE_ORES = True
+
 
 ################################################################################
 # Script starts here
@@ -53,6 +56,12 @@ ORE = ORE_SMALL + ORE_LARGE
 MINING_RES = ORE + [0x1BF2]
 TOOLS = [0x0E85, 0x0E86, 0x0F39, 0x0F3A]
 BACKPACK = Player.Backpack.Serial
+
+
+def needs_training() -> bool:
+    cur_mining = Player.GetSkillValue("Mining")
+    max_mining = Player.GetSkillCap("Mining")
+    return cur_mining < max_mining
 
 
 def get_valuable_ores() -> list:
@@ -145,8 +154,8 @@ def merge_valuable() -> bool:
             Misc.Pause(800)
             return True
 
-        # Merging larger piles into smaller ones is disabled
-        continue
+        if not MERGE_ORES:
+            continue
 
         # Set the ore to be merged
         ore_merger = None
@@ -171,7 +180,7 @@ def smelt_small() -> bool:
     for ore in find_backpack_or_ground(ORE_SMALL, -1):
         if ore.Amount < 2:
             continue
-        if ore.Amount > 3 and ore.Color in get_valuable_ores():
+        if needs_training() and ore.Amount > 3 and ore.Color in get_valuable_ores():
             continue
         use_ore_onto(ore, FORGE)
         return True
@@ -179,6 +188,8 @@ def smelt_small() -> bool:
 
 
 def split_small_valuable() -> bool:
+    if not needs_training():
+        return False
     for ore in find_backpack_or_ground(ORE_SMALL, -1):
         if ore.Amount > 3 and ore.Color in get_valuable_ores():
             Items.Move(ore.Serial, BACKPACK, 2, 0, 0)
@@ -192,7 +203,7 @@ def smelt_large() -> bool:
     if FORGE == 0:
         return False
     for ore in find_backpack_or_ground(ORE_LARGE, -1):
-        if ore.Amount > 1 and ore.Color in get_valuable_ores():
+        if needs_training() and ore.Amount > 1 and ore.Color in get_valuable_ores():
             continue
         use_ore_onto(ore, FORGE)
         return True
@@ -200,6 +211,8 @@ def smelt_large() -> bool:
 
 
 def split_large_valuable() -> bool:
+    if not needs_training():
+        return False
     for ore in find_backpack_or_ground(ORE_LARGE, -1):
         if ore.Color in get_valuable_ores():
             Items.Move(ore.Serial, BACKPACK, 1, 0, 0)

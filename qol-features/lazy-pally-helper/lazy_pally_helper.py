@@ -53,8 +53,8 @@ DEBUFFS_TO_REMOVE = [
 
 from AutoComplete import *
 from System.Collections.Generic import List as CList  # type: ignore
-from System import Byte  # type: ignore
-from typing import List
+from System import Byte, Int32  # type: ignore
+from typing import List, Optional
 import time
 
 
@@ -173,6 +173,18 @@ def find_enemies() -> List["Mobile"]:  # type: ignore
     return enemies
 
 
+def find_bandage() -> Optional["Item"]:  # type: ignore
+    filter = Items.Filter()
+    filter.Enabled = True
+    filter.Graphics = CList[Int32]([0x0E21])
+    filter.OnGround = False
+    bandages = Items.ApplyFilter(filter)
+    if len(bandages) > 0:
+        return bandages[0]
+    else:
+        return None
+
+
 gump_menu()
 while Player.Connected:
     if Gumps.WaitForGump(GUMP_MENU, 1):
@@ -203,7 +215,7 @@ while Player.Connected:
     if (Player.Hits < Player.HitsMax or Player.Poisoned) and not Player.BuffsExist("Healing", True):
         # If you're damaged, reset the safe timer
         Timer.Create("safe", REMOVE_CURSE_DELAY)
-        bandage = Items.FindByID(0x0E21, -1, Player.Backpack.Serial, 2, False)
+        bandage = find_bandage()
         if bandage is not None:
             Target.Cancel()
             Items.UseItem(bandage.Serial)

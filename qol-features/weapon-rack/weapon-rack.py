@@ -332,7 +332,8 @@ def equip_entry(entry: RackEntry) -> None:
         to_equip = [entry.serial]
         if LAST_LEFT_HAND != 0:
             to_equip.append(LAST_LEFT_HAND)
-        if left_hand is not None and left_hand.IsTwoHanded:
+        if left_hand is not None and left_hand.IsTwoHanded and left_hand.ItemID not in (0x0A22, ):
+            print(left_hand.IsTwoHanded)
             Player.UnEquipUO3D(["LeftHand"])
             Misc.Pause(DELAY_BETWEEN_EQUIPS)
         Player.EquipUO3D(to_equip)

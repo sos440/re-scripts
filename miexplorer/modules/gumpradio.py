@@ -643,7 +643,9 @@ class _Html(_InteractiveBlock, _HasText):
         if self._text_index == -1:
             return []
         bg_flag = 1 if self.background else 0
-        return [f"htmlgump {self._calc_left} {self._calc_top} {self.width} {self.height} {self._text_index} {bg_flag} {self.scrollbar}"]
+        cmds = [f"htmlgump {self._calc_left} {self._calc_top} {self.width} {self.height} {self._text_index} {bg_flag} {self.scrollbar}"]
+        cmds.extend(_InteractiveBlock.compile(self))
+        return cmds
 
 
 class _TextEntry(_InteractiveBlock, _HasText, _Serializable):
@@ -1062,6 +1064,15 @@ class GumpBuilder(_Clickable):
             cmds.extend(block.compile())
         cmds_body = "".join(f"{{ {cmd} }}" for cmd in cmds)
 
+        # # DEBUG: Log the gump to a file
+        # from datetime import datetime
+
+        # with open(f"Data/Sheets/log_gumps_{datetime.now():%Y%m%d}.txt", "a", encoding="utf-8") as f:
+        #     f.write(f"// Gump ID: {self.id}\n")
+        #     f.write(cmds_body)
+        #     f.write("\n\n")
+
+        Gumps.CloseGump(self.id)
         Gumps.SendGump(self.id, Player.Serial, 100, 100, cmds_body, CList[str](texts))
 
         # Process the response

@@ -4,6 +4,10 @@ from enum import Enum
 import re
 
 
+COLORS = [0, 33, 1645, 43, 1135, 56, 2213, 66, 1435, 5, 1341, 16, 13, 1166, 1173, 1158, 1161, 1153, 1109]
+PLANTS = [10460, 10461, 10462, 10463, 10464, 10465, 10466, 10467, 3273, 6810, 3204, 6815, 3265, 3326, 3215, 3272, 3214, 3365, 3255, 3262, 3521, 3323, 3512, 6817, 9324, 19340, 3230, 3203, 3206, 3208, 3220, 3211, 3237, 3239, 3223, 3231, 3238, 3228, 3377, 3332, 3241, 3372, 3366, 3367]
+
+
 class GardeningGumps:
     class States(Enum):
         NOT_FOUND = 0
@@ -147,10 +151,11 @@ if __name__ == "__main__":
 
     # Find all plants to tend
     plants = []
-    plants.extend(Items.FindAllByID(0x0C86, 0x002B, -1, 3))  # bright orange poppies
-    plants.extend(Items.FindAllByID(0x0CA9, 0x0042, -1, 3))  # bright green snake plant
+    plants.extend(Items.FindAllByID(PLANTS, -1, -1, 3))
 
     for plant in plants:
+        if plant.Color not in COLORS:
+            continue
         state = tender_plant(plant.Serial)
         if state == GardeningGumps.States.INTERRUPT:
             break
