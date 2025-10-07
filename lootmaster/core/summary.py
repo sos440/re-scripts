@@ -1,12 +1,9 @@
+from AutoComplete import *
 import os
 import sys
 import re
 import xml.etree.ElementTree as ET
 from typing import Optional, Union, Any, Dict
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from razorenhanced import *
 
 # This allows the RazorEnhanced to correctly identify the path of the current module.
 PATH = os.path.dirname(os.path.abspath(__file__))

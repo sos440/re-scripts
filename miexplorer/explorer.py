@@ -2,7 +2,7 @@
 # Settings
 ################################################################################
 
-VERSION = "2.1.1"
+VERSION = "2.1.3"
 EXPORT_PATH = "Data/Sheets"
 SETTING_PATH = "Data/Sheets/setting.json"
 
@@ -10,10 +10,24 @@ SETTING_PATH = "Data/Sheets/setting.json"
 # Imports
 ################################################################################
 
-from AutoComplete import *
-from typing import List, Dict, Tuple, Callable, Generator, Any, Optional, Union, TypeVar, Generic
 import os
 import sys
+
+# Ensure we can import from the current directory
+SCRIPT_DIR = os.path.dirname(__file__)
+sys.path.append(SCRIPT_DIR)
+
+# Remove old gumpradio module if exists, ensuring the newer version is used
+old_script = os.path.join(SCRIPT_DIR, "modules", "gumpradio.py")
+if os.path.exists(old_script):
+    os.remove(old_script)
+
+# Import
+from modules import *
+
+
+from AutoComplete import *
+from typing import List, Dict, Set, Tuple, Any, Optional, Iterable
 import time
 import csv
 import re
@@ -21,260 +35,10 @@ import json
 from datetime import datetime
 from enum import Enum
 
-# Ensure we can import from the current directory
-sys.path.append(os.path.dirname(__file__))
-
-from modules.core import *
-from modules.gumpradio import *
-
 
 ################################################################################
 # Gumpradio Extensions
 ################################################################################
-
-
-class SheetBuilder(GumpBuilder):
-    class _ProgressBar(GumpBuilder.Assets.Container):
-        def __init__(self, width: int = 100, height: int = 20, progress: float = 0.0):
-            """
-            Represents a progress bar block in the gump.
-
-            :param width: The width of the progress bar in pixels.
-            :param height: The height of the progress bar in pixels.
-            :param progress: The progress value between 0.0 and 1.0.
-            """
-            super().__init__(width, height)
-            self.padding = 3
-            self.background = "frame:2620"
-            self.progress = max(0.0, min(1.0, progress))
-            # Manually add background and bar gumparts
-            self._bg = GumpBuilder.Assets.GumpArt(graphics=2624, tiled=True)
-            self._bar = GumpBuilder.Assets.GumpArt(graphics=9354, tiled=True)
-            self.children = [self._bg, self._bar]
-
-        def compute_size(self):
-            # Manually set the size of the background and bar based on progress
-            res = super().compute_size()
-            self._bg._calc_width = self._calc_width - self.padding[0] - self.padding[2]
-            self._bg._calc_height = self._calc_height - self.padding[1] - self.padding[3]
-            self._bar._calc_width = int(self._bg._calc_width * self.progress)
-            self._bar._calc_height = self._bg._calc_height
-            return res
-
-        def compute_position(self, left: int = 0, top: int = 0):
-            # Manually position the background and bar within the container
-            res = super().compute_position(left, top)
-            self._bg.compute_position(self._calc_left + self.padding[0], self._calc_top + self.padding[1])
-            self._bar.compute_position(self._calc_left + self.padding[0], self._calc_top + self.padding[1])
-            return res
-
-    def ProgressBar(self, width: int = 100, height: int = 20, progress: float = 0.0):
-        """
-        Add a progress bar with the crafting gump style.
-
-        :param width: The width of the progress bar in pixels.
-        :param height: The height of the progress bar in pixels.
-        :param progress: The progress value between 0.0 and 1.0.
-        """
-        bar = self._ProgressBar(width, height, progress)
-        self.current.append(bar)
-        return bar
-
-    def ItemDisplayButton(self, item: "Union[Item, int]", checked: bool = False):
-        """
-        A shorthand for adding a button that displays an item (tileart) along with
-        its item properties as tooltip.
-
-        :param Item|int item:  The item or item serial to display.
-        """
-        if isinstance(item, int):
-            item_new = Items.FindBySerial(item)
-            if item_new is None:
-                return self.Checkbox(up=2328, down=2329, width=80, height=60, checked=checked)  # Empty button
-            item = item_new
-        btn = self.Checkbox(up=2328, down=2329, width=80, height=60, checked=checked, itemproperty=item.Serial)
-        btn.add_tileart(graphics=item.ItemID)
-        return btn
-
-    def MainFrame(self, spacing: int = 5, padding: Union[int, Tuple[int, int, int, int]] = 10):
-        """
-        A shorthand for adding the main frame of the crafting gump style.
-        """
-        return self.Column(padding=padding, background="frame:5054", spacing=spacing)
-
-    def MinimalFrame(self, spacing: int = 5, padding: Union[int, Tuple[int, int, int, int]] = (10, 5, 10, 10)):
-        """
-        A shorthand for adding a minimal frame with the crafting gump style.
-        """
-        return self.Column(padding=padding, background="frame:30546; alpha", spacing=spacing)
-
-    def ShadedColumn(self, halign: str = "left", spacing: int = 5):
-        """
-        A shorthand for adding a column with the crafting gump style.
-
-        :param halign: Horizontal alignment of child blocks within the column. ("left", "center", "right")
-        """
-        return self.Column(background="tiled:2624; alpha", padding=10, halign=halign, spacing=spacing)
-
-    def ShadedRow(self, valign: str = "top", spacing: int = 5):
-        """
-        A shorthand for adding a row with the crafting gump style.
-
-        :param valign: Vertical alignment of child blocks within the row. ("top", "middle", "bottom")
-        """
-        return self.Row(background="tiled:2624; alpha", padding=10, valign=valign, spacing=spacing)
-
-    class CraftingButtonStyle(Enum):
-        RIGHT = 1
-        LEFT = 2
-        X = 3
-        NO = 4
-        OK = 5
-
-    def CraftingButton(
-        self,
-        label: str,
-        style: CraftingButtonStyle = CraftingButtonStyle.RIGHT,
-        hue: int = 1152,
-        width: Optional[int] = None,
-        tooltip: Optional[str] = None,
-    ):
-        """
-        A shorthand for adding a button with a text label next to it.
-
-        :param str label: The text label to display next to the button.
-        :param int up: The gumpart ID for the button's up state.
-        :param int down: The gumpart ID for the button's down state.
-        :param int hue: The 0-based color hue of the label text.
-        :param int width: The width of the label text area. If None, it will auto-size.
-        """
-        # Determine the button style
-        up, down = 4005, 4007
-        if style == self.CraftingButtonStyle.RIGHT:
-            up, down = 4005, 4007
-        elif style == self.CraftingButtonStyle.LEFT:
-            up, down = 4014, 4016
-        elif style == self.CraftingButtonStyle.X:
-            up, down = 4017, 4019
-        elif style == self.CraftingButtonStyle.NO:
-            up, down = 4020, 4022
-        elif style == self.CraftingButtonStyle.OK:
-            up, down = 4023, 4025
-        # Create the button with label, if label is not empty
-        with self.Row(spacing=5) as row:
-            btn = self.Button(up=up, down=down, tooltip=tooltip)
-            if label:
-                self.Text(label, hue=hue, width=width, tooltip=tooltip)
-        return btn
-
-    class MenuItemStyle(Enum):
-        VIEW = 1
-        WRITE = 2
-        EXIT = 3
-        CHECK = 4
-        DOUBLE_RIGHT = 5
-        DOUBLE_LEFT = 6
-        SINGLE_RIGHT = 7
-        SINGLE_LEFT = 8
-
-    def MenuItem(
-        self,
-        label: str,
-        style: MenuItemStyle = MenuItemStyle.VIEW,
-        hue: int = 0,
-        width: Optional[int] = None,
-        tooltip: Optional[str] = None,
-    ):
-        """
-        A shorthand for adding a menu item button with a text label next to it.
-
-        :param str label: The text label to display next to the button.
-        :param int up: The gumpart ID for the button's up state.
-        :param int down: The gumpart ID for the button's down state.
-        :param int hue: The 0-based color hue of the label text.
-        :param int width: The width of the label text area. If None, it will auto-size.
-        """
-        # Determine the button style
-        up, down, bw, bh = 1531, 1532, 23, 21
-        if style == self.MenuItemStyle.VIEW:
-            up, down = 1531, 1532
-        elif style == self.MenuItemStyle.WRITE:
-            up, down = 1533, 1534
-        elif style == self.MenuItemStyle.EXIT:
-            up, down = 1535, 1536
-        elif style == self.MenuItemStyle.CHECK:
-            up, down = 1537, 1538
-        elif style == self.MenuItemStyle.DOUBLE_RIGHT:
-            up, down = 1539, 1540
-        elif style == self.MenuItemStyle.DOUBLE_LEFT:
-            up, down = 1541, 1542
-        elif style == self.MenuItemStyle.SINGLE_RIGHT:
-            up, down = 1543, 1544
-            bw, bh = 15, 21
-        elif style == self.MenuItemStyle.SINGLE_LEFT:
-            up, down = 1545, 1546
-            bw, bh = 15, 21
-        # Create the button with label, if label is not empty
-        with self.Row(spacing=5) as row:
-            btn = self.Button(up=up, down=down, width=bw, height=bh, tooltip=tooltip)
-            if label:
-                self.Text(label, hue=hue, width=width, tooltip=tooltip)
-        return btn
-
-    class UOStoreButtonStyle(Enum):
-        BLUE = 1
-        GREEN = 2
-        RED = 3
-        YELLOW = 4
-
-    def UOStoreButton(
-        self,
-        label: str,
-        style: UOStoreButtonStyle = UOStoreButtonStyle.BLUE,
-        color: str = "#FFFFFF",
-        tooltip: Optional[str] = None,
-    ):
-        """
-        A shorthand for adding a UO Store style button with a text label next to it.
-
-        :param str label: The text label to display next to the button.
-        :param style: The style of the button.
-        :param str color: The HTML color code of the label text. If None, it will use default color.
-        :param int width: The width of the label text area. If None, it will auto-size.
-        """
-        # Determine the button style
-        up, down, bw, bh = 40021, 40031, 125, 25
-        if style == self.UOStoreButtonStyle.BLUE:
-            up, down = 40021, 40031
-        elif style == self.UOStoreButtonStyle.GREEN:
-            up, down = 40020, 40030
-        elif style == self.UOStoreButtonStyle.RED:
-            up, down = 40297, 40298
-        elif style == self.UOStoreButtonStyle.YELLOW:
-            up, down = 40299, 40300
-        # Create the button with label, if label is not empty
-        with self.Row() as row:
-            btn = self.Button(up=up, down=down, width=0, height=bh, tooltip=tooltip)
-            if label:
-                self.Html(label, color=color, centered=True, width=bw, height=18)
-        return btn
-
-    class SortButtonStyle(Enum):
-        ASCENDING = 1
-        DESCENDING = 2
-
-    def SortButton(self, style: SortButtonStyle = SortButtonStyle.ASCENDING, tooltip: Optional[str] = None):
-        """
-        A shorthand for adding a sort button with ascending and descending states.
-        """
-        if style == self.SortButtonStyle.ASCENDING:
-            return self.Button(up=2435, down=2436, width=9, height=11, tooltip=tooltip)
-        elif style == self.SortButtonStyle.DESCENDING:
-            return self.Button(up=2437, down=2438, width=9, height=11, tooltip=tooltip)
-        raise ValueError("Invalid SortButtonStyle")
-
-    def BlueJewelButton(self, tooltip: Optional[str] = None):
-        return self.Button(up=1209, down=1210, width=14, height=14, tooltip=tooltip)
 
 
 ################################################################################
@@ -285,10 +49,13 @@ class SheetBuilder(GumpBuilder):
 class ExplorerSheetView:
     MAIN_GUMP_ID = hash("ExplorerMainGump") & 0xFFFFFFFF
     COL_WIDTH = 150
-    MENU_HEIGHT = 30
     HEADER_HEIGHT = 30
     ITEMS_PER_PAGE = 10
     RARITY_COLOR_MAP = {1: 905, 2: 72, 3: 89, 4: 4, 101: 13, 102: 53, 103: 43, 104: 33}
+
+    class Mode(Enum):
+        NORMAL = 1
+        BATCH = 2
 
     @classmethod
     def close(cls):
@@ -296,81 +63,254 @@ class ExplorerSheetView:
 
     @classmethod
     def show_loading(cls, progress: float = 0.0):
-        gb = SheetBuilder(id=cls.MAIN_GUMP_ID)
+        gb = CraftingGumpBuilder(id=cls.MAIN_GUMP_ID)
         with gb.MainFrame():
             with gb.ShadedColumn():
                 gb.Html(f"Loading... ({progress:.1%})", width=200, centered=True, color="#FFFFFF")
                 gb.ProgressBar(width=200, height=22, progress=progress)
-        gb.launch(response=False)
+        gb.launch()
 
-    def __init__(self, sheet: Sheet, col_precedence: List[Optional[int]], page: int = 0):
+    def _build_menubar(self, gb: CraftingGumpBuilder):
+        with gb.Column(background="tiled:9354", padding=(10, 5), spacing=5, halign="left"):
+            # Title
+            with gb.Row():
+                gb.Text(f"Name: {self.sheet.name}", hue=0, width=400)
+            # Menu buttons
+            with gb.Row():
+                self.menu_refresh = gb.MenuItem("Refresh", style="view", tooltip="This sheet does not auto-refresh. Click this button to reload the contents of the container.")
+                self.menu_export = gb.MenuItem("Rename/Export", width=120, style="write", tooltip="Rename the sheet or export it to a CSV file.")
+                self.menu_columns = gb.MenuItem("Load/Save Columns", width=150, style="write", tooltip="Load or save column configurations.")
+                if self.mode == self.Mode.NORMAL:
+                    self.menu_batch = gb.MenuItem("Batch Actions", width=120, style="double_right", tooltip="Switch to batch action mode, allowing selection of multiple items.")
+                else:
+                    self.menu_batch = gb.MenuItem("Individual Actions", width=120, style="double_right", tooltip="Switch to individual action mode.")
+
+    def _build_column_header(self, gb: CraftingGumpBuilder):
+        with gb.Row(spacing=1):
+            # Navigation buttons
+            with gb.Row(background="tiled:9354", width=80, height=self.HEADER_HEIGHT):
+                self.menu_prev = gb.MenuItem("", style="single_left")
+                gb.Html(f"{self.page+1}/{self.total_pages}", centered=True, width=50, height=18)
+                self.menu_next = gb.MenuItem("", style="single_right")
+            # Column headers
+            self.menu_edit_column = []
+            self.menu_sort_column = []
+            for j, col in enumerate(self.sheet.columns):
+                width = col.metadata.get("width", self.COL_WIDTH)
+                with gb.Row(background="tiled:9354", width=width, height=self.HEADER_HEIGHT, padding=(5, 0), spacing=2):
+                    # Edit button
+                    btn_edit = gb.BlueJewelButton().on_click(j)
+                    self.menu_edit_column.append(btn_edit)
+                    # Column name
+                    gb.Html(col.id, width=width - 37, height=18, tooltip=col.name)
+                    # Sort button
+                    if self.col_precedence[j] is None or col.sort_order == SortOrder.UNSORTED:
+                        btn_sort = gb.SortButton(style="asc", tooltip="Not sorted")
+                    elif col.sort_order == SortOrder.ASCENDING:
+                        btn_sort = gb.SortButton(style="asc", tooltip=f"Order: Ascending<BR>Precedence: {self.col_precedence[j]}")
+                    elif col.sort_order == SortOrder.DESCENDING:
+                        btn_sort = gb.SortButton(style="dec", tooltip=f"Order: Descending<BR>Precedence: {self.col_precedence[j]}")
+                    else:
+                        raise ValueError("Invalid sort order")
+                    btn_sort.on_click(j)
+                    self.menu_sort_column.append(btn_sort)
+            with gb.Row(background="tiled:9354", height=self.HEADER_HEIGHT, padding=(5, 0), spacing=2):
+                self.menu_new_column = gb.BlueJewelButton(tooltip="Add Column")
+
+    def _build_rows(self, gb: CraftingGumpBuilder):
+        is_batch_mode = self.mode == self.Mode.BATCH
+        self.menu_item_action = []
+        for i in range(self.ITEMS_PER_PAGE):
+            row_idx = self.page * self.ITEMS_PER_PAGE + i
+            with gb.Row(background="tiled:2624; alpha", height=60, spacing=1):
+                if row_idx >= len(self.sheet.rows):
+                    continue
+                row = self.sheet.rows[row_idx]
+                # Item button
+                self.menu_item_action.append(
+                    gb.ItemDisplayButton(
+                        row["Serial"],
+                        checked=is_batch_mode and (row["Serial"] in self.row_selected),
+                    ).on_click(row)
+                )
+                # Write the content of the row
+                for j, col in enumerate(self.sheet.columns):
+                    width = col.metadata.get("width", self.COL_WIDTH)
+                    hue = 1152
+                    if col.id == "Rarity":
+                        rarity = row["Rarity"]
+                        hue = self.RARITY_COLOR_MAP.get(rarity, 1152)
+                    value = col.read(row) or ""
+                    with gb.Row(width=width, padding=(10, 0, 0, 0)):
+                        gb.Text(value, hue=hue, width=width - 10, tooltip=f"{col.name}: {value}", cropped=True)
+
+    def _build_extra_frame(self, gb: CraftingGumpBuilder):
+        self.menu_extra_select_all = None
+        self.menu_extra_deselect_all = None
+        self.menu_extra_invert = None
+        self.menu_extra_move_to = None
+        if self.mode == self.Mode.BATCH:
+            with gb.MainFrame():
+                with gb.ShadedColumn():
+                    gb.Html("SELECT ITEMS", color="#FFFFFF", width=150)
+                    self.menu_extra_select_all = gb.CraftingButton("Select All", width=130)
+                    self.menu_extra_deselect_all = gb.CraftingButton("Deselect All", width=130)
+                    self.menu_extra_invert = gb.CraftingButton("Invert Selection", width=130)
+                    gb.Spacer(10)
+                    gb.Html("BATCH ACTIONS", color="#FFFFFF", width=150)
+                    self.menu_extra_move_to = gb.CraftingButton("Move Selected To", width=130, tooltip="Move all selected items to a target container.")
+
+    def __init__(self, sheet: Sheet, page: int = 0, mode: Mode = Mode.NORMAL, col_precedence: Optional[List[Optional[int]]] = None, row_selected: Optional[Set[int]] = None):
         self.sheet = sheet
-        self.col_precedence = col_precedence
+        self.col_precedence = col_precedence or [None] * len(sheet.columns)
         self.page = page
         self.total_pages = (len(sheet.rows) - 1) // self.ITEMS_PER_PAGE + 1
+        self.mode = mode
+        self.row_selected = row_selected or set()
 
-        gb = SheetBuilder(id=self.MAIN_GUMP_ID)
-        with gb.MainFrame():
-            # Menubar
-            with gb.Row(background="tiled:9354", height=self.MENU_HEIGHT, padding=5):
-                self.menu_refresh = gb.MenuItem("Refresh", style=SheetBuilder.MenuItemStyle.VIEW)
-                self.menu_export = gb.MenuItem("Rename/Export", width=120, style=SheetBuilder.MenuItemStyle.WRITE)
-                self.menu_columns = gb.MenuItem("Load/Save Columns", width=150, style=SheetBuilder.MenuItemStyle.WRITE)
-                gb.Text(f"Name: {sheet.name}", hue=0, width=250)
-            # Sheet area
-            with gb.Column(spacing=1):
-                # Column headers
-                with gb.Row(spacing=1):
-                    # Navigation buttons
-                    with gb.Row(background="tiled:9354", width=80, height=self.HEADER_HEIGHT):
-                        self.menu_prev = gb.MenuItem("", style=SheetBuilder.MenuItemStyle.SINGLE_LEFT)
-                        gb.Html(f"{self.page+1}/{self.total_pages}", centered=True, width=50, height=18)
-                        self.menu_next = gb.MenuItem("", style=SheetBuilder.MenuItemStyle.SINGLE_RIGHT)
-                    self.menu_edit_column = []
-                    self.menu_sort_column = []
-                    for j, col in enumerate(sheet.columns):
-                        width = col.metadata.get("width", self.COL_WIDTH)
-                        with gb.Row(background="tiled:9354", width=width, height=self.HEADER_HEIGHT, padding=(5, 0), spacing=2):
-                            # Edit button
-                            btn_edit = gb.BlueJewelButton().on_click(j)
-                            self.menu_edit_column.append(btn_edit)
-                            # Column name
-                            gb.Html(col.id, width=width - 37, height=18, tooltip=col.name)
-                            # Sort button
-                            if col_precedence[j] is None or col.sort_order == SortOrder.UNSORTED:
-                                btn_sort = gb.SortButton(style=SheetBuilder.SortButtonStyle.ASCENDING, tooltip="Not sorted")
-                            elif col.sort_order == SortOrder.ASCENDING:
-                                btn_sort = gb.SortButton(style=SheetBuilder.SortButtonStyle.ASCENDING, tooltip=f"Order: Ascending<BR>Precedence: {col_precedence[j]}")
-                            elif col.sort_order == SortOrder.DESCENDING:
-                                btn_sort = gb.SortButton(style=SheetBuilder.SortButtonStyle.DESCENDING, tooltip=f"Order: Descending<BR>Precedence: {col_precedence[j]}")
-                            else:
-                                raise ValueError("Invalid sort order")
-                            btn_sort.on_click(j)
-                            self.menu_sort_column.append(btn_sort)
-                    with gb.Row(background="tiled:9354", height=self.HEADER_HEIGHT, padding=(5, 0), spacing=2):
-                        self.menu_new_column = gb.BlueJewelButton(tooltip="Add Column")
-                # Rows
-                self.menu_item_action = []
-                for i in range(self.ITEMS_PER_PAGE):
-                    row_idx = self.page * self.ITEMS_PER_PAGE + i
-                    with gb.Row(background="tiled:2624; alpha", height=60, spacing=1):
-                        if row_idx >= len(sheet.rows):
-                            continue
-                        row = sheet.rows[row_idx]
-                        # Item button
-                        self.menu_item_action.append(gb.ItemDisplayButton(row["Serial"]).on_click(row))
-                        # Write the content of the row
-                        for j, col in enumerate(sheet.columns):
-                            width = col.metadata.get("width", self.COL_WIDTH)
-                            hue = 1152
-                            if col.id == "Rarity":
-                                rarity = row["Rarity"]
-                                hue = self.RARITY_COLOR_MAP.get(rarity, 1152)
-                            value = col.read(row) or ""
-                            with gb.Row(width=width, padding=(10, 0, 0, 0)):
-                                gb.Text(value, hue=hue, width=width - 10, tooltip=f"{col.name}: {value}", cropped=True)
+        gb = CraftingGumpBuilder(id=self.MAIN_GUMP_ID)
+        with gb.Row(valign="top"):
+            # Sheet frame
+            with gb.MainFrame():
+                self._build_menubar(gb)
+                with gb.Column(spacing=1, halign="left"):
+                    self._build_column_header(gb)
+                    self._build_rows(gb)
+            # Extra frame on the right
+            self._build_extra_frame(gb)
 
         self.gb = gb
+
+
+class BatchMoveManager:
+    class ItemNotFound(Exception):
+        pass
+
+    class ItemTooFar(Exception):
+        pass
+
+    class ContainerInfo:
+        def __init__(self, serial: int, contents: int, max_contents: int, weight: float = 0.0, max_weight: float = float("inf")):
+            self.serial = serial
+            self.contents = contents
+            self.max_contents = max_contents
+            self.weight = weight
+            self.max_weight = max_weight
+
+    @classmethod
+    def get_topmost_container(cls, serial: int) -> "Item":
+        if serial == -1:
+            raise cls.ItemNotFound("Invalid serial.")
+        topmost_obj = None
+        topmost_cont = None
+
+        if Misc.IsMobile(serial):
+            topmost_obj = Mobiles.FindBySerial(serial)
+            if topmost_obj is None:
+                raise cls.ItemNotFound("Mobile not found.")
+            topmost_cont = topmost_obj.Backpack
+        elif Misc.IsItem(serial):
+            while True:
+                topmost_cont = Items.FindBySerial(serial)
+                if topmost_cont is None:
+                    raise cls.ItemNotFound("Item not found.")
+                if topmost_cont.OnGround:
+                    topmost_obj = topmost_cont
+                    break
+                root_serial = topmost_cont.RootContainer
+                if Misc.IsItem(root_serial):
+                    serial = root_serial
+                    continue
+                if Misc.IsMobile(root_serial):
+                    topmost_obj = Mobiles.FindBySerial(root_serial)
+                    if topmost_obj is None:
+                        raise cls.ItemNotFound("Container mobile not found.")
+                    break
+                raise cls.ItemNotFound("The item's root container is neither an item nor a mobile.")
+        else:
+            raise cls.ItemNotFound("This is neither an item nor a mobile.")
+
+        if Player.DistanceTo(topmost_obj) > 2:
+            raise cls.ItemTooFar("The object is too far away.")
+
+        return topmost_cont
+
+    @classmethod
+    def get_contents(cls, serial: int) -> "BatchMoveManager.ContainerInfo":
+        cont = Items.FindBySerial(serial)
+        if cont is None:
+            raise cls.ItemNotFound()
+
+        Items.WaitForProps(cont.Serial, 1000)
+
+        result = cls.ContainerInfo(cont.Serial, 0, 125)
+        for line in Items.GetPropStringList(cont.Serial):
+            # Read contents
+            matchres = re.match(r"^contents: (\d+)/(\d+) items.*", line.lower())
+            if not matchres:
+                continue
+            result.contents = int(matchres.group(1))
+            result.max_contents = int(matchres.group(2))
+            # Read weight, type 1
+            matchres = re.match(r"^contents: \d+/\d+ items, (\d+)/(\d+) stones$", line.lower())
+            if matchres:
+                result.weight = int(matchres.group(1))
+                result.max_weight = int(matchres.group(2))
+                continue
+            # Read weight, type 2
+            matchres = re.match(r"^contents: \d+/\d+ items, (\d+) stones$", line.lower())
+            if matchres:
+                result.weight = int(matchres.group(1))
+                continue
+
+        return result
+
+    @classmethod
+    def execute(cls, cont_serial: int, selected: Iterable[int]):
+        if cont_serial == -1:
+            return
+        num_items = len(list(selected))
+        for i, serial in enumerate(selected):
+            item = Items.FindBySerial(serial)
+            if item is None:
+                continue
+            # Source check
+            try:
+                src_topcont = cls.get_topmost_container(serial)
+            except cls.ItemNotFound as e:
+                Misc.SendMessage(f"[{i + 1}/{num_items}] Cannot move '{item.Name}': Source not found.", 0x21)
+                break
+            except cls.ItemTooFar as e:
+                Misc.SendMessage(f"[{i + 1}/{num_items}] Cannot move '{item.Name}': Source is too far away.", 0x21)
+                break
+            # Target check
+            try:
+                dest_topcont = cls.get_topmost_container(cont_serial)
+            except cls.ItemNotFound as e:
+                Misc.SendMessage(f"[{i + 1}/{num_items}] Cannot move '{item.Name}': Destination not found.", 0x21)
+                break
+            except cls.ItemTooFar as e:
+                Misc.SendMessage(f"[{i + 1}/{num_items}] Cannot move '{item.Name}': Destination is too far away.", 0x21)
+                break
+
+            # Content and weight check
+            try:
+                cont_res = cls.get_contents(dest_topcont.Serial)
+            except cls.ItemNotFound:
+                Misc.SendMessage(f"[{i + 1}/{num_items}] Cannot move '{item.Name}': Failed to locate the destination.", 0x21)
+                break
+            if cont_res is None:
+                continue
+            if cont_res.contents >= cont_res.max_contents:
+                Misc.SendMessage(f"[{i + 1}/{num_items}] Cannot move '{item.Name}': The destination is full.", 0x21)
+                break
+            if cont_res.weight + item.Weight > cont_res.max_weight:
+                Misc.SendMessage(f"[{i + 1}/{num_items}] Cannot move '{item.Name}': The destination will be overweight if this item is moved.", 0x21)
+                continue
+
+            Items.Move(item.Serial, cont_serial, -1)
+            Misc.SendMessage(f"[{i + 1}/{num_items}] Attempting to move '{item.Name}'.", 68)
+            Misc.Pause(1000)
 
 
 class Explorer:
@@ -387,17 +327,17 @@ class Explorer:
         """
         Show a confirmation dialog with the given text and title.
         """
-        gb = SheetBuilder(id="ConfirmGump")
+        gb = CraftingGumpBuilder(id="ConfirmGump")
         with gb.MinimalFrame():
             if title:
                 gb.Html(title, width=250, centered=True, color="#FFFFFF")
             gb.Html(text, width=250, height=height, centered=centered, color="#FFFFFF")
             gb.Spacer(5)
             with gb.Row(spacing=10):
-                btn_yes = gb.UOStoreButton(yes_text, style=SheetBuilder.UOStoreButtonStyle.BLUE)
-                btn_no = gb.UOStoreButton(no_text, style=SheetBuilder.UOStoreButtonStyle.RED)
+                btn_yes = gb.UOStoreButton(yes_text, style="blue")
+                btn_no = gb.UOStoreButton(no_text, style="red")
 
-        block, response = gb.launch()
+        block, _ = gb.launch().wait_response().unpack()
         return block == btn_yes
 
     @staticmethod
@@ -482,12 +422,23 @@ class Explorer:
             Misc.SendMessage(f"Failed to save setting: {e}", 0x21)
 
     @classmethod
+    def batch_move_to(cls, selected: Set[int]):
+        """
+        Move all selected items in the sheet to a target container.
+        """
+        if len(selected) == 0:
+            Misc.SendMessage("No items selected.", 0x21)
+            return
+        target = Target.PromptTarget("Select the destination to move the selected items.", 0x3B2)
+        BatchMoveManager.execute(target, selected)
+
+    @classmethod
     def item_action(cls, row: ItemPropRow):
         """
         Shows the possible intreractions with the item for the given row.
         """
         # Build the gump
-        gb = SheetBuilder(id="SheetActionGump")
+        gb = CraftingGumpBuilder(id="SheetActionGump")
         with gb.MainFrame():
             with gb.ShadedColumn(halign="center"):
                 gb.TileArt(row["Type"], width=80, height=60, hue=row["Color"], centered=True, itemproperty=row["Serial"])
@@ -496,10 +447,10 @@ class Explorer:
                 btn_use = gb.CraftingButton("Use", tooltip="Use the item.")
                 btn_equip = gb.CraftingButton("Equip", tooltip="Attempts to equip the item. This may fail if you already have an item in the slot.")
                 btn_move = gb.CraftingButton("Move To", tooltip="Move the item to a target container.")
-                btn_exit = gb.CraftingButton("Return", style=gb.CraftingButtonStyle.LEFT, tooltip="Return to the previous menu.")
+                btn_exit = gb.CraftingButton("Return", style="left", tooltip="Return to the previous menu.")
 
         # Handle response
-        block, response = gb.launch()
+        block, _ = gb.launch().wait_response().unpack()
         if block == btn_exit:
             return
         if block == btn_to_inv:
@@ -539,7 +490,7 @@ class Explorer:
         lines_per_page = max(10, len(all_items) - 2)
 
         # Build the gump
-        gb = SheetBuilder(id="SheetFilterGump")
+        gb = CraftingGumpBuilder(id="SheetFilterGump")
         with gb.MainFrame():
             # Header
             with gb.ShadedColumn(halign="center"):
@@ -566,13 +517,13 @@ class Explorer:
             # Footer
             with gb.ShadedRow(spacing=25):
                 with gb.Column(width=200):
-                    btn_left = gb.CraftingButton("MOVE LEFT", width=165, style=gb.CraftingButtonStyle.LEFT)
+                    btn_left = gb.CraftingButton("MOVE LEFT", width=165, style="left")
                     btn_right = gb.CraftingButton("MOVE RIGHT", width=165)
                     btn_expand = gb.CraftingButton("EXPAND COLUMN", width=165)
                     btn_narrow = gb.CraftingButton("NARROW COLUMN", width=165)
                 with gb.Column(width=200):
                     btn_remove = gb.CraftingButton("REMOVE COLUMN", width=165)
-                    btn_exit = gb.CraftingButton("EXIT", width=165, style=gb.CraftingButtonStyle.X)
+                    btn_exit = gb.CraftingButton("EXIT", width=165, style="x")
 
         while True:
             # Populate properties column
@@ -592,7 +543,7 @@ class Explorer:
                     gb.Spacer(22)
 
             # Handle response
-            block, response = gb.launch()
+            block, response = gb.launch().wait_response().unpack()
             if block == btn_exit:
                 return
             if block == btn_prev:
@@ -655,7 +606,7 @@ class Explorer:
         Show the edit/save gump for the given sheet.
         Here you can change the sheet name or export the sheet.
         """
-        gb = SheetBuilder(id="SheetSaveGump")
+        gb = CraftingGumpBuilder(id="SheetSaveGump")
         with gb.MinimalFrame():
             gb.Html("Rename/Export Sheet", width=320, centered=True, color="#FFFFFF")
             with gb.Row(spacing=5):
@@ -666,12 +617,12 @@ class Explorer:
                 gb.Text("Verbose (Export every scanned properties)", width=280, hue=1152)
             gb.Spacer(5)
             with gb.Row(spacing=10):
-                btn_export = gb.UOStoreButton("Export", style=SheetBuilder.UOStoreButtonStyle.BLUE, tooltip="Export the sheet to a CSV file.")
-                btn_rename = gb.UOStoreButton("Rename", style=SheetBuilder.UOStoreButtonStyle.GREEN, tooltip="Rename the sheet.")
-                btn_cancel = gb.UOStoreButton("Cancel", style=SheetBuilder.UOStoreButtonStyle.RED, tooltip="Cancel and close this dialog.")
+                btn_export = gb.UOStoreButton("Export", style="blue", tooltip="Export the sheet to a CSV file.")
+                btn_rename = gb.UOStoreButton("Rename", style="green", tooltip="Rename the sheet.")
+                btn_cancel = gb.UOStoreButton("Cancel", style="red", tooltip="Cancel and close this dialog.")
 
         while True:
-            block, response = gb.launch()
+            block, _ = gb.launch().wait_response().unpack()
             if block == chk_verbose:
                 continue
             if block is None or block == btn_cancel:
@@ -696,7 +647,7 @@ class Explorer:
         :return: True if the sheet was modified, False otherwise.
         """
         # Build the gump
-        gb = SheetBuilder(id="ColumnConfigGump")
+        gb = CraftingGumpBuilder(id="ColumnConfigGump")
         with gb.MainFrame():
             # Header
             with gb.ShadedColumn(halign="center"):
@@ -725,7 +676,7 @@ class Explorer:
                     with gb.Column(width=150, spacing=5):
                         btn_delete = gb.CraftingButton("DELETE", width=115, tooltip="Delete the selected configuration.")
                     with gb.Column(width=150, spacing=5):
-                        btn_exit = gb.CraftingButton("EXIT", width=115, style=gb.CraftingButtonStyle.X, tooltip="Exit this dialog.")
+                        btn_exit = gb.CraftingButton("EXIT", width=115, style="x", tooltip="Exit this dialog.")
 
         selected_index = -1
         while True:
@@ -743,7 +694,7 @@ class Explorer:
                     btn_select.append(gb.Checkbox(checked=(i == selected_index)).on_click(i))
                     gb.Text(name, hue=(87 if i == selected_index else 1152), width=250, cropped=True, tooltip=txt_tooltip)
 
-            block, response = gb.launch()
+            block, response = gb.launch().wait_response().unpack()
 
             if block == btn_exit or block is None:
                 return False
@@ -913,7 +864,9 @@ class Explorer:
         sorted_sheet: Optional[Sheet] = None
         col_precedence: List[Optional[int]] = []
         col_sorted: List[SheetColumn] = []
+        row_selected: Set[int] = set()
         page: int = 0
+        mode: ExplorerSheetView.Mode = ExplorerSheetView.Mode.NORMAL
         while True:
             # Load the sheet if not already loaded
             if sheet is None:
@@ -922,6 +875,7 @@ class Explorer:
                 if sheet is None:
                     Misc.SendMessage("Failed to load the container.", 0x21)
                     return None
+                row_selected &= set(row["Serial"] for row in sheet.rows)
 
             # Check if the sheet is empty
             if len(sheet.rows) == 0:
@@ -949,38 +903,51 @@ class Explorer:
             if page < 0:
                 page = 0
 
-            esv = ExplorerSheetView(sorted_sheet, col_precedence, page)
+            esv = ExplorerSheetView(sorted_sheet, page, mode, col_precedence, row_selected)
 
-            block, response = esv.gb.launch()
+            block, response = esv.gb.launch().wait_response().unpack()
             if block == esv.menu_refresh:
+                # Reload the contents
                 sheet = None
                 continue
             if block == esv.menu_export:
+                # Rename or export the sheet
                 Explorer.rename_save(sorted_sheet)
                 sheet_header.name = sorted_sheet.name
                 continue
             if block == esv.menu_columns:
+                # Manage column configurations
                 modified = Explorer.manage_columns(sheet_header, setting)
                 if modified:
                     sorted_sheet = None
                 continue
             if block == esv.menu_prev:
+                # Go to the previous page
                 if page > 0:
                     page -= 1
                 continue
             if block == esv.menu_next:
+                # Go to the next page
                 if page < esv.total_pages - 1:
                     page += 1
                 continue
             if block in esv.menu_item_action:
+                # Perform action on the selected item
                 if not isinstance(response, ItemPropRow):
                     Misc.SendMessage("Invalid row.", 0x21)
                     continue
                 row = response
-                Explorer.item_action(row)
-                sheet = None
+                if mode == ExplorerSheetView.Mode.BATCH:
+                    if row["Serial"] in row_selected:
+                        row_selected.remove(row["Serial"])
+                    else:
+                        row_selected.add(row["Serial"])
+                elif mode == ExplorerSheetView.Mode.NORMAL:
+                    Explorer.item_action(row)
+                    sheet = None
                 continue
             if block in esv.menu_edit_column:
+                # Edit the selected column
                 if not isinstance(response, int):
                     Misc.SendMessage("Invalid column index.", 0x21)
                     continue
@@ -989,6 +956,7 @@ class Explorer:
                 sorted_sheet = None
                 continue
             if block in esv.menu_sort_column:
+                # Sort by the selected column
                 if not isinstance(response, int):
                     Misc.SendMessage("Invalid column index.", 0x21)
                     continue
@@ -1009,6 +977,29 @@ class Explorer:
                 sheet_header.add_column_by_id("Name", {"update_time": 0})
                 sorted_sheet = None
                 continue
+            if block == esv.menu_batch:
+                # Toggle between normal and batch mode
+                if mode == ExplorerSheetView.Mode.BATCH:
+                    mode = ExplorerSheetView.Mode.NORMAL
+                else:
+                    mode = ExplorerSheetView.Mode.BATCH
+                continue
+            if esv.menu_extra_select_all is not None and block == esv.menu_extra_select_all:
+                row_selected = set(row["Serial"] for row in sorted_sheet.rows)
+                continue
+            if esv.menu_extra_deselect_all is not None and block == esv.menu_extra_deselect_all:
+                row_selected = set()
+                continue
+            if esv.menu_extra_invert is not None and block == esv.menu_extra_invert:
+                current_selection = set(row["Serial"] for row in sorted_sheet.rows)
+                row_selected ^= current_selection
+                continue
+            if esv.menu_extra_move_to is not None and block == esv.menu_extra_move_to:
+                Explorer.batch_move_to(row_selected)
+                # mode = ExplorerSheetView.Mode.NORMAL
+                # row_selected = set()
+                sheet = None
+                continue
             return None
 
     @staticmethod
@@ -1017,12 +1008,12 @@ class Explorer:
         A minimized gump to quickly open the explorer.
         """
 
-        gb = SheetBuilder(id="SheetShortcutGump")
+        gb = CraftingGumpBuilder(id="SheetShortcutGump")
         with gb.MinimalFrame():
             gb.Html("Item Explorer", centered=True, color="#FFFFFF", width=125)
             gb.UOStoreButton("Inspect", tooltip="Inspect the target container's contents.").on_click(True)
 
-        _, response = gb.launch()
+        _, response = gb.launch().wait_response().unpack()
         return response
 
 

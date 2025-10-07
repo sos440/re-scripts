@@ -1,10 +1,6 @@
 import os
 import sys
 from typing import List
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from razorenhanced import *
 
 # This allows the RazorEnhanced to correctly identify the path of the current module.
 PATH = os.path.dirname(os.path.abspath(__file__))

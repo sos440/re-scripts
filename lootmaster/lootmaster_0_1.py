@@ -1,10 +1,7 @@
+from AutoComplete import *
 import os
 import sys
 import threading
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from razorenhanced import *
 
 # This allows the RazorEnhanced to correctly identify the path of the current module.
 PATH = os.path.dirname(os.path.abspath(__file__))
@@ -175,22 +172,24 @@ def gump_menu() -> int:
     Gumps.AddHtml(gd, 10, 5, 126, 18, GUMP_BUTTONTEXT_WRAP.format(text="Lootmaster"), False, False)
 
     Gumps.AddButton(gd, 10, 30, 40020, 40030, 1001, 1, 0)
-    Gumps.AddHtml(gd, 10, 32, 126, 18, GUMP_BUTTONTEXT_WRAP.format(text="Manual Loot"), False, False)
+    Gumps.AddHtml(gd, 10, 33, 126, 18, GUMP_BUTTONTEXT_WRAP.format(text="Manual Loot"), False, False)
 
     if LOOTER.mode == LootingMode.STOPPED:
         Gumps.AddButton(gd, 10, 55, 40021, 40031, 1002, 1, 0)
-        Gumps.AddHtml(gd, 10, 57, 126, 18, GUMP_BUTTONTEXT_WRAP.format(text="Enable Autoloot"), False, False)
+        Gumps.AddHtml(gd, 10, 58, 126, 18, GUMP_BUTTONTEXT_WRAP.format(text="Enable Autoloot"), False, False)
     else:
         Gumps.AddButton(gd, 10, 55, 40297, 40298, 1003, 1, 0)
         Gumps.AddHtml(gd, 10, 57, 126, 18, GUMP_BUTTONTEXT_WRAP.format(text="Stop Looter"), False, False)
 
     Gumps.AddButton(gd, 10, 80, 40299, 40300, 1004, 1, 0)
-    Gumps.AddHtml(gd, 10, 82, 126, 18, GUMP_BUTTONTEXT_WRAP.format(text="Edit Profile"), False, False)
+    Gumps.AddHtml(gd, 10, 83, 126, 18, GUMP_BUTTONTEXT_WRAP.format(text="Edit Profile"), False, False)
 
     # Send the gump and listen for the response
     Gumps.SendGump(GUMP_MENU, Player.Serial, 100, 100, gd.gumpDefinition, gd.gumpStrings)
-    if not Gumps.WaitForGump(GUMP_MENU, 3600000):
-        return 0
+
+    Timer.Create("session-timeout", 5000)
+    while not Gumps.WaitForGump(GUMP_MENU, 3000):
+        Timer.Create("session-timeout", 5000)
 
     gd = Gumps.GetGumpData(GUMP_MENU)
     if gd is None:
@@ -202,14 +201,9 @@ def refresh_gump_menu():
     Gumps.SendAction(GUMP_MENU, 0)
 
 
-def main():
-    global SETTING
+def load_profile():
     global PROFILE
-    global LOOTER
-
-    # Load the setting if exists
-    SETTING = io.load_setting()
-    Logger.Info("Lootmaster has been initialized.")
+    assert SETTING is not None, "SETTING is not initialized."
 
     # Load the last profile if exists, or create a new one
     profile_filename = SETTING["last-profile-filename"]
@@ -223,6 +217,20 @@ def main():
     else:
         PROFILE = create_template_profile()
         Logger.Info("No last profile found. Created a new profile.")
+
+
+def main():
+    global SETTING
+    global PROFILE
+    global LOOTER
+
+    # Load the setting if exists
+    SETTING = io.load_setting()
+    Logger.Info("Lootmaster has been initialized.")
+
+    # Load the last profile if exists, or create a new one
+    load_profile()
+    assert PROFILE is not None, "PROFILE is not initialized."
 
     # Save the profile
     filename = f"{PROFILE.name}.json"
@@ -239,6 +247,7 @@ def main():
     LOOTER = Looter(SETTING, PROFILE)
     LOOTER.callback = refresh_gump_menu
     LOOTER.scanner = Looter.scanner_basic
+    Timer.Create("session-timeout", 5000)
     LOOTER.start(LootingMode.LOOP)
     Logger.Info("Looter started.")
 

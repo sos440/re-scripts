@@ -63,6 +63,8 @@ color_map = [
 
 from AutoComplete import *
 from typing import Dict, Tuple
+from System.Collections.Generic import List as CList  # type: ignore
+from System import Byte, Int32  # type: ignore
 import re
 
 
@@ -108,22 +110,30 @@ color_invmap: Dict[int, Tuple[int, str]] = {entry[0]: (i, entry[1]) for i, entry
 
 
 def is_valid_seed(seed: "Item") -> bool:
-    cont = Items.FindBySerial(seed.Container)
-    if cont is not None and cont.ItemID in (0x4B59, 0x4B5B):
-        return False
-    return True
+    if seed.RootContainer in plant_map:
+        return True
+    if seed.RootContainer == Player.Backpack.Serial:
+        return True
+    return False
 
 
 def sort_seeds():
     seeds = []
 
     for cont_serial in plant_map:
-        Items.WaitForContents(cont_serial, 1000)
-        seeds.extend(Items.FindAllByID(0x0DCF, -1, cont_serial, 2))
-        Misc.Pause(1000)
-    seeds.extend(Items.FindAllByID(0x0DCF, -1, Player.Backpack.Serial, 2))
-
-    seeds = [seed for seed in seeds if is_valid_seed(seed)]
+        cont = Items.FindBySerial(cont_serial)
+        if cont is None:
+            continue
+        if not cont.ContainerOpened or len(cont.Contains) == 0:
+            Misc.SendMessage("Opening the container...", 68)
+            Items.WaitForContents(cont_serial, 1000)
+            Misc.Pause(1000)
+    
+    filter = Items.Filter()
+    filter.Enabled = True
+    filter.OnGround = False
+    filter.Graphics = CList[Int32]([0x0DCF])
+    seeds = [seed for seed in Items.ApplyFilter(filter) if is_valid_seed(seed)]
 
     n = len(seeds)
     Misc.SendMessage(f"{n} seeds found!", 0x3B2)

@@ -1,10 +1,8 @@
+from AutoComplete import *
 import os
 import sys
 import re
-from typing import Optional, List, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from razorenhanced import *
+from typing import Optional, List
 
 # This allows the RazorEnhanced to correctly identify the path of the current module.
 PATH = os.path.dirname(os.path.abspath(__file__))

@@ -1,5 +1,5 @@
 from AutoComplete import *
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Any
 from enum import Enum
 import re
 import sys
@@ -9,7 +9,12 @@ import os
 sys.path.append(os.path.dirname(__file__))
 
 # Import gumpradio after modifying sys.path
-import gumpradio
+from gumpradio.templates import *
+
+
+################################################################################
+# PS Book Parser
+################################################################################
 
 
 class SkillGroup(Enum):
@@ -258,6 +263,11 @@ class OldPSGumpManager:
         return ps_book
 
 
+################################################################################
+# Main Logic
+################################################################################
+
+
 PS_BOOK_EXAMINED = set()
 
 
@@ -288,12 +298,19 @@ def obtain_ps() -> Optional[PSBook]:
         return
 
 
-def main():
+def display_ps_count(gb: GumpBuilder, msg: Any, highlight: bool = False):
+    if highlight:
+        gb.Html(f"{str(msg)}*", width=70, color="#CD51FF")
+    else:
+        gb.Html(f"{str(msg)}", width=70, color="#FFFFFF")
+
+
+def show_main_gump():
     # Empty PS Book
     ps_book = PSBook(0)
 
     # Initialize CraftingGumpBuilder
-    gb = gumpradio.CraftingGumpBuilder()
+    gb = CraftingGumpBuilder()
 
     # Current skill group to display
     cur_group = None
@@ -302,7 +319,7 @@ def main():
     btn_view_group = {}
 
     # Build the main frame
-    with gb.MainFrame(spacing=5):
+    with gb.MainFrame():
         # Title
         with gb.ShadedColumn(halign="center"):
             gb.Html("POWER SCROLL BOOK SUMMARY", width=300, color="#FFFFFF", centered=True)
@@ -312,7 +329,7 @@ def main():
             with gb.ShadedColumn():
                 # Skill group buttons
                 for group in SkillGroup:
-                    btn_cur_group = gb.LabeledButton(f"{group.value} Skills")
+                    btn_cur_group = gb.CraftingButton(f"{group.value} Skills")
                     btn_view_group[btn_cur_group] = group
             # PS summary of the selected group
             with gb.ShadedColumn(spacing=5) as s:
@@ -320,8 +337,8 @@ def main():
                 summary = s
         # Action buttons
         with gb.ShadedRow():
-            btn_ask_ps = gb.LabeledButton("Choose PS Book").on_click(obtain_ps)
-            btn_exit = gb.LabeledButton("Exit", up=4017, down=4019)
+            btn_ask_ps = gb.CraftingButton("Choose PS Book").on_click(obtain_ps)
+            btn_exit = gb.CraftingButton("Exit", style="x")
 
     # Main loop
     while True:
@@ -349,16 +366,16 @@ def main():
                 continue
             # Write the skill row
             with gb.Row():
-                
+
                 gb.Html(skill, width=150, color="#FFFFFF")
-                gb.Html(f"{vals.level_105}", width=70, color="#FFFFFF")
-                gb.Html(f"{vals.level_110}", width=70, color="#FFFFFF")
-                gb.Html(f"{vals.level_115}", width=70, color="#FFFFFF")
-                gb.Html(f"{vals.level_120}", width=70, color="#FFFFFF")
+                display_ps_count(gb, vals.level_105, vals.level_105 >= 8)
+                display_ps_count(gb, vals.level_110, vals.level_110 >= 12)
+                display_ps_count(gb, vals.level_115, vals.level_115 >= 10)
+                display_ps_count(gb, vals.level_120)
 
         # Launch the gump and wait for user interaction
         # The return value is a tuple of (clicked_block, result)
-        block, result = gb.launch()
+        block, result = gb.launch().wait_response().unpack()
 
         # Handle the result of the gump
         if block in btn_view_group:
@@ -375,4 +392,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    show_main_gump()

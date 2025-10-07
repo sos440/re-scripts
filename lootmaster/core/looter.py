@@ -1,15 +1,12 @@
+from AutoComplete import *
 import threading
 import time
 import os
 import sys
-from System.Collections.Generic import List as GenList  # type: ignore
+from System.Collections.Generic import List as CList  # type: ignore
 from System import Byte  # type: ignore
 from enum import Enum
 from typing import List, Dict, Tuple, Any, Optional, Callable, Union
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from razorenhanced import *
 
 # This allows the RazorEnhanced to correctly identify the path of the current module.
 PATH = os.path.dirname(os.path.abspath(__file__))
@@ -83,7 +80,17 @@ def render_object(
     packet.add_byte(flag)
     packet.add_bytes(b"\x00\x00")
 
-    PacketLogger.SendToClient(GenList[Byte](packet.build()))
+    PacketLogger.SendToClient(CList[Byte](packet.build()))
+
+
+def close_container(serial: int):
+    serial = serial & 0xFFFFFFFF
+    packet = b"\xbf"  # command
+    packet += b"\x00\x0d"  # length
+    packet += b"\x00\x16"  # subcommand
+    packet += b"\x00\x00\x00\x0c"  # close container
+    packet += serial.to_bytes(4, "big")
+    PacketLogger.SendToClient(CList[Byte](packet))
 
 
 def root_dist_to_player(serial) -> Union[int, float]:
@@ -144,6 +151,7 @@ class LootingMemory:
         self.attempts = 0
         self.opened = False
         self.finished = False
+        self.name_checked = False
 
 
 class Looter:
@@ -200,6 +208,7 @@ class Looter:
         return summary
 
     def dehighlight_finished(self, target):
+        close_container(target.Serial)
         color = self.setting.get("mark-color", 1014)
         if target.ItemID == 0x2006:
             render_object(
@@ -215,6 +224,32 @@ class Looter:
         else:
             Items.SetColor(target.Serial, color)
 
+    def _raw_check_lootability(self):
+        for entry in Journal.GetJournalEntry(-1):
+            item = Items.FindBySerial(entry.Serial)
+            if item is None:
+                continue
+            if item.ItemID != 0x2006:
+                continue
+            if entry.Type != "Label":
+                continue
+            cur_mem = self.target_cache.setdefault(entry.Serial, LootingMemory())
+            if cur_mem.name_checked or not cur_mem.lootable:
+                continue
+            cur_mem.name_checked = True
+            if entry.Color == 89:
+                Misc.SendMessage(f"Looter> {item.Name} is not lootable.", 88)
+                cur_mem.lootable = False
+        Journal.Clear()
+
+    def global_check_lootability(self) -> None:
+        self._raw_check_lootability()
+        # Display the name of all corpses in the vicinity.
+        for corpse in Items.FindAllByID(0x2006, -1, -1, 8):
+            if corpse.Serial in self.target_cache:
+                continue
+            Items.SingleClick(corpse.Serial)
+
     def attempt_open(self, target) -> Tuple[bool, List[ItemSummary]]:
         """
         Attempt to open a lootable target and update the looting memory.
@@ -228,23 +263,24 @@ class Looter:
                 and a list of lootable items in the target.
         """
         max_attempts = self.setting.get("max-open-attempts", 3)
-        cur_mem = self.target_cache.get(target.Serial, LootingMemory())
-        self.target_cache[target.Serial] = cur_mem
+        cur_mem = self.target_cache.setdefault(target.Serial, LootingMemory())
         # If the target is not lootable or has been finished, return False.
         if cur_mem.finished:
             return True, []
         if not cur_mem.lootable:
             return True, []
+        if target.ItemID == 0x2006 and not cur_mem.name_checked:
+            Items.SingleClick(target.Serial)
+            Misc.Pause(500)
+            self._raw_check_lootability()
+        if not cur_mem.lootable:
+            return True, []
         # If failed to open the target, increment the attempts and check if it should be marked as not lootable.
-        action_performed = False
         cont_opened = target.ContainerOpened
         if not cont_opened:
-            Journal.Clear()
+            Misc.Pause(Timer.Remaining("action-delay"))
+            Timer.Create("action-delay", self.setting.get("action-delay", 900))
             cont_opened = Items.WaitForContents(target.Serial, 1000)
-            if Journal.Search("You did not earn the right to loot this"):
-                cur_mem.lootable = False
-                return True, []
-            action_performed = True
         if not cont_opened:
             cur_mem.attempts += 1
             if cur_mem.attempts >= max_attempts:
@@ -252,8 +288,7 @@ class Looter:
                 return True, []
             return False, []
         # Builds the list of lootable items in the target.
-        if action_performed:
-            Misc.Pause(self.setting.get("action-delay", 900))
+        Misc.Pause(Timer.Remaining("action-delay"))
         target = Items.FindBySerial(target.Serial)
         if target is None:
             return False, []
@@ -281,19 +316,26 @@ class Looter:
                     continue
                 self.dehighlight_finished(target)
 
+        self.global_check_lootability()
+
         is_greedy = self.setting.get("greedy-looting", False)
         # In the greedy mode, we only scan for the first lootable item.
         if is_greedy:
             lootables = []
             for target in self.scan_nearby_targets():
-                lootables.extend([self.summarize(item) for item in target.Contains])
-            lootables = [item for item in lootables if self.profile.test(item)]
+                cur_lootables = [self.summarize(item) for item in target.Contains]
+                cur_lootables = [item for item in cur_lootables if self.profile.test(item)]
+                if len(cur_lootables) > 0:
+                    lootables.extend(cur_lootables)
             if len(lootables) > 0:
                 return lootables[:1]
 
         # Open all targets near the player.
         needs_scan = True
         while needs_scan:
+            # Emergency stop
+            if self._stop_event.is_set():
+                return []
             needs_scan = False
             for target in self.scan_nearby_targets():
                 success, cur_lootables = self.attempt_open(target)
@@ -359,7 +401,7 @@ class Looter:
             # Move the item to the lootbag
             Items.Move(item_to_loot.serial, lootbag, -1)
             if rule.notify:
-                Misc.SendMessage(f"Looter> {rule.name} matched: {item_to_loot.name}")
+                Misc.SendMessage(f"Looter> {rule.name} matched: {item_to_loot.name}", 88)
             return True
 
         return False
@@ -372,6 +414,10 @@ class Looter:
         delay_action = self.setting.get("action-delay", 900)
         while Player.Connected and (not Player.IsGhost) and (not self._stop_event.is_set()):
             if self.mode == LootingMode.STOPPED:
+                break
+
+            if not Timer.Check("session-timeout"):
+                Misc.SendMessage("Looter> Session timeout reached, stopping looter.", 0x3B2)
                 break
 
             # Scan for lootable items

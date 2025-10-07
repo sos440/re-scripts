@@ -92,6 +92,8 @@ settings = {
     0x46A2: SortCriteria(sort_key=[SortKey.COLOR], dir=SortDir.RightThenDown, dx=20, dy=20, line_size=5),
     # Present Box
     0x9A93: SortCriteria(sort_key=[SortKey.COLOR], dir=SortDir.RightThenDown, dx=20, dy=20, line_size=5),
+    # Pigment of Tokuno
+    0x0EFF: SortCriteria(sort_key=[SortKey.COLOR], dir=SortDir.RightThenDown, dx=10, dy=15, line_size=40),
 }
 
 

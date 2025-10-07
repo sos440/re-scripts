@@ -88,6 +88,7 @@ def export_sos_map():
             else:
                 f.write(f"+SOS: {loc[0]} {loc[1]} 0 SOS\n")
                 f.write(f"+SOS: {loc[0]} {loc[1]} 1 SOS\n")
+    Misc.SendMessage("SOS map exported to: Data/Client/SOS.map", 68)
 
 
 def get_nearest_sos(x, y) -> Tuple[Optional["Item"], float]:
@@ -158,9 +159,6 @@ if __name__ == "__main__":
             continue
 
         if gd.buttonid == ID_NEAREST_SOS:
-            if REF_POS == (-1, -1):
-                Misc.SendMessage("No reference position set.", 33)
-                continue
             if IS_TRACKING:
                 Player.TrackingArrow(TRACKING_POS[0], TRACKING_POS[1], False, 0)
                 IS_TRACKING = False
@@ -171,6 +169,11 @@ if __name__ == "__main__":
                 Misc.Pause(1000)
             # Export SOS locations
             export_sos_map()
+
+
+            if REF_POS == (-1, -1):
+                Misc.SendMessage("No reference position set.", 33)
+                continue
             # Find the nearest and pick up
             sos_nearest, dist = get_nearest_sos(REF_POS[0], REF_POS[1])
             if sos_nearest is None:

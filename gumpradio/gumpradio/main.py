@@ -10,7 +10,7 @@ from enum import Enum
 from typing import List, Optional, Tuple, Dict, Union, Callable, Any
 
 
-VERSION = "0.1.0"
+VERSION = "1.0.0"
 
 
 ################################################################################
@@ -179,6 +179,8 @@ class _Container(_Block):
     * If the container is horizontal, this adds horizontal spacing between children.
     * If the container is vertical, this adds vertical spacing between children.
     """
+    stretch: bool
+    """Whether to stretch child blocks to fill the container's dimension in the layout direction."""
     _padding: Tuple[int, int, int, int]
     """Padding around the container's content. Format: (left, top, right, bottom)"""
 
@@ -192,6 +194,7 @@ class _Container(_Block):
         padding: Union[int, Tuple[int, ...]] = 0,
         spacing: int = 0,
         background: str = "",
+        stretch: bool = True,
     ):
         super().__init__(width, height)
         self.has_children = True
@@ -202,6 +205,7 @@ class _Container(_Block):
         self.padding = padding
         self.spacing = spacing
         self.background = background
+        self.stretch = stretch
 
     def append(self, block: _Block):
         self.children.append(block)
@@ -274,7 +278,7 @@ class _Container(_Block):
         inner_width = self._calc_width - self._padding[0] - self._padding[2]
         inner_height = self._calc_height - self._padding[1] - self._padding[3]
         for child in self.children:
-            if not isinstance(child, _Container):
+            if not isinstance(child, _Container) or not child.stretch:
                 continue
             if child.height is None and self.orientation == Orientation.HORIZONTAL:
                 # Stretch child height to fit container's inner height
@@ -764,6 +768,7 @@ class GumpBuilder(_Clickable):
         padding: Union[int, Tuple[int, ...]] = 0,
         spacing: int = 0,
         background: str = "",
+        stretch: bool = True,
     ):
         """
         Add a horizontal container to the gump.
@@ -771,10 +776,11 @@ class GumpBuilder(_Clickable):
 
         :param width: The width of the container in pixels. If None, it will be calculated based on children.
         :param height: The height of the container in pixels. If None, it will be calculated based on children.
-        :param halign: Horizontal alignment of child blocks within the container.
-        :param valign: Vertical alignment of child blocks within the container.
+        :param halign: Horizontal alignment of child blocks within the container. ("left", "center", "right")
+        :param valign: Vertical alignment of child blocks within the container. ("top", "middle", "bottom")
         :param padding: Padding around the container's content. Can be an int or a tuple of 2, 3, or 4 ints.
         :param background: Background style of the container. See `_Container.background` for details.
+        :param stretch: Whether to stretch child blocks to fill the container's height.
         """
         return self.Scope(
             self,
@@ -787,6 +793,7 @@ class GumpBuilder(_Clickable):
                 padding=padding,
                 spacing=spacing,
                 background=background,
+                stretch=stretch,
             ),
         )
 
@@ -800,6 +807,7 @@ class GumpBuilder(_Clickable):
         padding: Union[int, Tuple[int, ...]] = 0,
         spacing: int = 0,
         background: str = "",
+        stretch: bool = True,
     ):
         """
         Add a vertical container to the gump.
@@ -807,10 +815,11 @@ class GumpBuilder(_Clickable):
 
         :param width: The width of the container in pixels. If None, it will be calculated based on children.
         :param height: The height of the container in pixels. If None, it will be calculated based on children.
-        :param halign: Horizontal alignment of child blocks within the container.
-        :param valign: Vertical alignment of child blocks within the container.
+        :param halign: Horizontal alignment of child blocks within the container. ("left", "center", "right")
+        :param valign: Vertical alignment of child blocks within the container. ("top", "middle", "bottom")
         :param padding: Padding around the container's content. Can be an int or a tuple of 2, 3, or 4 ints.
         :param background: Background style of the container. See `_Container.background` for details.
+        :param stretch: Whether to stretch child blocks to fill the container's width.
         """
         return self.Scope(
             self,
@@ -823,17 +832,22 @@ class GumpBuilder(_Clickable):
                 padding=padding,
                 spacing=spacing,
                 background=background,
+                stretch=stretch,
             ),
         )
 
-    def Spacer(self, spacing: int = 0, orientation: Optional[Orientation] = None):
+    def Spacer(self, spacing: int = 0, orientation: Union[Orientation, str, None] = None):
         """
         Add a spacer block to the gump. This is an invisible block that takes up space.
 
         :param spacing: The amount of space in pixels.
         :param orientation: The orientation of the spacer. If None, uses the current container's orientation.
         """
-        block = _Spacer(spacing, orientation or self.current.orientation)
+        if orientation is None:
+            orientation = self.current.orientation
+        elif isinstance(orientation, str):
+            orientation = Orientation(orientation)
+        block = _Spacer(spacing, orientation)
         self.current.append(block)
         return block
 
@@ -1018,13 +1032,87 @@ class GumpBuilder(_Clickable):
         self.current.append(block)
         return block
 
-    def launch(self, response: bool = True, timeout: int = 3600000) -> Tuple[Optional[_Block], Any]:
+    class Response:
         """
-        Launch the gump and process the response.
+        Represents a response from the gump.
+
+        :param block: The block that was interacted with, if any.
+        :param result: The result from the block's click handler, if any.
+        """
+
+        def __init__(self, block: Optional[_Block] = None, result: Any = None):
+            self.block = block
+            self.result = result
+        
+        def __bool__(self):
+            return self.block is not None
+
+        def unpack(self) -> Tuple[Optional[_Block], Any]:
+            """
+            Unpack the response into its components.
+
+            :return: A tuple of (block, result).
+            """
+            return (self.block, self.result)
+
+    class ResponseParser:
+        """
+        Parses responses from the gump.
+
+        This can be used to handle responses in a more controlled manner by
+        separating the logic for launching the gump and processing the response.
+        """
+
+        def __init__(self, gb: "GumpBuilder", seriallized: Optional[Dict[int, _Block]] = None):
+            self.builder = gb
+            self.seriallized: Dict[int, _Block] = seriallized or {}
+
+        def wait_response(self, timeout: int = 3600000) -> "GumpBuilder.Response":
+            """
+            Wait for a response from the gump.
+
+            :param timeout: Timeout in milliseconds to wait for a response. Default is 1 hour.
+            :return: A response object containing the interacted block and result.
+            """
+            if Gumps.WaitForGump(self.builder.id, timeout):
+                return self.parse_response()
+            return GumpBuilder.Response()
+
+        def parse_response(self) -> "GumpBuilder.Response":
+            gd = Gumps.GetGumpData(self.builder.id)
+            if gd is None:
+                return GumpBuilder.Response()
+
+            # Update text fields
+            for i, text_index in enumerate(gd.textID):
+                if text_index not in self.seriallized:
+                    continue
+                block = self.seriallized[text_index]
+                if isinstance(block, _HasText):
+                    block.text = gd.text[i]
+
+            # Handle button clicks
+            if gd.buttonid in self.seriallized:
+                block = self.seriallized[gd.buttonid]
+                response = GumpBuilder.Response(block)
+                if isinstance(block, _Checkbox):
+                    block.checked = not block.checked
+                if isinstance(block, _Clickable):
+                    if isinstance(block.click_handler, Callable):
+                        response.result = block.click_handler(*(block.click_args or []))
+                    else:
+                        response.result = block.click_handler
+                return response
+
+            return GumpBuilder.Response()
+
+    def launch(self) -> "GumpBuilder.ResponseParser":
+        """
+        Launch the gump and return a response parser.
 
         :param response: Whether to wait for and process a response from the user.
         :param timeout: Timeout in milliseconds to wait for a response. Default is 1 hour.
-        :return: A tuple of (clicked block, handler result) if a clickable block was activated, else (None, None).
+        :return: A response parser for the launched gump.
         """
         # Compute sizes
         self.root.compute_size()
@@ -1064,50 +1152,9 @@ class GumpBuilder(_Clickable):
             cmds.extend(block.compile())
         cmds_body = "".join(f"{{ {cmd} }}" for cmd in cmds)
 
-        # # DEBUG: Log the gump to a file
-        # from datetime import datetime
-
-        # with open(f"Data/Sheets/log_gumps_{datetime.now():%Y%m%d}.txt", "a", encoding="utf-8") as f:
-        #     f.write(f"// Gump ID: {self.id}\n")
-        #     f.write(cmds_body)
-        #     f.write("\n\n")
-
         Gumps.CloseGump(self.id)
         Gumps.SendGump(self.id, Player.Serial, 100, 100, cmds_body, CList[str](texts))
-
-        # Process the response
-        if not response:
-            return None, None
-        if not Gumps.WaitForGump(self.id, timeout):
-            return None, None
-        gd = Gumps.GetGumpData(self.id)
-        if gd is None:
-            return None, None
-
-        # Update text fields
-        for i, text_index in enumerate(gd.textID):
-            if text_index not in serialized:
-                continue
-            block = serialized[text_index]
-            if isinstance(block, _HasText):
-                block.text = gd.text[i]
-
-        # Handle button clicks
-        if gd.buttonid in serialized:
-            block = serialized[gd.buttonid]
-            if isinstance(block, _Checkbox):
-                block.checked = not block.checked
-            if isinstance(block, _Clickable):
-                if isinstance(block.click_handler, Callable):
-                    return block, block.click_handler(*(block.click_args or []))
-                return block, block.click_handler
-
-        return None, None
+        return self.ResponseParser(self, serialized)
 
 
-__export__ = [
-    "Orientation",
-    "HorizontalAlign",
-    "VerticalAlign",
-    "GumpBuilder",
-]
+__export__ = ["GumpBuilder"]

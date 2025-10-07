@@ -1,16 +1,19 @@
 REFRESH_DURATION = 500
 """Duration (in milliseconds) between refreshes of the durability information."""
 
-
 DELAY_BETWEEN_EQUIPS = 500
 """Delay between successive equip/unequip commands."""
+
+RESTORE_POSITION = True
+"""Whether to restore the item to its last known position after unequipping."""
 
 ################################################################################
 # Header
 ################################################################################
 
 from AutoComplete import *
-from typing import List, Tuple, Dict, Any, Optional
+from typing import List, Tuple, Dict, Any, Optional, Callable, TypeVar
+from enum import Enum
 import re
 import json
 import os
@@ -25,9 +28,36 @@ sys.path.append(PATH)
 # Settings
 ################################################################################
 
-VERSION = "1.0.4"
+VERSION = "1.0.5"
 SETTING_FILEDIR = os.path.join(PATH, "data")
 SETTING_FILEPATH = os.path.join(SETTING_FILEDIR, f"{Player.Name} ({Player.Serial}).json")
+
+
+################################################################################
+# Logger
+################################################################################
+
+
+class Logger:
+    COLOR_INFO = 0x3B2  # light grey
+    COLOR_IMPORTANT = 0x44  # bright green
+    COLOR_ERROR = 0x21  # red
+
+    @classmethod
+    def header(cls) -> str:
+        return "[Weapon Rack]"
+
+    @classmethod
+    def info(cls, msg: str) -> None:
+        Misc.SendMessage(f"{cls.header()} {msg}", cls.COLOR_INFO)
+
+    @classmethod
+    def important(cls, msg: str) -> None:
+        Misc.SendMessage(f"{cls.header()} {msg}", cls.COLOR_IMPORTANT)
+
+    @classmethod
+    def error(cls, msg: str) -> None:
+        Misc.SendMessage(f"{cls.header()} {msg}", cls.COLOR_ERROR)
 
 
 ################################################################################
@@ -62,9 +92,9 @@ class RackEntry:
         item = Items.FindBySerial(serial)
         if item is None:
             return None
-        elif item.Container == Player.Serial:
+        elif item.RootContainer == Player.Serial:
             state = "equipped"
-        elif item.Container == Player.Backpack.Serial:
+        elif item.RootContainer == Player.Backpack.Serial:
             state = "ready"
         else:
             state = "inaccessible"
@@ -86,6 +116,251 @@ class RackEntry:
             "color": self.color,
             "name": self.name,
         }
+
+
+################################################################################
+# Equip Manager
+################################################################################
+
+
+T = TypeVar("T")
+
+
+class EquipManager:
+    """
+    Manages equipping and unequipping items.
+
+    This manages the equip/unequip queue to ensure that commands
+    are not sent too quickly in succession.
+
+    This is because in some situations Player.UO3DEquip and Player.UO3DUnequip
+    cannot be used, and the slower Player.Equip and Player.UnEquip must be used instead.
+    """
+
+    class Handedness(Enum):
+        RIGHT = "right-handed"
+        LEFT = "left-handed"
+        TWOHAND = "both-handed"
+
+    class HandState(Enum):
+        EMPTY = "empty"
+        RIGHT = "right-handed"
+        LEFT = "left-handed"
+        BOTH = "both-handed with left-handed"
+        TWOHAND = "both-handed"
+
+    class LastLocation:
+        def __init__(self, container: int, x: int, y: int):
+            self.container = container
+            self.x = x
+            self.y = y
+
+    LAST_IN_HAND: Dict[Handedness, int] = {}
+    LAST_CONT: Dict[int, LastLocation] = {}
+
+    @classmethod
+    def get_handedness(cls, item: Optional["Item"]) -> Optional[Handedness]:
+        """
+        Determines the handedness of the given item based on its layer.
+        """
+        if item is None:
+            return None
+        if item.Layer == "FirstValid":
+            return cls.Handedness.RIGHT
+        elif item.Layer == "LeftHand":
+            tiledata = Statics.GetItemData(item.ItemID)
+            if "Weapon" in str(tiledata.Flags):
+                return cls.Handedness.TWOHAND
+            else:
+                return cls.Handedness.LEFT
+        else:
+            return None
+
+    @classmethod
+    def get_current_hands(cls) -> Dict[Handedness, "Item"]:
+        """
+        Get the currently equipped items in the player's hands.
+        """
+        cur_hands = {}
+        cur_left = Player.GetItemOnLayer("LeftHand")
+        cur_right = Player.GetItemOnLayer("RightHand")
+        if cur_right is not None:
+            cur_hands[cls.Handedness.RIGHT] = cur_right
+        if cur_left is not None:
+            handedness = cls.get_handedness(cur_left)
+            if handedness is not None:
+                cur_hands[handedness] = cur_left
+        return cur_hands
+
+    @classmethod
+    def get_hand_state(cls, cur_hands: Dict[Handedness, "Item"]) -> HandState:
+        """
+        Determines the current hand state based on equipped items.
+        """
+        has_left = cls.Handedness.LEFT in cur_hands
+        has_right = cls.Handedness.RIGHT in cur_hands
+        has_twohand = cls.Handedness.TWOHAND in cur_hands
+
+        if has_twohand:
+            return cls.HandState.TWOHAND
+        else:
+            if has_left and has_right:
+                return cls.HandState.BOTH
+            elif has_left:
+                return cls.HandState.LEFT
+            elif has_right:
+                return cls.HandState.RIGHT
+            else:
+                return cls.HandState.EMPTY
+
+    @classmethod
+    def delay(cls, f, *args, **kwargs):  # type: (Callable[..., T], *Any, **Any) -> T
+        """
+        Wraps a function to ensure a delay between successive calls.
+        """
+        Misc.Pause(Timer.Remaining("action-delay"))
+        result = f(*args, **kwargs)
+        Timer.Create("action-delay", DELAY_BETWEEN_EQUIPS)
+        return result
+
+    @classmethod
+    def move_to_last_location(cls, item: Optional["Item"], unequip: bool = False) -> None:
+        """
+        Moves the item to its last known location if available, otherwise to the backpack.
+        """
+        item = None if item is None else Items.FindBySerial(item.Serial)
+        if item is None:
+            return
+        if RESTORE_POSITION and item.Serial in cls.LAST_CONT:
+            loc = cls.LAST_CONT[item.Serial]
+            if item.Container == loc.container and item.Position.X == loc.x and item.Position.Y == loc.y:
+                return
+            cls.delay(Items.Move, item.Serial, loc.container, -1, loc.x, loc.y)
+        elif unequip and item.RootContainer == Player.Serial:
+            cls.delay(Items.Move, item.Serial, Player.Backpack.Serial, -1)
+
+    @classmethod
+    def delayed_equip(cls, serials: List[int], fast: bool = False) -> None:
+        if fast:
+            cls.delay(Player.EquipUO3D, serials)
+            return
+        for serial in serials:
+            cls.delay(Player.EquipItem, serial)
+
+    @classmethod
+    def delayed_unequip(cls, layers: List[str], fast: bool = False) -> None:
+        if fast:
+            cls.delay(Player.UnEquipUO3D, layers)
+            return
+        for layer in layers:
+            cls.move_to_last_location(Player.GetItemOnLayer(layer), unequip=True)
+
+    @classmethod
+    def equip(cls, serial: int) -> None:
+        item = Items.FindBySerial(serial)
+        if item is None:
+            Logger.error("Item not found.")
+            return
+        if item.RootContainer == Player.Serial:
+            Logger.info("Item is already equipped.")
+            return
+        if item.RootContainer != Player.Backpack.Serial:
+            Logger.error("Item must be in your inventory.")
+            return
+
+        cls.LAST_CONT[serial] = cls.LastLocation(item.Container, item.Position.X, item.Position.Y)
+        handedness = cls.get_handedness(item)
+
+        cur_hands = cls.get_current_hands()
+        cur_left = cur_hands.get(cls.Handedness.LEFT, None)
+        cur_right = cur_hands.get(cls.Handedness.RIGHT, None)
+        cur_twohand = cur_hands.get(cls.Handedness.TWOHAND, None)
+        last_left = Items.FindBySerial(cls.LAST_IN_HAND.get(cls.Handedness.LEFT, 0))
+
+        hand_state = cls.get_hand_state(cur_hands)
+        is_in_top = item.Container == Player.Backpack.Serial
+
+        if handedness == cls.Handedness.RIGHT:
+            # If we are equipping a right-handed item
+            if (handedness == cls.Handedness.RIGHT) and (last_left is not None) and (cur_left is None):
+                # If we had a left-hand item before, but don't have it now, try to restore it
+                if hand_state == cls.HandState.EMPTY:
+                    if is_in_top and (last_left.Container == Player.Backpack.Serial):
+                        cls.delayed_equip([serial, last_left.Serial], fast=True)
+                    else:
+                        cls.delayed_equip([serial, last_left.Serial])
+                elif hand_state == cls.HandState.RIGHT:
+                    if is_in_top:
+                        if last_left.Container == Player.Backpack.Serial:
+                            cls.delayed_equip([serial, last_left.Serial], fast=True)
+                        else:
+                            cls.delayed_equip([serial], fast=True)
+                            cls.delayed_equip([last_left.Serial])
+                        cls.move_to_last_location(cur_right)
+                    else:
+                        cls.delayed_unequip(["RightHand"])
+                        cls.delayed_equip([serial, last_left.Serial])
+                elif hand_state == cls.HandState.TWOHAND:
+                    cls.delayed_unequip(["LeftHand"])
+                    if is_in_top and (last_left.Container == Player.Backpack.Serial):
+                        cls.delayed_equip([serial, last_left.Serial], fast=True)
+                    else:
+                        cls.delayed_equip([serial, last_left.Serial])
+            else:
+                # If there is no left-hand item to restore, just equip the right-hand item
+                if hand_state in (cls.HandState.EMPTY, cls.HandState.LEFT):
+                    cls.delayed_equip([serial])
+                elif hand_state == cls.HandState.TWOHAND:
+                    cls.delayed_unequip(["LeftHand"])
+                    cls.delayed_equip([serial])
+                elif is_in_top:
+                    cls.delayed_equip([serial], fast=True)
+                    cls.move_to_last_location(cur_right)
+                else:
+                    cls.delayed_unequip(["RightHand"])
+                    cls.delayed_equip([serial])
+
+        elif handedness == cls.Handedness.LEFT:
+            # If we are equipping a left-handed item
+            if hand_state in (cls.HandState.EMPTY, cls.HandState.RIGHT):
+                cls.delayed_equip([serial])
+            elif is_in_top:
+                cls.delayed_equip([serial], fast=True)
+                cls.move_to_last_location(cur_left)
+                cls.move_to_last_location(cur_twohand)
+            else:
+                cls.delayed_unequip(["LeftHand"])
+                cls.delayed_equip([serial])
+
+        elif handedness == cls.Handedness.TWOHAND:
+            # If we are equipping a two-handed item
+            if hand_state == cls.HandState.EMPTY:
+                cls.delayed_equip([serial])
+            elif hand_state == cls.HandState.RIGHT:
+                cls.delayed_unequip(["RightHand"])
+                cls.delayed_equip([serial])
+            else:
+                if hand_state == cls.HandState.BOTH:
+                    cls.delayed_unequip(["RightHand"])
+                if is_in_top:
+                    cls.delayed_equip([serial], fast=True)
+                    cls.move_to_last_location(cur_left)
+                    cls.move_to_last_location(cur_twohand)
+                else:
+                    cls.delayed_unequip(["LeftHand"])
+                    cls.delayed_equip([serial])
+
+        else:
+            # If the item has no specific handedness, just equip it
+            prev_item = Player.GetItemOnLayer(item.Layer)
+            if item.Container == Player.Backpack.Serial:
+                cls.delayed_equip([serial], fast=True)
+                cls.move_to_last_location(prev_item)
+            else:
+                cls.delayed_unequip([item.Layer])
+                cls.delayed_equip([serial], fast=True)
+
+        cls.LAST_IN_HAND.update({hand: item.Serial for hand, item in cur_hands.items()})
 
 
 ################################################################################
@@ -314,31 +589,8 @@ def equip_entry(entry: RackEntry) -> None:
     if entry.state == "inaccessible":
         Misc.SendMessage("The item must be in your inventory.", 0x21)
         return
-    item = Items.FindBySerial(entry.serial)
-    left_hand = Player.GetItemOnLayer("LeftHand")
-    right_hand = Player.GetItemOnLayer("RightHand")
-    if item.IsTwoHanded:
-        to_unequip = []
-        if left_hand is not None:
-            LAST_LEFT_HAND = left_hand.Serial
-            to_unequip.append("LeftHand")
-        if right_hand is not None:
-            to_unequip.append("RightHand")
-        if len(to_unequip) > 0:
-            Player.UnEquipUO3D(to_unequip)
-            Misc.Pause(DELAY_BETWEEN_EQUIPS)
-        Player.EquipUO3D([entry.serial])
-    else:
-        to_equip = [entry.serial]
-        if LAST_LEFT_HAND != 0:
-            to_equip.append(LAST_LEFT_HAND)
-        if left_hand is not None and left_hand.IsTwoHanded and left_hand.ItemID not in (0x0A22, ):
-            print(left_hand.IsTwoHanded)
-            Player.UnEquipUO3D(["LeftHand"])
-            Misc.Pause(DELAY_BETWEEN_EQUIPS)
-        Player.EquipUO3D(to_equip)
     Misc.SendMessage(f"Equipping: {entry.name}", 68)
-    Misc.Pause(450)
+    EquipManager.equip(entry.serial)
 
 
 if __name__ == "__main__":

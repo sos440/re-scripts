@@ -1,10 +1,7 @@
 import json
 import os
 import sys
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from razorenhanced import *
+from typing import Any, Dict
 
 # This allows the RazorEnhanced to correctly identify the path of the current module.
 PATH = os.path.dirname(os.path.abspath(__file__))
@@ -36,7 +33,7 @@ SETTING_SCHEMA = {
 }
 
 
-def load_setting() -> dict:
+def load_setting() -> Dict[str, Any]:
     """
     Load the settings from the settings.json file.
     If the file does not exist, return the default settings.
@@ -56,7 +53,13 @@ def load_setting() -> dict:
         return SETTING_SCHEMA.copy()
 
 
-def save_setting(setting: dict):
+def save_setting(setting: Dict[str, Any]):
+    # Create a save directory if necessary
+    if not os.path.exists(SAVE_DIR):
+        os.mkdir(SAVE_DIR)
+    # Test if the JSON is serializable, ensuring the save will not fail
+    json.dumps(setting)
+    # Save the settings to the settings.json file
     with open(SETTING_PATH, "w") as f:
         json.dump(setting, f, indent=4)
 

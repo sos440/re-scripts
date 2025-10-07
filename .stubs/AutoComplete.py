@@ -5725,7 +5725,7 @@ class Player:
         ...
 
     @staticmethod
-    def GetItemOnLayer(layer: str) -> "Item":
+    def GetItemOnLayer(layer: str) -> Optional["Item"]:
         """Returns the Item associated with a Mobile Layer.
 
         Parameters
@@ -7197,7 +7197,7 @@ class Spells:
     @staticmethod
     def CastMagery(
         SpellName: str,
-        target: Union["UInt32", "Mobile", int],
+        target: Union["UInt32", "Mobile", int, None] = None,
         wait: Union[bool, None] = None,
         waitAfter: Union[int, None] = None,
     ):
