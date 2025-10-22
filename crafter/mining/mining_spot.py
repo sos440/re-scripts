@@ -342,5 +342,35 @@ def main():
     Player.HeadMessage(0x47E, "Done!")
 
 
+class ShortcutGump:
+    GUMP_WT = """<CENTER><BASEFONT COLOR="#FFFFFF">{text}</BASEFONT></CENTER>"""
+
+    @classmethod
+    def prompt(cls, id: str, title: str, text: str) -> bool:
+        """
+        A minimized gump with a button to ask.
+        """
+        SHORTCUT_GUMP_ID = hash(id) & 0xFFFFFFFF
+        Gumps.CloseGump(SHORTCUT_GUMP_ID)
+        gd = Gumps.CreateGump(movable=True)
+        Gumps.AddPage(gd, 0)
+        Gumps.AddBackground(gd, 0, 0, 146, 65, 30546)
+        Gumps.AddAlphaRegion(gd, 0, 0, 146, 65)
+        Gumps.AddHtml(gd, 10, 5, 126, 18, cls.GUMP_WT.format(text=title), False, False)
+        Gumps.AddButton(gd, 10, 30, 40021, 40031, 1, 1, 0)
+        Gumps.AddHtml(gd, 10, 33, 126, 18, cls.GUMP_WT.format(text=text), False, False)
+        Gumps.SendGump(SHORTCUT_GUMP_ID, Player.Serial, 100, 100, gd.gumpDefinition, gd.gumpStrings)
+
+        if not Gumps.WaitForGump(SHORTCUT_GUMP_ID, 1000 * 60 * 60 * 24):
+            return False
+        gd = Gumps.GetGumpData(SHORTCUT_GUMP_ID)
+        if gd is None:
+            return False
+        return gd.buttonid == 1
+
+
 if __name__ == "__main__":
-    main()
+    while True:
+        result = ShortcutGump.prompt("MineSpotGump", "Mining Spot", "Start")
+        if result:
+            main()

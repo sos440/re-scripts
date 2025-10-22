@@ -151,6 +151,7 @@ class LootingMemory:
         self.attempts = 0
         self.opened = False
         self.finished = False
+        self.closed = False
         self.name_checked = False
 
 
@@ -208,7 +209,12 @@ class Looter:
         return summary
 
     def dehighlight_finished(self, target):
-        close_container(target.Serial)
+        if not target.Serial in self.target_cache:
+            return
+        mem = self.target_cache[target.Serial]
+        if not mem.closed:
+            close_container(target.Serial)
+            mem.closed = True
         color = self.setting.get("mark-color", 1014)
         if target.ItemID == 0x2006:
             render_object(

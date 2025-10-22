@@ -7,6 +7,9 @@ from typing import Optional, Tuple
 # User Constants
 SOS_CONT = [0x40FA12E4, 0x404311A6]
 
+# Tiles to identify whether you're on water
+SHIP_PIECES = [0x4030, 0x4031, 0x4032, 0x4033]
+
 # Gump constants
 GUMP_ID = hash("SOSGump") & 0xFFFFFFFF
 ID_RECORD = 1
@@ -112,7 +115,7 @@ if __name__ == "__main__":
         show_gump()
 
         while not Gumps.WaitForGump(GUMP_ID, 1000):
-            for mast in Items.FindAllByID([0x4030, 0x4031, 0x4032, 0x4033], -1, -1, 10):
+            for mast in Items.FindAllByID(SHIP_PIECES, -1, -1, 10):
                 if Player.DistanceTo(mast) <= 10:
                     new_pos = (Player.Position.X, Player.Position.Y)
                     if REF_POS == new_pos:

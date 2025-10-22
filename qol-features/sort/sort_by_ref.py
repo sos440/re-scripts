@@ -71,15 +71,15 @@ settings = {
     # mysterious fragment
     0x1F13: SortCriteria(sort_key=[SortKey.COLOR], dx=10, dy=15, line_size=40),
     # gold-trimmed metal box (facing south)
-    0x0E40: SortCriteria(sort_key=[SortKey.COLOR, SortKey.NAME], dir=SortDir.RightThenDown, dx=30, dy=25, line_size=40),
+    0x0E40: SortCriteria(sort_key=[SortKey.COLOR, SortKey.NAME], dir=SortDir.RightThenDown, dx=30, dy=20, line_size=40),
     # dull metal box (facing south)
-    0x0E7C: SortCriteria(sort_key=[SortKey.COLOR, SortKey.NAME], dir=SortDir.RightThenDown, dx=30, dy=25, line_size=40),
+    0x0E7C: SortCriteria(sort_key=[SortKey.COLOR, SortKey.NAME], dir=SortDir.RightThenDown, dx=30, dy=20, line_size=40),
     # pickaxe (facing south)
     0x0E85: SortCriteria(sort_key=[SortKey.COLOR], dx=5, dy=44, line_size=40),
     # pickaxe (facing south)
     0x0E86: SortCriteria(sort_key=[SortKey.COLOR], dx=5, dy=44, line_size=40),
     # skull
-    0x1AE1: SortCriteria(sort_key=[SortKey.COLOR], dx=5, dy=10, line_size=40),
+    0x1AE1: SortCriteria(sort_key=[SortKey.COLOR], dx=10, dy=10, line_size=40),
     # primer
     0x1E22: SortCriteria(sort_key=[SortKey.NAME], dir=SortDir.RightThenUp, dx=20, dy=10, line_size=40),
     # Rune

@@ -1,24 +1,6 @@
 ################################################################################
-# How to use this script
-################################################################################
-
-"""
-1. Place three chests in your house and set their IDs to the values in CHEST_IDS.
-    Make sure the chests are all accessible from where you will run the script.
-
-2. Put all your plant seeds in those chests or your backpack.
-
-3. Run the script. It will sort the seeds by plant type and color, and arrange them
-    neatly in the chests.
-"""
-
-################################################################################
 # User settings
 ################################################################################
-
-# Positioning constants for the seed arrangement
-POS_DX = 25  # Horizontal spacing between seeds
-POS_DY = 10  # Vertical spacing between seeds
 
 # IDs for plant chests
 # You need three chests to organize all the seeds
@@ -34,7 +16,7 @@ CHEST_IDS = [
 
 # List of colors for plant seeds
 # Seeds will be sorted vertically by color in the order defined here
-color_map = [
+color_name_list = [
     (0, "plain"),
     (0x0021, "bright red"),
     (0x066D, "red"),
@@ -76,7 +58,6 @@ name_itemid_list = [
     ("tribarrel cactus", 3367),
 ]
 
-
 ################################################################################
 # Script starts here
 ################################################################################
@@ -85,7 +66,12 @@ from AutoComplete import *
 from typing import Dict, Tuple, List
 from System.Collections.Generic import List as CList  # type: ignore
 from System import Byte, Int32  # type: ignore
+import os
+import sys
 import re
+
+sys.path.append(os.path.dirname(__file__))
+from gumpradio.templates import CraftingGumpBuilder
 
 
 # A dictionary mapping chest serial to list of plant types it contains
@@ -130,7 +116,7 @@ itemid_invmap: Dict[int, Tuple[int, str]] = {itemid: (i, name) for i, (name, ite
 
 # Convert the color list to a dictionary for easy lookup
 # Key: color code, Value: (index, color name)
-color_invmap: Dict[int, Tuple[int, str]] = {entry[0]: (i, entry[1]) for i, entry in enumerate(color_map)}
+color_invmap: Dict[int, Tuple[int, str]] = {color: (i, name) for i, (color, name) in enumerate(color_name_list)}
 
 
 def is_valid_seed(seed: "Item") -> bool:
@@ -162,7 +148,36 @@ def parse_cliloc(props: List["Property"]) -> int:
     return graphics
 
 
-def sort_seeds():
+def show_seed_summary(my_plants: Dict[str, Dict[int, int]]):
+    CELL_WIDTH = 75
+    CELL_HEIGHT = 50
+    gb = CraftingGumpBuilder(id="MySeedSummaryGump")
+    with gb.Column(padding=10, background="frame:2620"):
+        # Header row
+        with gb.Row():
+            gb.Spacer(spacing=100)
+            for name, _ in name_itemid_list:
+                gb.Html(name.title(), width=CELL_WIDTH, height=40, color="#FFFF00", centered=True)
+        # Icon row
+        with gb.Row():
+            gb.Spacer(spacing=100)
+            for _, itemid in name_itemid_list:
+                gb.TileArt(itemid, width=CELL_WIDTH, height=80, centered=True)
+        # Data rows
+        for row_idx, (color_code, color_name) in enumerate(color_name_list):
+            with gb.Row(valign="middle"):
+                gb.Text(color_name.title(), width=100, hue=(color_code or 0x3B2) - 1)
+                for name, itemid in name_itemid_list:
+                    amount = my_plants[name].get(color_code, 0)
+                    if amount > 0:
+                        gb.Html(str(amount), width=CELL_WIDTH, height=22, color="#FFFFFF", centered=True)
+                    else:
+                        gb.Spacer(spacing=CELL_WIDTH)
+
+    gb.launch()
+
+
+def scan_seeds():
     seeds = []
 
     for cont_serial in plant_map:
@@ -173,7 +188,7 @@ def sort_seeds():
             Misc.SendMessage("Opening the container...", 68)
             Items.WaitForContents(cont_serial, 1000)
             Misc.Pause(1000)
-    
+
     filter = Items.Filter()
     filter.Enabled = True
     filter.OnGround = False
@@ -183,35 +198,21 @@ def sort_seeds():
     n = len(seeds)
     Misc.SendMessage(f"{n} seeds found!", 0x3B2)
 
-    seed_history = set()
+    my_plants = {name: dict() for (name, _) in name_itemid_list}
     for i, seed in enumerate(seeds):
-        # Parse color
         if seed.Color not in color_invmap:
-            Misc.SendMessage("Unknown seed color: 0x{seed.Color:04X}", 33)
             continue
         row_idx, color_name = color_invmap[seed.Color]
-        # Parse plant type
+
         itemid = parse_cliloc(seed.Properties)
         if itemid not in itemid_invmap:
             continue
-        _, plant_type = itemid_invmap[itemid]
-        cont_serial, col_idx = plant_invmap[plant_type]
 
-        Misc.SendMessage(f"Sorting ({i+1}/{n}): {color_name} {plant_type}", 68)
-        seed_key = (plant_type, seed.Color)
-        if seed_key not in seed_history:
-            seed_history.add(seed_key)
-            x = 50 + POS_DX * col_idx
-            y = 59 + POS_DY * row_idx
-            if seed.Container == cont_serial and seed.Position.X == x and seed.Position.Y == y:
-                continue
-            Items.Move(seed.Serial, cont_serial, -1, x, y)
-        else:
-            Items.Move(seed.Serial, cont_serial, -1)
-        Misc.Pause(1000)
+        plant_idx, plant_type = itemid_invmap[itemid]
+        my_plants[plant_type][seed.Color] = seed.Amount
 
-    Misc.SendMessage("Done!", 0x3B2)
+    show_seed_summary(my_plants)
 
 
 if __name__ == "__main__":
-    sort_seeds()
+    scan_seeds()

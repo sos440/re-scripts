@@ -3,7 +3,7 @@
 ################################################################################
 
 # Automatically make the plant decorative when possible
-AUTO_DECORATIVE = False
+AUTO_DECORATIVE = True
 
 # Delay between actions in milliseconds
 ACTION_DELAY = 1000

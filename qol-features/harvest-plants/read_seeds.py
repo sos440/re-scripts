@@ -485,16 +485,6 @@ def show_seed_viewer(serial):
         Misc.SendMessage("The container has no identified seeds.", 33)
         return
 
-    with open("Data/plants.json", "r") as f:
-        data = json.load(f)
-
-    for entry in entries:
-        if entry.graphics not in data:
-            data.append(entry.graphics)
-
-    with open("Data/plants.json", "w") as f:
-        json.dump(data, f)
-
     # Show the new gump
     print(f"Found {len(entries)} seeds!")
     SeedViewer.render(entries)

@@ -2,6 +2,6 @@ PLANTS = [10460, 10461, 10462, 10463, 10464, 10465, 10466, 10467, 3273, 6810, 32
 
 
 for item in Items.FindAllByID(PLANTS, -1, Player.Backpack.Serial, 2):
-    Items.Move(item.Serial, 0x5970A02F, -1)
+    Items.Move(item.Serial, 0x64F9A11E, -1)
     Misc.Pause(1000)
     

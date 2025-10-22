@@ -12,7 +12,7 @@
         "type": 3937
     },
     {
-        "color": 0,
+        "color": 1260,
         "serial": 1082967935,
         "name": "Dragon",
         "type": 3937
@@ -90,7 +90,7 @@
         "type": 3937
     },
     {
-        "color": 0,
+        "color": 88,
         "serial": 1414681720,
         "name": "Area Spider",
         "type": 11571
@@ -106,5 +106,11 @@
         "serial": 1959083324,
         "name": "Fishing",
         "type": 3520
+    },
+    {
+        "color": 1152,
+        "serial": 1081841929,
+        "name": "Area Spider",
+        "type": 11571
     }
 ]

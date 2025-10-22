@@ -28,7 +28,7 @@ sys.path.append(PATH)
 # Settings
 ################################################################################
 
-VERSION = "1.0.6"
+VERSION = "1.0.5"
 SETTING_FILEDIR = os.path.join(PATH, "data")
 SETTING_FILEPATH = os.path.join(SETTING_FILEDIR, f"{Player.Name} ({Player.Serial}).json")
 
@@ -570,14 +570,6 @@ def gump_main(rack: List[RackEntry], mode: str = "view") -> None:
 def prompt_rack_entry() -> Optional[RackEntry]:
     """Prompts the user to select a weapon to add to the rack."""
     serial = Target.PromptTarget("Select a weapon to add to the rack.", 0x481)
-    item = Items.FindBySerial(serial)
-    if item is None:
-        Misc.SendMessage("Item not found.", 0x21)
-        return
-    if item.ItemID == 0x0E75:  # Backpack
-        Misc.SendMessage("You cannot add a backpack to the rack.", 0x21)
-        return
-
     entry = RackEntry.from_serial(serial)
     if entry is None:
         Misc.SendMessage("Item not found.", 0x21)
@@ -597,15 +589,6 @@ def equip_entry(entry: RackEntry) -> None:
     if entry.state == "inaccessible":
         Misc.SendMessage("The item must be in your inventory.", 0x21)
         return
-    
-    item = Items.FindBySerial(entry.serial)
-    if item is None:
-        Misc.SendMessage("The item is not found.", 0x21)
-        return
-    if item.ItemID == 0x0E75:  # Backpack
-        Misc.SendMessage("You cannot equip a backpack.", 0x21)
-        return
-    
     Misc.SendMessage(f"Equipping: {entry.name}", 68)
     EquipManager.equip(entry.serial)
 
