@@ -71,7 +71,7 @@ import sys
 import re
 
 sys.path.append(os.path.dirname(__file__))
-from gumpradio.templates import CraftingGumpBuilder
+from gumpradio.templates import CraftingGumpBuilder  # type: ignore
 
 
 # A dictionary mapping chest serial to list of plant types it contains

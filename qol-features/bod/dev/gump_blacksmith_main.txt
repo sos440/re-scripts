@@ -67,6 +67,7 @@ gumpLayout:
 { xmfhtmlgumpcolor 50 243 150 18 1079508 0 0 32767 }
 { button 15 260 4005 4007 1 0 181 }
 { xmfhtmlgumpcolor 50 263 150 18 1011173 0 0 32767 }
+
 { page 1 }
 { button 220 60 4005 4007 1 0 2 }
 { xmfhtmlgumpcolor 255 63 220 18 1025099 0 0 32767 }
@@ -100,6 +101,7 @@ gumpLayout:
 { button 480 240 4011 4012 1 0 183 }
 { button 370 260 4005 4007 0 2 0 }
 { xmfhtmlgumpcolor 405 263 100 18 1044045 0 0 32767 }
+
 { page 2 }
 { button 220 260 4014 4015 0 1 0 }
 { xmfhtmlgumpcolor 255 263 100 18 1044044 0 0 32767 }
@@ -135,6 +137,7 @@ gumpLayout:
 { button 480 240 4011 4012 1 0 383 }
 { button 370 260 4005 4007 0 3 0 }
 { xmfhtmlgumpcolor 405 263 100 18 1044045 0 0 32767 }
+
 { page 3 }
 { button 220 260 4014 4015 0 2 0 }
 { xmfhtmlgumpcolor 255 263 100 18 1044044 0 0 32767 }

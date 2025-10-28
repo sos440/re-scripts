@@ -723,7 +723,7 @@ class GumpBuilder(_Clickable):
         def __exit__(self, exc_type, exc_val, exc_tb):
             self.builder.current = self.block.parent if self.block.parent else self.builder.root
 
-    def __init__(self, movable: bool = True, closable: bool = True, disposable: bool = True, id: Optional[Any] = None):
+    def __init__(self, movable: bool = True, closable: bool = True, disposable: bool = True, id: Optional[Any] = None, x: int = 100, y: int = 100):
         """
         Initialize a new Gump instance.
 
@@ -739,6 +739,10 @@ class GumpBuilder(_Clickable):
         """Whether the gump can be closed with right-click by the user."""
         self.disposable: bool = disposable
         """Whether the gump can be closed with ESC by the user."""
+        self.x: int = x
+        """The X position of the gump on the screen."""
+        self.y: int = y
+        """The Y position of the gump on the screen."""
 
         if isinstance(id, int) and 0 <= id <= 0xFFFFFFFF:
             self.id: int = id
@@ -1153,7 +1157,7 @@ class GumpBuilder(_Clickable):
         cmds_body = "".join(f"{{ {cmd} }}" for cmd in cmds)
 
         Gumps.CloseGump(self.id)
-        Gumps.SendGump(self.id, Player.Serial, 100, 100, cmds_body, CList[str](texts))
+        Gumps.SendGump(self.id, Player.Serial, self.x, self.y, cmds_body, CList[str](texts))
         return self.ResponseParser(self, serialized)
 
 

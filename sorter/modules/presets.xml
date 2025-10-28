@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <!-- Item Types -->
+    <TypeMatch itemid="0x0EED" name="Gold" />
+    <TypeMatch itemid="0x0F3F" name="Arrow" />
+    <TypeMatch itemid="0x1BFB" name="Bolt" />
+    <TypeMatch itemid="0x14EB, 0x14EC" name="Map" />
+    <TypeMatch itemid="0x0F78...0x0F91" name="Reagent" />
+    <TypeMatch itemid="0x0F0F...0x0F31" name="Gem" />
+    <TypeMatch itemid="0x0EF3" name="Blank Scroll" />
+    <TypeMatch itemid="0x1F2D...0x1F72" name="Magery Scroll" />
+    <TypeMatch itemid="0x2260...0x227C" name="Necromancy Scroll" />
+    <TypeMatch itemid="0x2D51...0x2D60" name="Spellweaving Scroll" />
+    <TypeMatch itemid="0x2D9E...0x2DAD" name="Mysticism Scroll" />
+    <TypeMatch itemid="0x0E40, 0x0E41, 0x0E7C, 0x09AB" name="Chest" />
+    <TypeMatch itemid="0x0DF2...0x0DF5" name="Wand" />
+    <TypeMatch itemid="5162, 5163, 11617, 19672, 19673, 19674" name="Refinement" />
+    <TypeMatch itemid="0x1086, 0x108A, 0x1F06, 0x1F09, 0x4211, 0x4212" name="Jewelry" />
+</root>

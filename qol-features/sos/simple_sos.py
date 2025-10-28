@@ -5,7 +5,7 @@ import re
 from typing import Optional, Tuple
 
 # User Constants
-SOS_CONT = [0x40FA12E4, 0x404311A6]
+SOS_CONT = [0x5F6D09FC]
 
 # Tiles to identify whether you're on water
 SHIP_PIECES = [0x4030, 0x4031, 0x4032, 0x4033]
@@ -110,19 +110,41 @@ def get_nearest_sos(x, y) -> Tuple[Optional["Item"], float]:
     return sos_nearest, min_dist
 
 
+def get_player_pos() -> Tuple[int, int, int]:
+    pos = Player.Position
+    return (pos.X, pos.Y, pos.Z)
+
+
+def get_water(x: int, y: int, z: int) -> Optional[Tuple[int, int, int, Optional[int]]]:
+    """
+    Check if the player is on a water land tile.
+    """
+    arg = (x, y, Player.Map)
+    land_tile = Statics.GetLandID(*arg)
+    if Statics.GetLandFlag(land_tile, "Wet"):
+        return (x, y, Statics.GetLandZ(*arg), None)
+    for tile in Statics.GetStaticsTileInfo(*arg):
+        if Statics.GetTileFlag(tile.StaticID, "Wet"):
+            return (x, y, tile.Z, tile.StaticID)
+
+
 if __name__ == "__main__":
     while Player.Connected:
         show_gump()
 
         while not Gumps.WaitForGump(GUMP_ID, 1000):
-            for mast in Items.FindAllByID(SHIP_PIECES, -1, -1, 10):
-                if Player.DistanceTo(mast) <= 10:
-                    new_pos = (Player.Position.X, Player.Position.Y)
-                    if REF_POS == new_pos:
-                        continue
-                    REF_POS = new_pos
-                    show_gump()
-                    break
+            if Player.Map not in (0, 1):
+                continue
+            cur_pos = get_player_pos()
+            water = get_water(*cur_pos)
+            if water is None:
+                continue
+            new_pos = cur_pos[:2]
+            if REF_POS == new_pos:
+                continue
+            REF_POS = new_pos
+            show_gump()
+            break
             continue
 
         gd = Gumps.GetGumpData(GUMP_ID)

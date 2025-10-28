@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <!-- Item Types -->
+    <TypeMatch itemid="0x0EED" name="Gold" />
+    <TypeMatch itemid="0x0F3F" name="Arrow" />
+    <TypeMatch itemid="0x1BFB" name="Bolt" />
+    <TypeMatch itemid="0x14EB, 0x14EC" name="Map" />
+    <TypeMatch itemid="0x0F78...0x0F91" name="Reagent" />
+    <TypeMatch itemid="0x0F0F...0x0F31" name="Gem" />
+    <TypeMatch itemid="0x0EF3" name="Blank Scroll" />
+    <TypeMatch itemid="0x1F2D...0x1F72" name="Magery Scroll" />
+    <TypeMatch itemid="0x2260...0x227C" name="Necromancy Scroll" />
+    <TypeMatch itemid="0x2D51...0x2D60" name="Spellweaving Scroll" />
+    <TypeMatch itemid="0x2D9E...0x2DAD" name="Mysticism Scroll" />
+    <TypeMatch itemid="0x0E40, 0x0E41, 0x0E7C, 0x09AB" name="Chest" />
+    <TypeMatch itemid="0x0DF2...0x0DF5" name="Wand" />
+    <TypeMatch itemid="5162, 5163, 11617, 19672, 19673, 19674" name="Refinement" />
+    <TypeMatch itemid="0x1086, 0x108A, 0x1F06, 0x1F09, 0x4211, 0x4212" name="Jewelry" />
+    <PropMatch pattern="\[Daily Rare\]" name="Daily Rare" />
+    <!-- Magic Items -->
+    <RarityMatch min_value="1" max_value="4" name="Magic Item" />
+    <RarityMatch min_value="5" max_value="9" name="Artifact" />
+    <!-- Stats -->
+    <ClilocRangeMatch cliloc="1060485" name="Strength Bonus" />
+    <ClilocRangeMatch cliloc="1060432" name="Intelligence Bonus" />
+    <ClilocRangeMatch cliloc="1060409" name="Dexterity Bonus" />
+    <ClilocRangeMatch cliloc="1060431" name="Hit Point Increase" />
+    <ClilocRangeMatch cliloc="1060439" name="Mana Increase" />
+    <ClilocRangeMatch cliloc="1060484" name="Stamina Increase" />
+    <ClilocRangeMatch cliloc="1060444" name="Hit Point Regeneration" />
+    <ClilocRangeMatch cliloc="1060440" name="Mana Regeneration" />
+    <ClilocRangeMatch cliloc="1060443" name="Stamina Regeneration" />
+    <ClilocRangeMatch cliloc="1060436" name="Luck" />
+    <!-- Melee -->
+    <ClilocRangeMatch cliloc="1060401" name="Damage Increase" />
+    <ClilocRangeMatch cliloc="1060486" name="Swing Speed Increase" />
+    <ClilocRangeMatch cliloc="1060408" name="Defense Chance Increase" />
+    <ClilocRangeMatch cliloc="1060415" name="Hit Chance Increase" />
+    <ClilocRangeMatch cliloc="1060442" name="Reflect Physical Damage" />
+    <ClilocMatch cliloc="1112364" name="Reactive Paralyze" />
+    <ClilocMatch cliloc="1113591" name="Blood Drinker" />
+    <ClilocRangeMatch cliloc="1113592" name="Soul Charge" />
+    <ClilocMatch cliloc="1113710" name="Battle Lust" />
+    <ClilocMatch cliloc="1072792" name="Balanced" />
+    <ClilocMatch cliloc="1151183" name="Searing Weapon" />
+    <ClilocMatch cliloc="1060400" name="Use Best Weapon Skill" />
+    <!-- Caster -->
+    <ClilocRangeMatch cliloc="1060483" name="Spell Damage Increase" />
+    <ClilocRangeMatch cliloc="1060412" name="Fast Cast Recovery" />
+    <ClilocRangeMatch cliloc="1060413" name="Faster Casting" />
+    <ClilocRangeMatch cliloc="1060433" name="Lower Mana Cost" />
+    <ClilocRangeMatch cliloc="1060434" name="Lower Reagent Cost" />
+    <ClilocMatch cliloc="1060437" name="Mage Armor" />
+    <ClilocRangeMatch cliloc="1060438" name="Mage Weapon" />
+    <ClilocMatch cliloc="1060482" name="Spell Channeling" />
+    <ClilocRangeMatch cliloc="1113696" name="Casting Focus" />
+    <!-- Damage Types -->
+    <ClilocRangeMatch cliloc="1060403" name="Physical Damage" />
+    <ClilocRangeMatch cliloc="1060404" name="Cold Damage" />
+    <ClilocRangeMatch cliloc="1060405" name="Fire Damage" />
+    <ClilocRangeMatch cliloc="1060406" name="Poison Damage" />
+    <ClilocRangeMatch cliloc="1060407" name="Energy Damage" />
+    <ClilocRangeMatch cliloc="1072846" name="Chaos Damage" />
+    <!-- Damage Eaters -->
+    <ClilocRangeMatch cliloc="1113593" name="Fire Eater" />
+    <ClilocRangeMatch cliloc="1113594" name="Cold Eater" />
+    <ClilocRangeMatch cliloc="1113595" name="Poison Eater" />
+    <ClilocRangeMatch cliloc="1113596" name="Energy Eater" />
+    <ClilocRangeMatch cliloc="1113597" name="Kinetic Eater" />
+    <ClilocRangeMatch cliloc="1113598" name="Damage Eater" />
+    <!-- On Hit Spell -->
+    <ClilocRangeMatch cliloc="1060416" name="Hit Cold Area" />
+    <ClilocRangeMatch cliloc="1060417" name="Hit Dispel" />
+    <ClilocRangeMatch cliloc="1060418" name="Hit Energy Area" />
+    <ClilocRangeMatch cliloc="1060419" name="Hit Fire Area" />
+    <ClilocRangeMatch cliloc="1060420" name="Hit Fireball" />
+    <ClilocRangeMatch cliloc="1060421" name="Hit Harm" />
+    <ClilocRangeMatch cliloc="1060422" name="Hit Life Leech" />
+    <ClilocRangeMatch cliloc="1060423" name="Hit Lightning" />
+    <ClilocRangeMatch cliloc="1060424" name="Hit Lower Attack" />
+    <ClilocRangeMatch cliloc="1060425" name="Hit Lower Defense" />
+    <ClilocRangeMatch cliloc="1060426" name="Hit Magic Arrow" />
+    <ClilocRangeMatch cliloc="1060427" name="Hit Mana Leech" />
+    <ClilocRangeMatch cliloc="1060428" name="Hit Physical Area" />
+    <ClilocRangeMatch cliloc="1060429" name="Hit Poison Area" />
+    <ClilocRangeMatch cliloc="1060430" name="Hit Stamina Leech" />
+    <ClilocRangeMatch cliloc="1113699" name="Hit Mana Drain" />
+    <ClilocRangeMatch cliloc="1113700" name="Hit Fatigue" />
+    <ClilocRangeMatch cliloc="1113712" name="Hit Curse" />
+    <ClilocRangeMatch cliloc="1112857" name="Splintering Weapon" />
+    <ClilocRangeMatch cliloc="1072793" name="Velocity" />
+    <!-- Resists -->
+    <ClilocRangeMatch cliloc="1060445" name="Cold Resist" />
+    <ClilocRangeMatch cliloc="1060446" name="Energy Resist" />
+    <ClilocRangeMatch cliloc="1060447" name="Fire Resist" />
+    <ClilocRangeMatch cliloc="1060448" name="Physical Resist" />
+    <ClilocRangeMatch cliloc="1060449" name="Poison Resist" />
+    <!-- Skill Bonuses -->
+    <ClilocSkillMatch name="Alchemy" skill_name="Alchemy" />
+    <ClilocSkillMatch name="Anatomy" skill_name="Anatomy" />
+    <ClilocSkillMatch name="Animal Lore" skill_name="Animal Lore" />
+    <ClilocSkillMatch name="Animal Taming" skill_name="Animal Taming" />
+    <ClilocSkillMatch name="Archery" skill_name="Archery" />
+    <ClilocSkillMatch name="Arms Lore" skill_name="Arms Lore" />
+    <ClilocSkillMatch name="Begging" skill_name="Begging" />
+    <ClilocSkillMatch name="Blacksmithing" skill_name="Blacksmithing" />
+    <ClilocSkillMatch name="Bushido" skill_name="Bushido" />
+    <ClilocSkillMatch name="Camping" skill_name="Camping" />
+    <ClilocSkillMatch name="Carpentry" skill_name="Carpentry" />
+    <ClilocSkillMatch name="Cartography" skill_name="Cartography" />
+    <ClilocSkillMatch name="Chivalry" skill_name="Chivalry" />
+    <ClilocSkillMatch name="Cooking" skill_name="Cooking" />
+    <ClilocSkillMatch name="Detecting Hidden" skill_name="Detecting Hidden" />
+    <ClilocSkillMatch name="Discordance" skill_name="Discordance" />
+    <ClilocSkillMatch name="Eval Intelligence" skill_name="Eval Intelligence" />
+    <ClilocSkillMatch name="Fencing" skill_name="Fencing" />
+    <ClilocSkillMatch name="Fishing" skill_name="Fishing" />
+    <ClilocSkillMatch name="Fletching" skill_name="Fletching" />
+    <ClilocSkillMatch name="Focus" skill_name="Focus" />
+    <ClilocSkillMatch name="Forensics" skill_name="Forensics" />
+    <ClilocSkillMatch name="Healing" skill_name="Healing" />
+    <ClilocSkillMatch name="Herding" skill_name="Herding" />
+    <ClilocSkillMatch name="Hiding" skill_name="Hiding" />
+    <ClilocSkillMatch name="Imbuing" skill_name="Imbuing" />
+    <ClilocSkillMatch name="Inscription" skill_name="Inscription" />
+    <ClilocSkillMatch name="Item Identification" skill_name="Item Identification" />
+    <ClilocSkillMatch name="Lock Picking" skill_name="Lock Picking" />
+    <ClilocSkillMatch name="Lumberjacking" skill_name="Lumberjacking" />
+    <ClilocSkillMatch name="Mace Fighting" skill_name="Mace Fighting" />
+    <ClilocSkillMatch name="Magery" skill_name="Magery" />
+    <ClilocSkillMatch name="Meditation" skill_name="Meditation" />
+    <ClilocSkillMatch name="Mining" skill_name="Mining" />
+    <ClilocSkillMatch name="Musicianship" skill_name="Musicianship" />
+    <ClilocSkillMatch name="Mysticism" skill_name="Mysticism" />
+    <ClilocSkillMatch name="Necromancy" skill_name="Necromancy" />
+    <ClilocSkillMatch name="Ninjitsu" skill_name="Ninjitsu" />
+    <ClilocSkillMatch name="Parrying" skill_name="Parrying" />
+    <ClilocSkillMatch name="Peacemaking" skill_name="Peacemaking" />
+    <ClilocSkillMatch name="Poisoning" skill_name="Poisoning" />
+    <ClilocSkillMatch name="Provocation" skill_name="Provocation" />
+    <ClilocSkillMatch name="Remove Trap" skill_name="Remove Trap" />
+    <ClilocSkillMatch name="Resisting Spells" skill_name="Resisting Spells" />
+    <ClilocSkillMatch name="Snooping" skill_name="Snooping" />
+    <ClilocSkillMatch name="Spellweaving" skill_name="Spellweaving" />
+    <ClilocSkillMatch name="Spirit Speak" skill_name="Spirit Speak" />
+    <ClilocSkillMatch name="Stealing" skill_name="Stealing" />
+    <ClilocSkillMatch name="Stealth" skill_name="Stealth" />
+    <ClilocSkillMatch name="Swordsmanship" skill_name="Swordsmanship" />
+    <ClilocSkillMatch name="Tactics" skill_name="Tactics" />
+    <ClilocSkillMatch name="Tailoring" skill_name="Tailoring" />
+    <ClilocSkillMatch name="Taste Identification" skill_name="Taste Identification" />
+    <ClilocSkillMatch name="Throwing" skill_name="Throwing" />
+    <ClilocSkillMatch name="Tinkering" skill_name="Tinkering" />
+    <ClilocSkillMatch name="Tracking" skill_name="Tracking" />
+    <ClilocSkillMatch name="Veterinary" skill_name="Veterinary" />
+    <ClilocSkillMatch name="Wrestling" skill_name="Wrestling" />
+    <!-- Super Slayers -->
+    <ClilocMatch cliloc="1060458" name="Arachnid Slayer" />
+    <ClilocMatch cliloc="1060461" name="Demon Slayer" />
+    <ClilocMatch cliloc="1060464" name="Elemental Slayer" />
+    <ClilocMatch cliloc="1070855" name="Fey Slayer" />
+    <ClilocMatch cliloc="1060472" name="Repond Slayer" />
+    <ClilocMatch cliloc="1060473" name="Reptile Slayer" />
+    <ClilocMatch cliloc="1071451" name="Silver" />
+    <!-- Single Slayers -->
+    <ClilocMatch cliloc="1060457" name="Air Elemental Slayer" />
+    <ClilocMatch cliloc="1060459" name="Blood Elemental Slayer" />
+    <ClilocMatch cliloc="1060463" name="Earth Elemental Slayer" />
+    <ClilocMatch cliloc="1060465" name="Fire Elemental Slayer" />
+    <ClilocMatch cliloc="1060471" name="Poison Elemental Slayer" />
+    <ClilocMatch cliloc="1060476" name="Snow Elemental Slayer" />
+    <ClilocMatch cliloc="1060481" name="Water Elemental Slayer" />
+
+    <ClilocMatch cliloc="1060466" name="Gargoyle Slayer" />
+
+    <ClilocMatch cliloc="1060474" name="Scorpion Slayer" />
+    <ClilocMatch cliloc="1060477" name="Spider Slayer" />
+    <ClilocMatch cliloc="1060478" name="Terathan Slayer" />
+
+    <ClilocMatch cliloc="1060462" name="Dragon Slayer" />
+    <ClilocMatch cliloc="1060467" name="Lizardman Slayer" />
+    <ClilocMatch cliloc="1060469" name="Ophidian Slayer" />
+    <ClilocMatch cliloc="1060475" name="Snake Slayer" />
+
+    <ClilocMatch cliloc="1095010" name="Goblin Slayer" />
+    <ClilocMatch cliloc="1060468" name="Ogre Slayer" />
+    <ClilocMatch cliloc="1060470" name="Orc Slayer" />
+    <ClilocMatch cliloc="1060480" name="Troll Slayer" />
+    <ClilocMatch cliloc="1072505" name="Vermin Slayer" />
+    <ClilocMatch cliloc="1060479" name="Undead Slayer" />
+    <ClilocMatch cliloc="1072507" name="Mage Slayer" />
+
+    <ClilocMatch cliloc="1072504" name="Bear Slayer" />
+    <ClilocMatch cliloc="1072506" name="Bat Slayer" />
+    <ClilocMatch cliloc="1072508" name="Beetle Slayer" />
+    <ClilocMatch cliloc="1072509" name="Bird Slayer" />
+    <ClilocMatch cliloc="1072510" name="Ice Slayer" />
+    <ClilocMatch cliloc="1072511" name="Flame Slayer" />
+    <ClilocMatch cliloc="1072512" name="Bovine Slayer" />
+    <ClilocMatch cliloc="1075462" name="Wolf Slayer" />
+    
+    <ClilocMatch cliloc="1156126" name="Eodon Slayer" />
+    
+    <PropMatch pattern="(Silver|.+ Slayer)" name="Any Slayer" />
+    <!-- Wand Charges -->
+    <ClilocRangeMatch cliloc="1060487" name="Fireball Charges" />
+    <ClilocRangeMatch cliloc="1060488" name="Greater Healing Charges" />
+    <ClilocRangeMatch cliloc="1060489" name="Harm Charges" />
+    <ClilocRangeMatch cliloc="1060490" name="Healing Charges" />
+    <ClilocRangeMatch cliloc="1060491" name="Lightning Charges" />
+    <ClilocRangeMatch cliloc="1060492" name="Magic Arrow Charges" />
+    <!-- Special -->
+    <ClilocMatch cliloc="1111709" name="Gargoyles Only" />
+    <ClilocMatch cliloc="1075086" name="Elves Only" />
+    <ClilocMatch cliloc="1060441" name="Night Sight" />
+    <ClilocRangeMatch cliloc="1060450" name="Self Repair" />
+    <ClilocRangeMatch cliloc="1060411" name="Enhance Potions" />
+    <ClilocRangeMatch cliloc="1060435" name="Lower Requirements" />
+    <ClilocRangeMatch cliloc="1061078" name="Artifact Rarity" />
+    <!-- Special -->
+</root>

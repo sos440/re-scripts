@@ -1,5 +1,5 @@
 from AutoComplete import *
-from typing import List, Dict, Tuple, Callable, Generator, Any, Optional, Union, TypeVar, Generic
+from typing import Iterable, List, Dict, Set, Tuple, Callable, Generator, Any, Optional, Union, TypeVar, Generic
 import re
 from enum import Enum
 
@@ -53,6 +53,16 @@ class SortOrder(Enum):
     UNSORTED = "unsorted"
 
 
+class PropTypes:
+    class Boolean: ...
+
+    class Numeric: ...
+
+    class String: ...
+
+    class Enum: ...
+
+
 class BaseProp(Generic[CT]):
     """
     This is the base class for item properties.
@@ -80,9 +90,9 @@ class BaseProp(Generic[CT]):
         :param row: The item property row to read from.
         :return: The property value.
         """
-        if row.has(self.id):
-            return str(row[self.id])
-        return None
+        value = self.key(row)
+        if value is not None:
+            return str(value)
 
     def key(self, row: ItemPropRow) -> Any:
         """
@@ -231,10 +241,10 @@ class ComparableProp(BaseProp[CT]):
         self.default_order = SortOrder.DESCENDING
 
     def key_none_is_inf(self, row: ItemPropRow) -> Any:
-        return self._ValueWrapperNoneIsInf(row[self.id])
+        return self._ValueWrapperNoneIsInf(self.key(row))
 
     def key_none_is_sup(self, row: ItemPropRow) -> Any:
-        return self._ValueWrapperNoneIsSup(row[self.id])
+        return self._ValueWrapperNoneIsSup(self.key(row))
 
     def sort(self, sheet: ItemPropSheet, reverse: bool = False) -> ItemPropSheet:
         if reverse:
@@ -282,7 +292,7 @@ class ComparableMatchProp(MatchProp[CT], ComparableProp[CT]): ...
 class ComparableDerivedProp(DerivedProp[CT], ComparableProp[CT]): ...
 
 
-class BooleanProp(MatchProp[bool]):
+class BooleanProp(MatchProp[bool], PropTypes.Boolean):
     """
     This represents a boolean property that can be parsed from a string.
     """
@@ -309,12 +319,12 @@ class BooleanProp(MatchProp[bool]):
         return bool(row[self.id])
 
     def stringify(self, row: ItemPropRow) -> Optional[str]:
-        if row.has(self.id) and row[self.id]:
+        if self.key(row):
             return "Yes"
         return None
 
 
-class PercentageProp(ComparableMatchProp[int]):
+class PercentageProp(ComparableMatchProp[int], PropTypes.Numeric):
     """
     This represents a percentage property that can be parsed from a string.
     """
@@ -338,7 +348,7 @@ class PercentageProp(ComparableMatchProp[int]):
         return None
 
 
-class IntegerProp(ComparableMatchProp[int]):
+class IntegerProp(ComparableMatchProp[int], PropTypes.Numeric):
     """
     This represents an integer property that can be parsed from a string.
     """
@@ -356,7 +366,7 @@ class IntegerProp(ComparableMatchProp[int]):
         super().__init__(name, id, r"^" + pattern + r"\s*:?\s*([+-]?\d+)$", int)
 
 
-class EnumProp(ComparableProp[int]):
+class EnumProp(ComparableProp[int], PropTypes.Enum):
     """
     This represents a property which can take on a limited set of string values.
     """
@@ -424,7 +434,7 @@ class AllProp(DerivedProp[bool]):
         return all(row[prop_id] for prop_id in self.prop_ids)
 
 
-class IntegerSumProp(DerivedProp[int]):
+class IntegerSumProp(DerivedProp[int], ComparableProp[int], PropTypes.Numeric):
     """
     This property calculates the sum of the specified integer property IDs.
 
@@ -438,11 +448,14 @@ class IntegerSumProp(DerivedProp[int]):
         super().__init__(name, id)
         self.prop_ids = prop_ids
 
-    def key(self, row: ItemPropRow) -> int:
-        return sum(row[prop_id] or 0 for prop_id in self.prop_ids)
+    def key(self, row: ItemPropRow) -> Optional[int]:
+        values = [row[prop_id] for prop_id in self.prop_ids if row[prop_id] is not None]
+        if len(values) == 0:
+            return None
+        return sum(values)
 
 
-class IntegerMaxProp(DerivedProp[int]):
+class IntegerMaxProp(DerivedProp[int], ComparableProp[int], PropTypes.Numeric):
     """
     This property calculates the maximum of the specified integer property IDs.
 
@@ -456,11 +469,14 @@ class IntegerMaxProp(DerivedProp[int]):
         super().__init__(name, id)
         self.prop_ids = prop_ids
 
-    def key(self, row: ItemPropRow) -> int:
-        return max(row[prop_id] or 0 for prop_id in self.prop_ids)
+    def key(self, row: ItemPropRow) -> Optional[int]:
+        values = [row[prop_id] for prop_id in self.prop_ids if row[prop_id] is not None]
+        if len(values) == 0:
+            return None
+        return max(values)
 
 
-class IntegerMinProp(DerivedProp[int]):
+class IntegerMinProp(DerivedProp[int], ComparableProp[int], PropTypes.Numeric):
     """
     This property calculates the minimum of the specified integer property IDs.
 
@@ -474,8 +490,11 @@ class IntegerMinProp(DerivedProp[int]):
         super().__init__(name, id)
         self.prop_ids = prop_ids
 
-    def key(self, row: ItemPropRow) -> int:
-        return min(row[prop_id] or 0 for prop_id in self.prop_ids)
+    def key(self, row: ItemPropRow) -> Optional[int]:
+        values = [row[prop_id] for prop_id in self.prop_ids if row[prop_id] is not None]
+        if len(values) == 0:
+            return None
+        return min(values)
 
 
 class PropGroup:
@@ -538,7 +557,6 @@ class PropGroup:
                 yield from group.walk_group()
 
 
-
 ################################################################################
 # Property Structures
 ################################################################################
@@ -549,6 +567,79 @@ def to_proper_case(text: str) -> str:
 
 
 class PropMaster:
+    RARITY_VALUES = {
+        "Minor Magic Item": 1,
+        "Lesser Magic Item": 2,
+        "Greater Magic Item": 3,
+        "Major Magic Item": 4,
+        "Minor Artifact": 5,
+        "Lesser Artifact": 6,
+        "Greater Artifact": 7,
+        "Major Artifact": 8,
+        "Legendary Artifact": 9,
+    }
+
+    SKILL_NAMES = [
+        "Arms Lore",
+        "Begging",
+        "Camping",
+        "Cartography",
+        "Forensic",
+        "ItemID",
+        "TasteID",
+        "Anatomy",
+        "Archery",
+        "Fencing",
+        "Focus",
+        "Healing",
+        "MaceFighting",
+        "Parrying",
+        "Swordsmanship",
+        "Tactics",
+        "Throwing",
+        "Wrestling",
+        "Alchemy",
+        "Smithy",
+        "Fletching",
+        "Carpentry",
+        "Cooking",
+        "Inscription",
+        "Lumberjacking",
+        "Mining",
+        "Tailoring",
+        "Tinkering",
+        "Bushido",
+        "Chivalry",
+        "EvalInt",
+        "Imbuing",
+        "Magery",
+        "Meditation",
+        "Mysticism",
+        "Necromancy",
+        "Ninjitsu",
+        "ResistSpell",
+        "Spellweaving",
+        "SpiritSpeak",
+        "Animal Lore",
+        "Animal Taming",
+        "Fishing",
+        "Herding",
+        "Tracking",
+        "Veterinary",
+        "Detect Hidden",
+        "Hiding",
+        "Lockpicking",
+        "Poisoning",
+        "Remove Trap",
+        "Snooping",
+        "Stealing",
+        "Stealth",
+        "Discordance",
+        "Musicianship",
+        "Peacemaking",
+        "Provocation",
+    ]
+
     ALL_PROPS = PropGroup(
         "All",
         "All",
@@ -560,39 +651,20 @@ class PropMaster:
                     BaseProp("Name", "Name"),
                     BaseProp("Serial", "Serial"),
                     BaseProp("Type", "Type").set_order(SortOrder.ASCENDING),
-                    MatchProp("Weight", "Weight", r"^Weight: (\d+)", int).set_order(SortOrder.DESCENDING),
+                    BaseProp("Weight", "Weight").set_order(SortOrder.DESCENDING),
                     BaseProp("Color", "Color").set_order(SortOrder.ASCENDING),
                     BaseProp("Amount", "Amount").set_order(SortOrder.DESCENDING),
                     EnumProp(
                         "Rarity",
                         "Rarity",
-                        {
-                            "Minor Magic Item": 1,
-                            "Lesser Magic Item": 2,
-                            "Greater Magic Item": 3,
-                            "Major Magic Item": 4,
-                            "Lesser Artifact": 101,
-                            "Greater Artifact": 102,
-                            "Major Artifact": 103,
-                            "Legendary Artifact": 104,
-                        },
-                        {
-                            1: "Minor Magic",
-                            2: "Lesser Magic",
-                            3: "Greater Magic",
-                            4: "Major Magic",
-                            101: "Lesser Artifact",
-                            102: "Greater Artifact",
-                            103: "Major Artifact",
-                            104: "Legendary Artifact",
-                        },
+                        RARITY_VALUES,
+                        {v: k for k, v in RARITY_VALUES.items()},
                     ),
                     EnumProp(
                         "Layer",
                         "Layer",
                         {
-                            "RightHand": 1,
-                            "FirstValid": 2,
+                            "FirstValid": 1,
                             "LeftHand": 2,
                             "Shoes": 3,
                             "Pants": 4,
@@ -634,7 +706,6 @@ class PropMaster:
                             18: "Outer Legs",
                             19: "Inner Legs",
                             20: "Talisman",
-                            99: "",
                         },
                     ),
                     ComparableMatchProp("Contents", "Contents", r"^Contents: (\d+)", int),
@@ -727,70 +798,8 @@ class PropMaster:
                     IntegerProp("Forensic Evaluation", "Forensic", "Forensic Evaluation"),
                     IntegerProp("Item Identification", "ItemID", "Item Identification"),
                     IntegerProp("Taste Identification", "TasteID", "Taste Identification"),
-                    IntegerMaxProp(
-                        "Max Skill",
-                        "MaxSkill",
-                        [
-                            "Arms Lore",
-                            "Begging",
-                            "Camping",
-                            "Cartography",
-                            "Forensic",
-                            "ItemID",
-                            "TasteID",
-                            "Anatomy",
-                            "Archery",
-                            "Fencing",
-                            "Focus",
-                            "Healing",
-                            "MaceFighting",
-                            "Parrying",
-                            "Swordsmanship",
-                            "Tactics",
-                            "Throwing",
-                            "Wrestling",
-                            "Alchemy",
-                            "Smithy",
-                            "Fletching",
-                            "Carpentry",
-                            "Cooking",
-                            "Inscription",
-                            "Lumberjacking",
-                            "Mining",
-                            "Tailoring",
-                            "Tinkering",
-                            "Bushido",
-                            "Chivalry",
-                            "EvalInt",
-                            "Imbuing",
-                            "Magery",
-                            "Meditation",
-                            "Mysticism",
-                            "Necromancy",
-                            "Ninjitsu",
-                            "ResistSpell",
-                            "Spellweaving",
-                            "SpiritSpeak",
-                            "Animal Lore",
-                            "Animal Taming",
-                            "Fishing",
-                            "Herding",
-                            "Tracking",
-                            "Veterinary",
-                            "Detect Hidden",
-                            "Hiding",
-                            "Lockpicking",
-                            "Poisoning",
-                            "Remove Trap",
-                            "Snooping",
-                            "Stealing",
-                            "Stealth",
-                            "Discordance",
-                            "Musicianship",
-                            "Peacemaking",
-                            "Provocation",
-                        ],
-                    ),
+                    IntegerSumProp("Total Skills", "SumSkill", SKILL_NAMES),
+                    IntegerMaxProp("Max Skill", "MaxSkill", SKILL_NAMES),
                 ],
             ),
             PropGroup(
@@ -924,6 +933,7 @@ class PropMaster:
                 "Slayers",
                 [
                     ComparableMatchProp("Slayer", "Slayer", r"^(?:(Silver)|(.+) Slayer)$", str),
+                    ComparableMatchProp("Super Slayer", "SupSlayer", r"^(?:(Silver)|Arachnid Slayer|Demon Slayer|Elemental Slayer|Fey Slayer|Repond Slayer|Reptile Slayer)$", str),
                     ComparableMatchProp("Arachnid Slayer", "Arachnid Slayer", r"^(Arachnid) Slayer$", str),
                     ComparableMatchProp("Demon Slayer", "Demon Slayer", r"^(Demon) Slayer$", str),
                     ComparableMatchProp("Elemental Slayer", "Elemental Slayer", r"^(Elemental) Slayer$", str),
@@ -1001,6 +1011,7 @@ class PropMaster:
         row.raw_props = lines
         row["Name"] = to_proper_case(item.Name)
         row["Serial"] = item.Serial
+        row["Weight"] = item.Weight
         row["Type"] = item.ItemID
         row["Color"] = item.Color
         row["Amount"] = item.Amount
@@ -1039,6 +1050,114 @@ class PropMaster:
 ################################################################################
 
 
+class SheetColumnFilters:
+    class Base:
+        """
+        This represents a filter for a sheet column.
+        """
+
+        def __call__(self, value: Any) -> bool:
+            return True
+
+        def to_dict(self) -> Dict[str, Any]:
+            return {}
+
+    class Boolean(Base):
+        """
+        This represents a boolean filter for a sheet column.
+        """
+
+        expected_value: Optional[bool]
+        """The expected boolean value for the filter."""
+
+        def __init__(self, expected_value: Optional[bool] = None):
+            self.expected_value = expected_value
+
+        def __call__(self, value: Any) -> bool:
+            if not isinstance(value, bool):
+                return False
+            if self.expected_value is not None and value != self.expected_value:
+                return False
+            return True
+
+        def to_dict(self) -> Dict[str, Any]:
+            return {
+                "type": "boolean",
+                "expected_value": self.expected_value,
+            }
+
+    class Numeric(Base):
+        """
+        This represents a numeric filter for a sheet column.
+        """
+
+        min_value: Optional[int]
+        """The minimum value for the filter."""
+        max_value: Optional[int]
+        """The maximum value for the filter."""
+
+        def __init__(self, min_value: Optional[int] = None, max_value: Optional[int] = None):
+            self.min_value = min_value
+            self.max_value = max_value
+
+        def __call__(self, value: Any) -> bool:
+            if not isinstance(value, (int, float)):
+                return False
+            if self.min_value is not None and value < self.min_value:
+                return False
+            if self.max_value is not None and value > self.max_value:
+                return False
+            return True
+
+        def to_dict(self) -> Dict[str, Any]:
+            return {
+                "type": "numeric",
+                "min_value": self.min_value,
+                "max_value": self.max_value,
+            }
+
+    class Enum(Base):
+        """
+        This represents an enum filter for a sheet column.
+        """
+
+        kvmap: Dict[str, int]
+        """The mapping of enum keys to their values."""
+        allowed_values: Set[int]
+        """The list of allowed enum values for the filter."""
+
+        def __init__(self, kvmap: Dict[str, int], allowed_values: Optional[Iterable[int]] = None):
+            self.kvmap = kvmap
+            if allowed_values is None:
+                allowed_values = kvmap.values()
+            self.allowed_values = set(allowed_values)
+
+        def __call__(self, value: int) -> bool:
+            if not isinstance(value, int):
+                return False
+            if value is None or value not in self.allowed_values:
+                return False
+            return True
+
+        def to_dict(self) -> Dict[str, Any]:
+            return {
+                "type": "enum",
+                "allowed_values": list(self.allowed_values),
+            }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "SheetColumnFilters.Base":
+        filter_type = data.get("type")
+        if filter_type == "boolean":
+            return SheetColumnFilters.Boolean(expected_value=data.get("expected_value"))
+        elif filter_type == "numeric":
+            return SheetColumnFilters.Numeric(min_value=data.get("min_value"), max_value=data.get("max_value"))
+        elif filter_type == "enum":
+            return SheetColumnFilters.Enum(kvmap={}, allowed_values=set(data.get("allowed_values", [])))
+        else:
+            raise ValueError(f"Unknown filter type: {filter_type}")
+
+
 class SheetColumn:
     """
     This represents a column in the sheet.
@@ -1049,13 +1168,13 @@ class SheetColumn:
     """The property associated with this column."""
     sort_order: SortOrder
     """The sort order for this column."""
-    ignored_values: List[Any]
-    """A list of values to ignore when filtering this column."""
+    filter: Optional[SheetColumnFilters.Base]
+    """A filter to apply when filtering this column."""
 
     def __init__(self, prop: BaseProp):
         self.prop = prop
         self.sort_order = SortOrder.ASCENDING
-        self.ignored_values: List[Any] = []
+        self.filter = None
         self.metadata: Dict[str, Any] = {}
 
     @property
@@ -1078,7 +1197,7 @@ class SheetColumn:
         elif self.sort_order == SortOrder.DESCENDING:
             self.sort_order = SortOrder.ASCENDING
 
-    def filter(self, sheet: "Sheet") -> "Sheet":
+    def apply_filter(self, sheet: "Sheet") -> "Sheet":
         """
         Filters the given sheet based on the ignored values for this column.
 
@@ -1087,7 +1206,7 @@ class SheetColumn:
         new_sheet = Sheet(name=sheet.name)
         new_sheet.columns = sheet.columns
         for row in sheet.rows:
-            if row[self.id] not in self.ignored_values:
+            if not self.filter or self.filter(self.prop.key(row)):
                 new_sheet.add_row(row)
         if not self.is_unsorted():
             new_sheet.rows = self.prop.sort(new_sheet.rows, reverse=self.is_reverse())
@@ -1153,15 +1272,6 @@ class Sheet:
             return
         self.rows.append(row)
 
-    def filter(self) -> "Sheet":
-        """
-        Creates a filtered and sorted copy of the sheet based on the active column filters.
-        """
-        new_sheet = self
-        for sheet_col in self.columns:
-            new_sheet = sheet_col.filter(new_sheet)
-        return new_sheet
-
 
 __exported__ = [
     "VERSION_CORE",
@@ -1169,6 +1279,7 @@ __exported__ = [
     "ItemPropRow",
     "ItemPropSheet",
     "SortOrder",
+    "PropTypes",
     "BaseProp",
     "DerivedProp",
     "ComparableProp",
@@ -1188,6 +1299,7 @@ __exported__ = [
     # Property Master
     "PropMaster",
     # Spreadsheet
+    "SheetColumnFilters",
     "SheetColumn",
     "Sheet",
 ]

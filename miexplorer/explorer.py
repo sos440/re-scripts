@@ -51,7 +51,7 @@ class ExplorerSheetView:
     COL_WIDTH = 150
     HEADER_HEIGHT = 30
     ITEMS_PER_PAGE = 10
-    RARITY_COLOR_MAP = {1: 905, 2: 72, 3: 89, 4: 4, 101: 13, 102: 53, 103: 43, 104: 33}
+    RARITY_COLOR_MAP = {1: 905, 2: 72, 3: 89, 4: 4, 5: 0x3B2, 6: 13, 7: 53, 8: 43, 9: 33}
 
     class Mode(Enum):
         NORMAL = 1
@@ -102,7 +102,10 @@ class ExplorerSheetView:
                     btn_edit = gb.BlueJewelButton().on_click(j)
                     self.menu_edit_column.append(btn_edit)
                     # Column name
-                    gb.Html(col.id, width=width - 37, height=18, tooltip=col.name)
+                    if col.filter:
+                        gb.Html(f"{col.id}*", width=width - 37, height=18, tooltip=f"{col.name} (Filtered)")
+                    else:
+                        gb.Html(col.id, width=width - 37, height=18, tooltip=col.name)
                     # Sort button
                     if self.col_precedence[j] is None or col.sort_order == SortOrder.UNSORTED:
                         btn_sort = gb.SortButton(style="asc", tooltip="Not sorted")
@@ -349,6 +352,13 @@ class Explorer:
             col = PropMaster.create_col_by_id(col_json["id"], col_json.get("metadata"))
             if col is None:
                 continue
+            # Update filter
+            try:
+                if "filter" in col_json:
+                    col.filter = SheetColumnFilters.from_dict(col_json["filter"])
+            except:
+                Misc.SendMessage(f"Failed to load filter for column '{col.id}'. The filter will be ignored.", 0x21)
+            # Update sort order
             try:
                 col.sort_order = SortOrder(col_json.get("sort_order", "unsorted"))
             except ValueError:
@@ -358,14 +368,17 @@ class Explorer:
 
     @staticmethod
     def encode_column_setting(sheet: Sheet) -> List[Dict[str, Any]]:
-        return [
-            {
+        result = []
+        for col in sheet.columns:
+            col_encoded = {
                 "id": col.id,
                 "sort_order": col.sort_order.value,
                 "metadata": dict(col.metadata),
             }
-            for col in sheet.columns
-        ]
+            if col.filter is not None:
+                col_encoded["filter"] = col.filter.to_dict()
+            result.append(col_encoded)
+        return result
 
     @staticmethod
     def export_to_csv(sheet: Sheet, verbose: bool = False):
@@ -475,8 +488,8 @@ class Explorer:
             Misc.Pause(500)
             return
 
-    @staticmethod
-    def edit_column(col_idx: int, sheet: Sheet):
+    @classmethod
+    def edit_column(cls, col_idx: int, sheet: Sheet):
         """
         Edit the column's property or remove the column.
         """
@@ -490,7 +503,7 @@ class Explorer:
         lines_per_page = max(10, len(all_items) - 2)
 
         # Build the gump
-        gb = CraftingGumpBuilder(id="SheetFilterGump")
+        gb = CraftingGumpBuilder(id="SheetEditColumnGump")
         with gb.MainFrame():
             # Header
             with gb.ShadedColumn(halign="center"):
@@ -522,7 +535,9 @@ class Explorer:
                     btn_expand = gb.CraftingButton("EXPAND COLUMN", width=165)
                     btn_narrow = gb.CraftingButton("NARROW COLUMN", width=165)
                 with gb.Column(width=200):
-                    btn_remove = gb.CraftingButton("REMOVE COLUMN", width=165)
+                    btn_remove = gb.CraftingButton("REMOVE COLUMN", width=165, hue=0x21)
+                    btn_filter = gb.CraftingButton("EDIT FILTER", width=165)
+                    gb.Spacer(22)
                     btn_exit = gb.CraftingButton("EXIT", width=165, style="x")
 
         while True:
@@ -539,7 +554,7 @@ class Explorer:
                         gb.Spacer(22)
             else:
                 gb.Html("(No group selected)", width=200, centered=True, color="#FFFFFF")
-                for i in range(lines_per_page):
+                for i in range(lines_per_page - 1):
                     gb.Spacer(22)
 
             # Handle response
@@ -598,7 +613,208 @@ class Explorer:
                 else:
                     Misc.SendMessage("Column width cannot be more than 500px.", 0x21)
                 return
+            if block == btn_filter:
+                prop = col.prop
+                result = False
+                if isinstance(prop, PropTypes.Boolean):
+                    result = cls.edit_filter_boolean(col_idx, sheet)
+                elif isinstance(prop, PropTypes.Numeric):
+                    result = cls.edit_filter_numeric(col_idx, sheet)
+                elif isinstance(prop, PropTypes.Enum):
+                    result = cls.edit_filter_enum(col_idx, sheet)
+                else:
+                    Misc.SendMessage("This property type does not support filtering.", 0x21)
+                if result:
+                    return
+                continue
             return
+
+    @staticmethod
+    def edit_filter_boolean(col_idx: int, sheet: Sheet) -> bool:
+        """
+        Edit the column's filter.
+        """
+        col = sheet.columns[col_idx]
+        expected_value = None
+        if isinstance(col.filter, SheetColumnFilters.Boolean):
+            expected_value = col.filter.expected_value
+
+        # Build the gump
+        gb = CraftingGumpBuilder(id="SheetEditFilterGump")
+        with gb.MainFrame():
+            with gb.ShadedColumn(halign="center"):
+                gb.Html(f"COLUMN {col_idx+1}: {col.name}", centered=True, color="#FFFFFF")
+                gb.Spacer(0)
+                gb.Html("Choose the criterion. Only the items that match the selected criterion will be displayed.", width=450, height=44, color="#FFFFFF")
+                with gb.Row(spacing=5):
+                    btn_true = gb.Checkbox()
+                    gb.Text("Item has this property.", hue=1152, width=100)
+                with gb.Row(spacing=5):
+                    btn_false = gb.Checkbox()
+                    gb.Text("Item does not have this property.", hue=1152, width=100)
+                gb.Spacer(0)
+                with gb.Row():
+                    btn_apply = gb.CraftingButton("Apply Filter", width=120)
+                    btn_clear = gb.CraftingButton("Clear Filter", width=120)
+                    btn_exit = gb.CraftingButton("Exit", width=60, style="x")
+
+        while True:
+            btn_true.checked = expected_value is True
+            btn_false.checked = expected_value is False
+            block, response = gb.launch().wait_response().unpack()
+
+            if block == btn_true:
+                expected_value = True
+                continue
+            if block == btn_false:
+                expected_value = False
+                continue
+            if block == btn_exit:
+                return False
+            if block == btn_clear:
+                col.filter = None
+                Misc.SendMessage(f"Filter removed from column {col_idx+1}.", 68)
+                return True
+            if block == btn_apply:
+                if expected_value is None:
+                    col.filter = None
+                    Misc.SendMessage(f"Filter removed from column {col_idx+1}.", 68)
+                else:
+                    col.filter = SheetColumnFilters.Boolean(expected_value=expected_value)
+                    Misc.SendMessage(f"Filter applied to column {col_idx+1}.", 68)
+                return True
+            return False
+
+    @staticmethod
+    def edit_filter_numeric(col_idx: int, sheet: Sheet) -> bool:
+        """
+        Edit the column's filter.
+        """
+        col = sheet.columns[col_idx]
+        min_value = None
+        max_value = None
+        if isinstance(col.filter, SheetColumnFilters.Numeric):
+            min_value = col.filter.min_value
+            max_value = col.filter.max_value
+
+        # Build the gump
+        gb = CraftingGumpBuilder(id="SheetEditFilterGump")
+        with gb.MainFrame():
+            with gb.ShadedColumn(halign="center"):
+                gb.Html(f"COLUMN {col_idx+1}: {col.name}", centered=True, color="#FFFFFF")
+                gb.Spacer(0)
+                gb.Html("Set the min and/or max values to filter the items. Only items with values within this range will be displayed.", width=450, height=44, color="#FFFFFF")
+                with gb.Row(spacing=5):
+                    gb.Text("Min Value:", hue=1152, width=100)
+                    with gb.Row(background="tiled:9354", padding=2):
+                        field_min = gb.TextEntry(str(min_value) if min_value is not None else "(none)", width=100, hue=68, max_length=10, tooltip="Minimum value (inclusive). Leave empty for no minimum.")
+                with gb.Row(spacing=5):
+                    gb.Text("Max Value:", hue=1152, width=100)
+                    with gb.Row(background="tiled:9354", padding=2):
+                        field_max = gb.TextEntry(str(max_value) if max_value is not None else "(none)", width=100, hue=68, max_length=10, tooltip="Maximum value (inclusive). Leave empty for no maximum.")
+                gb.Spacer(0)
+                with gb.Row():
+                    btn_apply = gb.CraftingButton("Apply Filter", width=120)
+                    btn_clear = gb.CraftingButton("Clear Filter", width=120)
+                    btn_exit = gb.CraftingButton("Exit", width=60, style="x")
+
+        while True:
+            block, response = gb.launch().wait_response().unpack()
+            # Check if minimum and maximum values are valid
+            try:
+                if block == btn_clear or field_min.text == "(none)":
+                    field_min.text = ""
+                min_value = int(field_min.text) if field_min.text.strip() != "" else None
+                if block == btn_clear or field_max.text == "(none)":
+                    field_max.text = ""
+                max_value = int(field_max.text) if field_max.text.strip() != "" else None
+            except:
+                Misc.SendMessage("Invalid min/max value.", 0x21)
+                continue
+
+            if block == btn_exit:
+                return False
+            if block == btn_clear:
+                col.filter = None
+                Misc.SendMessage(f"Filter removed from column {col_idx+1}.", 68)
+                return True
+            if block == btn_apply:
+                if min_value is None and max_value is None:
+                    col.filter = None
+                    Misc.SendMessage(f"Filter removed from column {col_idx+1}.", 68)
+                else:
+                    col.filter = SheetColumnFilters.Numeric(min_value=min_value, max_value=max_value)
+                    Misc.SendMessage(f"Filter applied to column {col_idx+1}.", 68)
+                return True
+            return False
+
+    @staticmethod
+    def edit_filter_enum(col_idx: int, sheet: Sheet) -> bool:
+        """
+        Edit the column's filter.
+        """
+        col = sheet.columns[col_idx]
+        prop = col.prop
+        if not isinstance(prop, EnumProp):
+            Misc.SendMessage("This property is not an enum.", 0x21)
+            return False
+        vkmap = prop.value_to_str
+        kvmap = {v: k for k, v in vkmap.items()}
+        if isinstance(col.filter, SheetColumnFilters.Enum):
+            selected_values = set(col.filter.allowed_values)
+        else:
+            selected_values = set(kvmap.values())
+
+        # Build the gump
+        gb = CraftingGumpBuilder(id="SheetEditFilterGump")
+        with gb.MainFrame():
+            with gb.ShadedColumn(halign="center"):
+                gb.Html(f"COLUMN {col_idx+1}: {col.name}", centered=True, color="#FFFFFF")
+                gb.Spacer(0)
+                gb.Html("Choose the values to filter by. Only the items that match the selected values will be displayed.", width=450, height=44, color="#FFFFFF")
+                btn_choices: Dict[int, GumpBuilder.Assets.Checkbox] = {}
+                values = sorted(kvmap.values())
+                num_rows = max(10, (len(values) + 1) // 2)
+                with gb.Row():
+                    for cur_values in (values[:num_rows], values[num_rows:]):
+                        with gb.Column(halign="left", spacing=5, width=225) as c:
+                            for enum_value in cur_values:
+                                enum_name = vkmap[enum_value]
+                                is_checked = enum_value in selected_values
+                                with gb.Row(spacing=5):
+                                    btn_choices[enum_value] = gb.Checkbox(checked=is_checked)
+                                    gb.Text(enum_name, hue=1152, width=300)
+                gb.Spacer(0)
+                with gb.Row():
+                    btn_apply = gb.CraftingButton("Apply Filter", width=120)
+                    btn_clear = gb.CraftingButton("Clear Filter", width=120)
+                    btn_exit = gb.CraftingButton("Exit", width=60, style="x")
+
+        while True:
+            # Update selected values based on checkbox states
+            selected_values = set()
+            for enum_value, checkbox in btn_choices.items():
+                if checkbox.checked:
+                    selected_values.add(enum_value)
+            # Handle response
+            block, response = gb.launch().wait_response().unpack()
+            if block in btn_choices.values():
+                continue
+            if block == btn_exit:
+                return False
+            if block == btn_clear:
+                col.filter = None
+                Misc.SendMessage(f"Filter removed from column {col_idx+1}.", 68)
+                return True
+            if block == btn_apply:
+                if selected_values == set(kvmap.values()):
+                    col.filter = None
+                    Misc.SendMessage(f"Filter removed from column {col_idx+1}.", 68)
+                else:
+                    col.filter = SheetColumnFilters.Enum(kvmap=kvmap, allowed_values=selected_values)
+                    Misc.SendMessage(f"Filter applied to column {col_idx+1}.", 68)
+                return True
+            return False
 
     @staticmethod
     def rename_save(sheet: Sheet):
@@ -894,7 +1110,7 @@ class Explorer:
                     idx, col = idxcol
                     if "update_time" in col.metadata:
                         col_precedence[idx] = len(idxcol_sorted) - i
-                        sorted_sheet = col.filter(sorted_sheet)
+                        sorted_sheet = col.apply_filter(sorted_sheet)
 
             # Ensure the current page is within bounds
             last_page = (len(sorted_sheet.rows) - 1) // ExplorerSheetView.ITEMS_PER_PAGE
