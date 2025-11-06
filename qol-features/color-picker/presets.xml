@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <group name="Custom Cloth Hues">
+        <color name="Ethereal" value="65535" />
+        <color name="Ice White" value="1153" />
+        <color name="Glacial" value="1152" />
+        <color name="Reflective Shadow" value="1910" />
+        <color name="Blood Speckled" value="2673" />
+        <color name="Bloody Ice" value="1288" />
+        <color name="Chilled" value="2729" />
+        <color name="Void Black" value="2075" />
+        <color name="Fire Yellow" value="1174" />
+        <color name="Liquid Metal" value="2728" />
+        <color name="UOAlive 8th Anniversary Purple" value="1963" />
+        <color name="Metallic Purple" value="1918" />
+        <color name="Wildfire" value="2758" />
+        <color name="Cosmic Blue" value="2747" />
+        <color name="Speckled Ice - Leg Polar Bear" value="2953" />
+        <color name="Blazing" value="1161" />
+        <color name="Sorcerer Blue" value="1917" />
+        <color name="Magical Red Aura" value="1287" />
+        <color name="Magical Green Aura" value="2745" />
+        <color name="Mad Scientist Green" value="2690" />
+        <color name="Mystic Speckle" value="2703" />
+        <color name="Anodized Purple" value="1282" />
+        <color name="Big Bird Yellow" value="2721" />
+        <color name="Pretty Blue" value="1265" />
+        <color name="Worn Red" value="2751" />
+        <color name="Reflective Yellow" value="1177" />
+        <color name="Shined Dark Blue" value="1928" />
+        <color name="Shined Green" value="1926" />
+        <color name="Shine Blue" value="1971" />
+        <color name="Shined Red" value="1975" />
+        <color name="Phoenix Red" value="1964" />
+        <color name="Ragnall's Forge Green" value="2722" />
+        <color name="Monk Tan" value="2515" />
+        <color name="Burnt Orange" value="2114" />
+        <color name="Dirty Brown" value="1809" />
+        <color name="Dark Green" value="1980" />
+        <color name="Magery Red" value="1779" />
+        <color name="Monk Brown" value="1933" />
+        <color name="Electric Blue" value="1916" />
+        <color name="Ooze Green" value="1958" />
+        <color name="Rainy Day" value="1409" />
+        <color name="Luna Purple" value="1951" />
+        <color name="Very Blue" value="1266" />
+        <color name="Jade" value="1426" />
+        <color name="Barnacle Red" value="2707" />
+        <color name="Barnacle Purple" value="2716" />
+        <color name="Barnacle Blue" value="2713" />
+        <color name="Barnacle Green" value="2711" />
+        <color name="Barnacle Olive Green" value="2709" />
+        <color name="Harvest Brown" value="1148" />
+        <color name="Harvest Rose" value="1652" />
+        <color name="Harvest Yellow" value="2125" />
+        <color name="Harvest Orange" value="2725" />
+        <color name="Matte Blue" value="2757" />
+        <color name="Ecto Blue" value="2741" />
+        <color name="Siloutte Gray" value="1987" />
+        <color name="Barbie Pink" value="2759" />
+        <color name="Malibu Barbie Pink" value="2727" />
+        <color name="Toxic Green" value="2755" />
+        <color name="QTPI Purps" value="1984" />
+        <color name="The Ararat Blue" value="1366" />
+        <color name="Matte Black" value="2051" />
+        <color name="Halloween in October Ghostly Essence" value="2769" />
+        <color name="Void Purple" value="2771" />
+        <color name="Corpse Run" value="2500" />
+        <color name="Ultima Online Birth Year Hue" value="1997" />
+        <color name="UOAlive 9th Anniversary Hue" value="1973" />
+        <color name="Really Orange" value="1259" />
+        <color name="Mint" value="1151" />
+        <color name="Pastel Green" value="2966" />
+        <color name="Halloween in October Burnished Orange" value="2778" />
+    </group>
+    <group name="Backpack Dyes">
+        <color model="0x0E75" name="Ethereal" value="65535" />
+        <color model="0x0E75" name="Ice White" value="1153" />
+        <color model="0x0E75" name="Pure Black" value="1" />
+        <color model="0x0E75" name="Matte Black" value="2051" />
+        <color model="0x0E75" name="9th Anniversary Hue" value="1963" />
+        <color model="0x0E75" name="Glacial" value="1152" />
+        <color model="0x0E75" name="Magery Red" value="1779" />
+        <color model="0x0E75" name="Blazing" value="1161" />
+        <color model="0x0E75" name="Metallic Purple" value="1918" />
+        <color model="0x0E75" name="Liquid Metal" value="2728" />
+        <color model="0x0E75" name="Wildfire" value="2758" />
+        <color model="0x0E75" name="Cosmic Blue" value="2747" />
+        <color model="0x0E75" name="Fire Yellow" value="1174" />
+        <color model="0x0E75" name="Sorcerer Blue" value="1917" />
+        <color model="0x0E75" name="Really Orange" value="1259" />
+        <color model="0x0E75" name="Blood Speckled" value="2673" />
+        <color model="0x0E75" name="Mad Scientist Green" value="2690" />
+        <color model="0x0E75" name="Mystic Speckle" value="2703" />
+        <color model="0x0E75" name="Magical Red Aura" value="1287" />
+        <color model="0x0E75" name="Magical Green Aura" value="2745" />
+        <color model="0x0E75" name="Bloody Robe" value="2707" />
+        <color model="0x0E75" name="Void Black" value="2075" />
+        <color model="0x0E75" name="Anodized Purple" value="1282" />
+        <color model="0x0E75" name="Big Bird Yellow" value="2721" />
+        <color model="0x0E75" name="Pretty Blue" value="1265" />
+        <color model="0x0E75" name="Worn Red" value="2751" />
+        <color model="0x0E75" name="Reflective Yellow" value="1177" />
+        <color model="0x0E75" name="Bloody Ice" value="1288" />
+        <color model="0x0E75" name="Chilled" value="2729" />
+        <color model="0x0E75" name="Shined Dark Blue" value="1928" />
+        <color model="0x0E75" name="Shined Green" value="1926" />
+        <color model="0x0E75" name="Shined Blue" value="1971" />
+        <color model="0x0E75" name="Shined Red" value="1975" />
+        <color model="0x0E75" name="The Ararat Blue" value="1366" />
+        <color model="0x0E75" name="Void Purple" value="2771" />
+        <color model="0x0E75" name="Ghostly Essence" value="2769" />
+        <color model="0x0E75" name="Burnished Orange" value="2778" />
+        <color model="0x0E75" name="Malibu Barbie Pink" value="2727" />
+        <color model="0x0E75" name="Corpse Run" value="2500" />
+        <color model="0x0E75" name="Ragnall's Forge Green" value="2722" />
+        <color model="0x0E75" name="Monk Tan" value="2515" />
+        <color model="0x0E75" name="Burnt Orange" value="2114" />
+        <color model="0x0E75" name="Dirty Brown" value="1809" />
+        <color model="0x0E75" name="Dark Green" value="1980" />
+        <color model="0x0E75" name="Electric Blue" value="1916" />
+        <color model="0x0E75" name="Monk Brown" value="1933" />
+        <color model="0x0E75" name="Ooze Green" value="1958" />
+        <color model="0x0E75" name="Rainy Day" value="1409" />
+        <color model="0x0E75" name="Luna Purple" value="1951" />
+        <color model="0x0E75" name="Very Blue" value="1266" />
+        <color model="0x0E75" name="Phoenix Red" value="1964" />
+        <color model="0x0E75" name="Jade" value="1426" />
+        <color model="0x0E75" name="UO Birth Year Hue" value="1997" />
+        <color model="0x0E75" name="Reflective Shadow" value="1910" />
+        <color model="0x0E75" name="Icelight" value="1165" />
+        <color model="0x0E75" name="Charcoal" value="1175" />
+        <color model="0x0E75" name="Mint" value="1151" />
+        <color model="0x0E75" name="Speckled Ice" value="2953" />
+        <color model="0x0E75" name="Pastel Green" value="2966" />
+        <color model="0x0E75" name="Golden Horse Casino" value="1923" />
+    </group>
+    <group name="Clean Up Britannia">
+        <color model="3839" name="Intense Teal Pigment" value="2691" />
+        <color model="3839" name="Tyrian Purple Pigment" value="2716" />
+        <color model="3839" name="Mottled Sunset Blue Pigment" value="2714" />
+        <color model="3839" name="Mossy Green Pigment" value="2684" />
+        <color model="3839" name="Vibrant Ocher Pigment" value="2725" />
+        <color model="3839" name="Olive Green Pigment" value="2709" />
+        <color model="3839" name="Polished Bronze Pigment" value="1944" />
+        <color model="3839" name="Glossy Blue Pigment" value="1916" />
+        <color model="3839" name="Black and Green Pigment" value="1979" />
+        <color model="3839" name="Deep Violet Pigment" value="1929" />
+        <color model="3839" name="Aura of Amber Pigment" value="1967" />
+        <color model="3839" name="Murky Seagreen Pigment" value="1992" />
+        <color model="3839" name="Shadowy Blue Pigment" value="1960" />
+        <color model="3839" name="Gleaming Fuchsia Pigment" value="1930" />
+        <color model="3839" name="Glossy Fuchsia Pigment" value="1919" />
+        <color model="3839" name="Deep Blue Pigment" value="1939" />
+        <color model="3839" name="Vibrant Seagreen Pigment" value="1970" />
+        <color model="3839" name="Murky Amber Pigment" value="1989" />
+        <color model="3839" name="Vibrant Crimson Pigment" value="1964" />
+        <color model="3839" name="Reflective Shadow Pigment" value="1910" />
+        <color model="3839" name="Star Blue Pigment" value="2723" />
+        <color model="3839" name="Mother of Pearl Pigment" value="2720" />
+        <color model="3839" name="Liquid Sunshine Pigment" value="1923" />
+        <color model="3839" name="Dark Void Pigment" value="2068" />
+    </group>
+    <group name="Pigments of Tokuno (Lesser)">
+        <color model="3839" name="Fresh Plum" value="325" />
+        <color model="3839" name="Fresh Rose" value="1209" />
+        <color model="3839" name="Silver" value="1001" />
+        <color model="3839" name="Pale Blue" value="591" />
+        <color model="3839" name="Deep Brown" value="1008" />
+        <color model="3839" name="Noble Gold" value="551" />
+        <color model="3839" name="Burnt Brown" value="1050" />
+        <color model="3839" name="Pale Orange" value="46" />
+        <color model="3839" name="Light Green" value="456" />
+        <color model="3839" name="Chaos Blue" value="5" />
+    </group>
+    <group name="Pet Dyes">
+        <color model="0x2124" name="Faded Bronze" value="2420" />
+        <color model="0x2124" name="Fresh Plum" value="2428" />
+        <color model="0x2124" name="Faded Rose" value="2425" />
+        <color model="0x2124" name="Fresh Rose" value="1209" />
+        <color model="0x2124" name="Emerald" value="1173" />
+        <color model="0x2124" name="Crimson Dawn" value="1964" />
+        <color model="0x2124" name="Marble" value="2955" />
+        <color model="0x2124" name="Hunter Green" value="1936" />
+        <color model="0x2124" name="Glossy Blue" value="1916" />
+        <color model="0x2124" name="Dusk" value="2052" />
+        <color model="0x2124" name="Fine Wine" value="2751" />
+        <color model="0x2124" name="Ghostly White" value="2498" />
+        <color model="0x2124" name="Wild Fire" value="2758" />
+        <color model="0x2124" name="Golden Horse Casino" value="1923" />
+        <color model="0x2124" name="Halloween Mad Scientist" value="2684" />
+        <color model="0x2124" name="Valentine Red" value="1172" />
+        <color model="0x2124" name="Valentine Pink" value="1168" />
+        <color model="0x2124" name="Liquid Metal" value="2728" />
+        <color model="0x2124" name="Glacial" value="1152" />
+        <color model="0x2124" name="Ethereal" value="-2" />
+        <color model="0x2124" name="Burnt Orange/Red" value="1358" />
+        <color model="0x2124" name="Blaze" value="1161" />
+        <color model="0x2124" name="Shadow Lords/Minax Faction Shadow" value="1109" />
+        <color model="0x2124" name="Shadowlord Faction Green" value="2211" />
+        <color model="0x2124" name="Minax Faction Red" value="1645" />
+        <color model="0x2124" name="True Britanian Faction Purple" value="1254" />
+        <color model="0x2124" name="True Britanian Faction Yellow" value="2125" />
+        <color model="0x2124" name="Council of Mages Faction Blue" value="1310" />
+        <color model="0x2124" name="Council of Mages Faction Blue 2" value="1325" />
+        <color model="0x2124" name="Big Bird Yellow" value="2721" />
+        <color model="0x2124" name="Matte Red" value="2749" />
+        <color model="0x2124" name="Matte Blue" value="2746" />
+        <color model="0x2124" name="Cosmic Blue" value="2747" />
+        <color model="0x2124" name="Rare Jet Black Pet Dye" value="1" />
+        <color model="0x2124" name="Reflective Shadow" value="1910" />
+        <color model="0x2124" name="Cloud Blue" value="1165" />
+        <color model="0x2124" name="Toxic Green Temp" value="2755" />
+        <color model="0x2124" name="Barbie Pink Temp" value="2759" />
+        <color model="0x2124" name="Malibu Barbie Pink" value="2727" />
+        <color model="0x2124" name="Harvest Orange Temp" value="2725" />
+        <color model="0x2124" name="Siloutte Gray Temp" value="1987" />
+        <color model="0x2124" name="Powder Snow" value="1150" />
+        <color model="0x2124" name="Frozen Lake" value="1154" />
+        <color model="0x2124" name="Shimmering Snowflake" value="1151" />
+        <color model="0x2124" name="UOAlive 8th Anniversary Purple" value="1963" />
+        <color model="0x2124" name="The Ararat Blue" value="1366" />
+        <color model="0x2124" name="Void" value="2771" />
+        <color model="0x2124" name="Ghostly Essence" value="2769" />
+        <color model="0x2124" name="Burnished Orange" value="2778" />
+        <color model="0x2124" name="Corpse Run" value="2500" />
+        <color model="0x2124" name="Ultima Online Birth Year Hue" value="1997" />
+        <color model="0x2124" name="UOAlive 9th Anniversary Hue" value="1973" />
+    </group>
+</root>

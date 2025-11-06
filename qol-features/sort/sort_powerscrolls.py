@@ -72,20 +72,22 @@ scroll_map = {
 
 
 def sort_ps():
-    while True:
-        scrolls = Items.FindAllByID(0x14F0, 0x481, Player.Backpack.Serial, 2)
-        if not scrolls:
-            break
-        ps = scrolls[0]
+    for ps in Items.FindAllByID(0x14F0, 0x481, Player.Backpack.Serial, 2):
         matchres = re.match(r"^(?:a wondrous|an exalted|a mythical|a legendary) scroll of (.+) \((\d+) Skill\)", ps.Name)
         if not matchres:
-            print(f"{ps.Name} -> Not matched")
-            Misc.Pause(1000)
+            Misc.SendMessage(f"{ps.Name} -> Not matched", 33)
+            ignore.add(ps.Serial)
             continue
         book = scroll_map.get(matchres.group(1), None)
         if book is None:
-            print(f"{ps.Name} -> No book found")
-            Misc.Pause(1000)
+            Misc.SendMessage(f"{ps.Name} -> No book found", 33)
+            continue
+        book_obj = Items.FindBySerial(book)
+        if book_obj is None:
+            Misc.SendMessage(f"{ps.Name} -> No book found", 33)
+            continue
+        if Player.DistanceTo(book_obj) > 2:
+            Misc.SendMessage(f"{ps.Name} -> Book too far", 33)
             continue
         Misc.SendMessage(f"Moving PS: {matchres.group(2)} {matchres.group(1)}", 0x802)
         Items.Move(ps.Serial, book, -1)

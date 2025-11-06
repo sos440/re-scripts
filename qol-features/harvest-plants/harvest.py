@@ -14,6 +14,8 @@ ACTION_DELAY = 1000
 ################################################################################
 
 from AutoComplete import *
+from System.Collections.Generic import List as CList  # type: ignore
+from System import Int32  # type: ignore
 from typing import List, Tuple, Dict, Any, Optional
 from enum import Enum
 import re
@@ -21,6 +23,196 @@ import re
 
 COLORS = [0, 33, 1645, 43, 1135, 56, 2213, 66, 1435, 5, 1341, 16, 13, 1166, 1173, 1158, 1161, 1153, 1109]
 PLANTS = [10460, 10461, 10462, 10463, 10464, 10465, 10466, 10467, 3273, 6810, 3204, 6815, 3265, 3326, 3215, 3272, 3214, 3365, 3255, 3262, 3521, 3323, 3512, 6817, 9324, 19340, 3230, 3203, 3206, 3208, 3220, 3211, 3237, 3239, 3223, 3231, 3238, 3228, 3377, 3332, 3241, 3372, 3366, 3367]
+
+
+def _namespace_garden_bed():
+    RAISED_BED = [
+        0x4B22,  # top left
+        0x4B28,  # top center
+        0x4B23,  # top right
+        0x4B24,  # middle left
+        0x4B29,  # middle center
+        0x4B25,  # middle right
+        0x4B26,  # bottom left
+        0x4B2A,  # bottom center
+        0x4B27,  # bottom right
+    ]
+
+    FIELD_BED = [
+        0xA30D,  # top left
+        0xA313,  # top center
+        0xA30E,  # top right
+        0xA30F,  # middle left
+        0xA314,  # middle center
+        0xA310,  # middle right
+        0xA311,  # bottom left
+        0xA315,  # bottom center
+        0xA312,  # bottom right
+    ]
+
+    PLANTS = [
+        0x0913,  # dirt
+        0x0C62,  # sapling
+        10460,
+        10461,
+        10462,
+        10463,
+        10464,
+        10465,
+        10466,
+        10467,
+        3273,
+        6810,
+        3204,
+        6815,
+        3265,
+        3326,
+        3215,
+        3272,
+        3214,
+        3365,
+        3255,
+        3262,
+        3521,
+        3323,
+        3512,
+        6817,
+        9324,
+        19340,
+        3230,
+        3203,
+        3206,
+        3208,
+        3220,
+        3211,
+        3237,
+        3239,
+        3223,
+        3231,
+        3238,
+        3228,
+        3377,
+        3332,
+        3241,
+        3372,
+        3366,
+        3367,
+    ]
+
+    def detect_bed(serial: int) -> Optional[Tuple[int, int, int, int, int]]:
+        # Sanity check
+        cur_item = Items.FindBySerial(serial)
+        if cur_item is None:
+            return
+        if not cur_item.OnGround:
+            return
+
+        # Record some states
+        # x, y, z = coords of the current "garden bed" piece
+        # zp = the z coordinate where the plants should lie at
+        # bed_type = the current bed type. ("plant" is an alias for "not determined yet")
+        cur_pos = cur_item.Position
+        x, y, z = cur_pos.X, cur_pos.Y, cur_pos.Z
+        zp = z
+        if cur_item.ItemID in RAISED_BED:
+            bed_type = "raised"
+            zp += 5
+        elif cur_item.ItemID in FIELD_BED:
+            bed_type = "field"
+            zp += 1
+        elif cur_item.ItemID in PLANTS:
+            bed_type = "plant"
+        else:
+            return
+
+        # List of coordinates of top-left corners
+        coord_TLs = []
+        # List of coordinates of bottom-right corners
+        coord_BRs = []
+
+        # For all scanned garden bed pieces
+        filter = Items.Filter()
+        filter.Enabled = True
+        filter.Graphics = CList[Int32](RAISED_BED + FIELD_BED)
+        filter.OnGround = True
+        for item in Items.ApplyFilter(filter):
+            pos = item.Position
+            coords = (pos.X, pos.Y, pos.Z)
+            # If the bed_type is still undetermined,
+            if bed_type == "plant":
+                # Guess the bed_type and the z coordinate of the garden bed piece beneath the plant
+                if item.ItemID in FIELD_BED and (x, y, z - 1) == coords:
+                    bed_type = "field"
+                    z = z - 1
+                elif item.ItemID in RAISED_BED and (x, y, z - 5) == coords:
+                    bed_type = "raised"
+                    z = z - 5
+            # Record the coordinates of the top-left corners
+            if item.ItemID in (RAISED_BED[0], FIELD_BED[0]):
+                coord_TLs.append(coords)
+            # Record the coordinates of the bottom-right corners
+            elif item.ItemID in (RAISED_BED[8], FIELD_BED[8]):
+                coord_BRs.append(coords)
+
+        # If the bed_type is stilll undetermined, then it defaults to None
+        if bed_type == "plant":
+            return
+
+        # For the x, y, z, coordinates of each top-left piece,
+        for x0, y0, z0 in coord_TLs:
+            # If its z-height is different from the height of the "current" bed piece, skip
+            if z != z0:
+                continue
+            # For each of the possible bed shapes,
+            for dx, dy in [(2, 2), (1, 2), (2, 1), (1, 1)]:
+                # Compute the bottom-right coordinates
+                x1, y1 = x0 + dx, y0 + dy
+                # If that coordinates do not exist in the recorded list, skip
+                if (x1, y1, z) not in coord_BRs:
+                    continue
+                # If the "current" piece does not lie in the rect, skip
+                if x < x0 or x > x1 or y < y0 or y > y1:
+                    continue
+                return (x0, y0, x1, y1, zp)
+
+    def get_plants_on_bed(serial: int) -> Optional[List["Item"]]:
+        """
+        A function that retuns the list of plants on a garden bed.
+        """
+        if serial == -1:
+            return
+
+        result = detect_bed(serial)
+        if result is None:
+            item = Items.FindBySerial(serial)
+            if item is None:
+                return
+            if item.ItemID not in PLANTS:
+                return [item]
+            return
+
+        x0, y0, x1, y1, zp = result
+        plants = []
+
+        filter = Items.Filter()
+        filter.Enabled = True
+        filter.Graphics = CList[Int32](PLANTS)
+        filter.OnGround = True
+        for item in Items.ApplyFilter(filter):
+            pos = item.Position
+            x, y, z = pos.X, pos.Y, pos.Z
+            if z != zp:
+                continue
+            if x < x0 or x > x1 or y < y0 or y > y1:
+                continue
+            plants.append(item)
+
+        return plants
+
+    return get_plants_on_bed
+
+
+get_plants_on_bed = _namespace_garden_bed()
 
 
 class GardeningGumps:
@@ -111,8 +303,8 @@ def handle_gardening_gumps(plant: int, color: int, auto_deco: bool = False) -> G
 
         match_main = GardeningGumps.is_main(gd)
         if match_main is not None:
-            plant_matched = (match_main["plant"] == plant)
-            color_matched = (match_main["color"] == color)
+            plant_matched = match_main["plant"] == plant
+            color_matched = match_main["color"] == color
             if match_main["plant"] == 3274:
                 plant_matched = plant in (3323, 3326)  # Special case for cypress
             if not plant_matched or not color_matched:
@@ -204,58 +396,64 @@ def ask_to_harvest(harvesting: bool = False):
     Gumps.CloseGump(SHORTCUT_GUMP_ID)
     gd = Gumps.CreateGump(movable=True)
     Gumps.AddPage(gd, 0)
-    Gumps.AddBackground(gd, 0, 0, 146, 90, 30546)
-    Gumps.AddAlphaRegion(gd, 0, 0, 146, 90)
+    Gumps.AddBackground(gd, 0, 0, 146, 115, 30546)
+    Gumps.AddAlphaRegion(gd, 0, 0, 146, 115)
     Gumps.AddHtml(gd, 10, 5, 126, 18, GUMP_WT.format(text="Harvest Helper"), False, False)
     if harvesting:
         Gumps.AddButton(gd, 10, 30, 40297, 40298, 1, 1, 0)
         Gumps.AddHtml(gd, 10, 33, 126, 18, GUMP_WT.format(text="Stop Harvesting"), False, False)
     else:
         Gumps.AddButton(gd, 10, 30, 40021, 40031, 1, 1, 0)
-        Gumps.AddHtml(gd, 10, 33, 126, 18, GUMP_WT.format(text="Start Harvesting"), False, False)
+        Gumps.AddHtml(gd, 10, 33, 126, 18, GUMP_WT.format(text="Harvest Batch"), False, False)
     Gumps.AddButton(gd, 10, 55, 40021, 40031, 2, 1, 0)
-    Gumps.AddHtml(gd, 10, 58, 126, 18, GUMP_WT.format(text="Harvest Individually"), False, False)
+    Gumps.AddHtml(gd, 10, 58, 126, 18, GUMP_WT.format(text="Harvest Each"), False, False)
+
+    Gumps.AddCheck(gd, 10, 85, 210, 211, AUTO_DECORATIVE, 10)
+    Gumps.AddLabel(gd, 35, 85, 1152, "Auto Decorative")
+
     Gumps.SendGump(SHORTCUT_GUMP_ID, Player.Serial, 100, 100, gd.gumpDefinition, gd.gumpStrings)
 
 
-def parse_response(delay: int = 500) -> int:
+def parse_response(delay: int = 500) -> Tuple[int, bool]:
     if not Gumps.WaitForGump(SHORTCUT_GUMP_ID, delay):
-        return 0
+        return 0, AUTO_DECORATIVE
     gd = Gumps.GetGumpData(SHORTCUT_GUMP_ID)
+    auto_deco = 10 in gd.switches
     if gd is None:
-        return 0
-    return gd.buttonid
+        return 0, auto_deco
+    return gd.buttonid, auto_deco
 
 
 if __name__ == "__main__":
-    plant_done = set()
-
     while Player.Connected:
         ask_to_harvest()
-        response = 0
-        while not response:
-            response = parse_response()
-            continue
+        response, AUTO_DECORATIVE = parse_response(1000 * 60 * 60)
 
         # Find all plants to tend
-        if response == 1:
-            find_next = True
-            while find_next:
-                find_next = False
-                for plant in Items.FindAllByID(PLANTS, -1, -1, 4):
-                    if plant.Serial in plant_done:
-                        continue
-                    if plant.Color not in COLORS:
-                        continue
-                    # Tend the plant
+        if response == 0:
+            Misc.SendMessage("Bye!", 68)
+            break
+        elif response == 1:
+            serial = Target.PromptTarget("Target the garden bed or plant to tend.", 0x3B2)
+            if serial == -1:
+                continue
+            plants = get_plants_on_bed(serial)
+            if plants is None:
+                Misc.SendMessage("Failed to find the garden bed.", 33)
+                continue
+            for plant in plants:
+                if plant.ItemID not in PLANTS:
+                    continue
+                if plant.Color not in COLORS:
+                    continue
+                # Tend the plant
+                while True:
                     state = tend_plant(plant.Serial, AUTO_DECORATIVE)
-                    if state == GardeningGumps.States.INTERRUPT:
-                        break
-                    if state in (GardeningGumps.States.COMPLETED, GardeningGumps.States.INCOMPLETE):
-                        find_next = True
-                        plant_done.add(plant.Serial)
-                        break
                     Misc.Pause(Timer.Remaining("plant-used"))
+                    if state == GardeningGumps.States.INTERRUPT:
+                        continue
+                    if state in (GardeningGumps.States.COMPLETED, GardeningGumps.States.INCOMPLETE):
+                        break
         elif response == 2:
             while True:
                 serial = Target.PromptTarget("Choose the plant to tend.")
@@ -270,6 +468,4 @@ if __name__ == "__main__":
                     continue
                 if plant.Color not in COLORS:
                     continue
-                state = tend_plant(plant.Serial, True)
-                if state in (GardeningGumps.States.COMPLETED, GardeningGumps.States.INCOMPLETE):
-                    plant_done.add(plant.Serial)
+                state = tend_plant(plant.Serial, AUTO_DECORATIVE)

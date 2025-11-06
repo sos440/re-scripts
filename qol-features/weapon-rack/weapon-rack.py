@@ -241,6 +241,7 @@ class EquipManager:
 
     @classmethod
     def delayed_equip(cls, serials: List[int], fast: bool = False) -> None:
+        fast = False  # Quick fix for the recent UO3D packet change
         if fast:
             cls.delay(Player.EquipUO3D, serials)
             return
@@ -249,6 +250,7 @@ class EquipManager:
 
     @classmethod
     def delayed_unequip(cls, layers: List[str], fast: bool = False) -> None:
+        fast = False  # Quick fix for the recent UO3D packet change
         if fast:
             cls.delay(Player.UnEquipUO3D, layers)
             return

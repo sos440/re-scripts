@@ -12,6 +12,9 @@ ATTACK_PRIORITY = "Weakest"
 # Spell delay in milliseconds.
 SPELL_DELAY = 1000
 
+# You will attempt to heal yourself using bandages only if your healing is at least this.
+BANDAGE_THRESHOLD = 50.0
+
 # Remove Curse will be cast after you are safe for this duration.
 REMOVE_CURSE_DELAY = 3000
 
@@ -72,8 +75,8 @@ def set_cr_timer():
     delay = 2000 - 250 * min(6, Player.FasterCastRecovery)
     Timer.Create("casting-recovery", delay)
 
-
 SPELL_DATABASE = {
+    "Cleanse By Fire": {"cost": 10, "casting-time": 1500, "word": "Expor Flamus"},
     "Close Wounds": {"cost": 10, "casting-time": 1500, "word": "Obsu Vulni"},
     "Consecrate Weapon": {"cost": 10, "casting-time": 500, "word": "Consecrus Arma"},
     "Divine Fury": {"cost": 10, "casting-time": 1000, "word": "Divinum Furis"},
@@ -212,19 +215,39 @@ while Player.Connected:
         continue
 
     # Heal self
-    if (Player.Hits < Player.HitsMax or Player.Poisoned) and not Player.BuffsExist("Healing", True):
-        # If you're damaged, reset the safe timer
-        Timer.Create("safe", REMOVE_CURSE_DELAY)
-        bandage = find_bandage()
-        if bandage is not None:
-            Target.Cancel()
-            Items.UseItem(bandage.Serial)
-            if not Target.WaitForTarget(500, True):
+    if Player.GetSkillValue("Healing") >= BANDAGE_THRESHOLD:
+        if (Player.Hits < Player.HitsMax or Player.Poisoned) and not Player.BuffsExist("Healing", True):
+            # If you're damaged, reset the safe timer
+            Timer.Create("safe", REMOVE_CURSE_DELAY)
+            bandage = find_bandage()
+            if bandage is not None:
+                Target.Cancel()
+                Items.UseItem(bandage.Serial)
+                if not Target.WaitForTarget(500, True):
+                    continue
+                Target.Self()
+                Target.Cancel()
+                Misc.Pause(250)
                 continue
-            Target.Self()
-            Target.Cancel()
-            Misc.Pause(250)
-            continue
+            elif not Timer.Check("sysmsg-timer"):
+                Misc.SendMessage("No bandage found!", 33)
+                Timer.Create("sysmsg-timer", 1000)
+    else:
+        if Player.Poisoned:
+            if not safe_cast("Cleanse By Fire"):
+                continue
+            if Target.WaitForTarget(2500, True):
+                Target.Self()
+                set_cr_timer()
+                continue
+        if Player.Hits < 0.95 * Player.HitsMax:
+            if not safe_cast("Close Wounds"):
+                continue
+            if Target.WaitForTarget(2500, True):
+                Target.Self()
+                set_cr_timer()
+                continue
+            
 
     # Clear debuffs
     if not Timer.Check("safe") and (Player.Hits >= (DEBUFF_THRESHOLD * Player.HitsMax / 100)) and can_cast("Remove Curse"):

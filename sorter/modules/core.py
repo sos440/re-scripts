@@ -248,9 +248,9 @@ class SingleSerialMatch(BaseMatch):
 
     def to_xml(self, e: Optional[ET.Element] = None) -> ET.Element:
         e = super().to_xml(e)
-        e.set("serial", f"0x{self.serial:08X}")
-        e.set("itemid", f"0x{self.itemid:04X}")
-        e.set("color", f"0x{self.color:04X}")
+        e.set("serial", hex(self.serial))
+        e.set("itemid", hex(self.itemid))
+        e.set("color", str(self.color))
         return e
 
 
@@ -325,9 +325,9 @@ class SingleTypeMatch(BaseMatch):
 
     def to_xml(self, e: Optional[ET.Element] = None) -> ET.Element:
         e = super().to_xml(e)
-        e.set("itemid", f"0x{self.itemid:04X}")
+        e.set("itemid", hex(self.itemid))
         if self.color is not None:
-            e.set("color", f"0x{self.color:04X}")
+            e.set("color", str(self.color))
         elif "color" in e.attrib:
             del e.attrib["color"]
         return e

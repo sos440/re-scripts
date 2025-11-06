@@ -31,6 +31,8 @@ CHEST_IDS = [
     0x52547AF3,
 ]
 
+# ID for the rest
+CHEST_FOR_REST = 0x41481EBF
 
 # List of colors for plant seeds
 # Seeds will be sorted vertically by color in the order defined here
@@ -188,11 +190,15 @@ def sort_seeds():
         # Parse color
         if seed.Color not in color_invmap:
             Misc.SendMessage("Unknown seed color: 0x{seed.Color:04X}", 33)
+            Items.Move(seed.Serial, CHEST_FOR_REST, -1)
+            Misc.Pause(1000)
             continue
         row_idx, color_name = color_invmap[seed.Color]
         # Parse plant type
         itemid = parse_cliloc(seed.Properties)
         if itemid not in itemid_invmap:
+            Items.Move(seed.Serial, CHEST_FOR_REST, -1)
+            Misc.Pause(1000)
             continue
         _, plant_type = itemid_invmap[itemid]
         cont_serial, col_idx = plant_invmap[plant_type]

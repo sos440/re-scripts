@@ -1,7 +1,7 @@
 ################################################################################
 # Settings
 
-VERSION = "1.0"
+VERSION = "1.1"
 SETTING_DIR = "Data/Sorter/"
 
 MOVE_DELAY = 1000
@@ -23,6 +23,7 @@ from modules import *
 from AutoComplete import *
 from typing import List, Dict, Set, Tuple, Any, Optional, Union, Iterable
 import threading
+import re
 import xml.etree.ElementTree as ET
 
 ################################################################################
@@ -199,6 +200,32 @@ class Sorter:
     RULE_SETS: List[SortRules] = []
     """The list of sorting rules."""
     RULES_FILEPATH = os.path.join(SETTING_DIR, f"sort_rules.xml")
+
+    README = "<br>".join(
+        map(
+            lambda s: s.strip(),
+            re.split(
+                r"\n",
+                """
+                <b>Welcome to the Rule Editor!</b>
+
+                This tool allows you to create and manage sorting rules for your items.
+
+                1. Creating Rule Sets:
+                There are two ways to create a new rule set. You can either scan an existing container to automatically generate rules based on its contents, or you can manually create a new rule set from scratch.
+
+                2. Basic Rule Set Properties:
+                Once you have a rule set, you can edit its properties, including its name, description, and whether it's enabled or not. You can also choose to receive notifications when items are sorted using this rule set.
+
+                3. Setting Target Container (Sortbag) Rules:
+                You can also set the target container (sortbag) rules, which determine the container where matched items will be moved. You can specify a specific container or use match rules to identify suitable containers.
+
+                4. Managing Match Rules:
+                Each rule set consists of match rules that determine which items get sorted. You can add new match rules, edit existing ones, rearrange their order, or delete them as needed.
+                """.strip(),
+            ),
+        )
+    )
 
     class ContainerInfo:
         def __init__(self, serial: int, contents: int, max_contents: int, weight: float = 0.0, max_weight: float = float("inf")):
@@ -467,8 +494,8 @@ class Sorter:
         while True:
             field_tileart.graphics = new_match.itemid
             field_tileart.hue = new_match.color
-            field_serial.text = f"0x{new_match.serial:08X}"
-            field_itemid.text = f"0x{new_match.itemid:04X}"
+            field_serial.text = hex(new_match.serial)
+            field_itemid.text = hex(new_match.itemid)
             field_color.text = str(new_match.color) if new_match.color is not None else "-1"
             field_name.text = new_match.name or "(Empty)"
             field_desc.text = new_match.desc or "(Empty)"
@@ -571,7 +598,7 @@ class Sorter:
         while True:
             field_tileart.graphics = new_match.itemid
             field_tileart.hue = new_match.color or 0
-            field_itemid.text = f"0x{new_match.itemid:04X}"
+            field_itemid.text = hex(new_match.itemid)
             field_color.text = str(new_match.color) if new_match.color is not None else "-1"
             field_name.text = new_match.name or "(Empty)"
             field_desc.text = new_match.desc or "(Empty)"
@@ -635,9 +662,15 @@ class Sorter:
 
         with gb.Row(width=RULE_CELL_WIDTH, spacing=5):
             button = gb.Checkbox(up=2328, down=2329, width=80, height=60)
+            desc = rule.desc or ""
 
             if isinstance(rule, SingleTypeMatch):
                 button.add_tileart(graphics=rule.itemid, hue=rule.color or 0)
+                if rule.desc is None:
+                    if rule.color is not None:
+                        desc = f"Color: {rule.color}"
+                    else:
+                        desc = "Any Colors"
 
             elif isinstance(rule, SingleSerialMatch):
                 graphics = rule.itemid
@@ -651,7 +684,7 @@ class Sorter:
 
             with gb.Column(halign="left", spacing=2):
                 gb.Text(rule.name or "(Unnamed)", hue=1152, width=RULE_CELL_WIDTH - 85, cropped=True)
-                gb.Html(rule.desc or "", color="#FFFFFF", width=RULE_CELL_WIDTH - 85, height=42)
+                gb.Html(desc, color="#FFFFFF", width=RULE_CELL_WIDTH - 85, height=42)
 
         return button
 
@@ -705,6 +738,8 @@ class Sorter:
                             btn_exit = gb.UOStoreButton("Exit", style="red")
 
         while True:
+            if RULE_SET_SELECTED != -1:
+                RULE_SET_PAGE = RULE_SET_SELECTED // RULE_SETS_PER_PAGE
             # Populate Rule Sets
             btn_rule_sets = {}
             rule_set_col.clear_children()
@@ -736,7 +771,8 @@ class Sorter:
             controls_col.clear_children()
             gb.current = controls_col
             if RULE_SET_SELECTED == -1:
-                gb.Html("(No Rule Set Selected)", color="#FFFFFF")
+                with gb.Column():
+                    gb.Html(cls.README, width=550, height=400, color="#FFFFFF", background=True, scrollbar=True)
                 with gb.Row():
                     for col in range(RULE_GRID_COLS):
                         cls.gump_draw_rule(gb, None)
@@ -863,7 +899,7 @@ class Sorter:
                     )
                     if confirm_delete:
                         del cls.RULE_SETS[RULE_SET_SELECTED]
-                        RULE_SET_SELECTED = -1
+                        RULE_SET_SELECTED = min(RULE_SET_SELECTED, len(cls.RULE_SETS) - 1)
                 continue
 
             if block == btn_rule_set_scan:
