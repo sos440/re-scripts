@@ -15,6 +15,9 @@ SPELL_DELAY = 1000
 # You will attempt to heal yourself using bandages only if your healing is at least this.
 BANDAGE_THRESHOLD = 50.0
 
+# If set to True, the script will utilize Remove Curse.
+USE_REMOVE_CURSE = True
+
 # Remove Curse will be cast after you are safe for this duration.
 REMOVE_CURSE_DELAY = 3000
 
@@ -142,8 +145,8 @@ def gump_menu() -> None:
     # Create the gump
     gd = Gumps.CreateGump(movable=True)
     Gumps.AddPage(gd, 0)
-    Gumps.AddBackground(gd, 0, 0, 146, 65, 30546)
-    Gumps.AddAlphaRegion(gd, 0, 0, 146, 65)
+    Gumps.AddBackground(gd, 0, 0, 146, 90, 30546)
+    Gumps.AddAlphaRegion(gd, 0, 0, 146, 90)
 
     Gumps.AddHtml(gd, 10, 5, 126, 18, GUMP_WRAPTXT.format(text="Lazy Pally Helper"), False, False)
 
@@ -153,6 +156,12 @@ def gump_menu() -> None:
     else:
         Gumps.AddButton(gd, 10, 30, 40021, 40031, 2, 1, 0)
         Gumps.AddHtml(gd, 10, 32, 126, 18, GUMP_WRAPTXT.format(text="Enable"), False, False)
+    
+    if USE_REMOVE_CURSE:
+        Gumps.AddButton(gd, 10, 60, 211, 210, 3, 1, 0)
+    else:
+        Gumps.AddButton(gd, 10, 60, 210, 211, 3, 1, 0)
+    Gumps.AddLabel(gd, 35, 60, 1152, "Remove Curse")
 
     # Send the gump and listen for the response
     Gumps.SendGump(GUMP_MENU, Player.Serial, 100, 100, gd.gumpDefinition, gd.gumpStrings)
@@ -196,6 +205,8 @@ while Player.Connected:
             is_running = False
         elif gd.buttonid == 2:
             is_running = True
+        elif gd.buttonid == 3:
+            USE_REMOVE_CURSE = not USE_REMOVE_CURSE
         gump_menu()
 
     # If your corpses should be highlighted, do it here
@@ -250,7 +261,12 @@ while Player.Connected:
             
 
     # Clear debuffs
-    if not Timer.Check("safe") and (Player.Hits >= (DEBUFF_THRESHOLD * Player.HitsMax / 100)) and can_cast("Remove Curse"):
+    if (
+        USE_REMOVE_CURSE 
+        and (not Timer.Check("safe")) 
+        and (Player.Hits >= (DEBUFF_THRESHOLD * Player.HitsMax / 100)) 
+        and can_cast("Remove Curse")
+    ):
         updated = False
         for debuff in DEBUFFS_TO_REMOVE:
             if not Player.BuffsExist(debuff, True):

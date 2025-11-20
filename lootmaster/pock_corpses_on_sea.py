@@ -32,8 +32,24 @@ def use_on(serial_src, serial_dst):
     Misc.Pause(1000)
 
 
+def find_davy_jones_poker():
+    return Items.FindByID(0x0F62, 0x07f3, Player.Backpack.Serial, 0)
+
+
+def find_harvester_blade():
+    return Items.FindByID(0x2D20, 0x04a7, Player.Backpack.Serial, 0)
+
+
 while Player.Connected:
     if ask():
+        POCKER = find_davy_jones_poker()
+        CUTTER = find_harvester_blade()
+        if POCKER is None:
+            Misc.SendMessage("You do not have a Davy Jone's iron poker.", 33)
+            continue
+        if CUTTER is None:
+            Misc.SendMessage("You do not have a harvester's blade.", 33)
+            continue
         for corpse in Items.FindAllByID(0x2006, -1, -1, 2):
             name = corpse.Name.lower()
             if "sea serpent" in name:

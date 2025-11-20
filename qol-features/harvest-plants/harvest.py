@@ -24,6 +24,24 @@ import re
 COLORS = [0, 33, 1645, 43, 1135, 56, 2213, 66, 1435, 5, 1341, 16, 13, 1166, 1173, 1158, 1161, 1153, 1109]
 PLANTS = [10460, 10461, 10462, 10463, 10464, 10465, 10466, 10467, 3273, 6810, 3204, 6815, 3265, 3326, 3215, 3272, 3214, 3365, 3255, 3262, 3521, 3323, 3512, 6817, 9324, 19340, 3230, 3203, 3206, 3208, 3220, 3211, 3237, 3239, 3223, 3231, 3238, 3228, 3377, 3332, 3241, 3372, 3366, 3367]
 
+MAP_GUMP_COLOR_TO_NAME = {
+    2101: "plain",
+    36: "bright red",
+    0x066D: "red",
+    0x002B: "bright orange",
+    46: "orange",
+    53: "bright yellow",
+    56: "yellow",
+    63: "bright green",
+    66: "green",
+    6: "bright blue",
+    0x053D: "blue",
+    0x0010: "bright purple",
+    0x000D: "purple",
+    0x0481: "white",
+    0: "black",
+}
+
 
 def _namespace_garden_bed():
     RAISED_BED = [
@@ -249,6 +267,18 @@ class GardeningGumps:
         if len(gd.gumpData) < 6 or gd.gumpData[5] != "Reproduction":
             return
 
+        # Extract the seed color from the gump layout
+        seed_color = None
+        for line in gd.gumpLayout.strip("{} ").split("}{"):
+            line = line.strip()
+            args = line.split(" ")
+            if line.startswith("text 199 116"):
+                match = re.search(r"text 199 116 (\d+) \d+", line)
+                if match is None:
+                    continue
+                seed_color = int(match.group(1))
+                break
+
         if gd.gumpData[6] == "3169" and gd.gumpData[7] == "/":
             text_res = gd.gumpData[11]
             text_seed = gd.gumpData[13]
@@ -280,7 +310,7 @@ class GardeningGumps:
             seed_left = int(match_seed.group(1))
             seed_max = int(match_seed.group(2))
 
-        return {"id": gd.gumpId, "res-left": res_left, "res-max": res_max, "seed-left": seed_left, "seed-max": seed_max}
+        return {"id": gd.gumpId, "res-left": res_left, "res-max": res_max, "seed-left": seed_left, "seed-max": seed_max, "seed-color": seed_color}
 
     @staticmethod
     def is_confirm(gd: Gumps.GumpData) -> Optional[Dict[str, Any]]:
@@ -292,10 +322,13 @@ class GardeningGumps:
         return {"id": gd.gumpId}
 
 
-def handle_gardening_gumps(plant: int, color: int, auto_deco: bool = False) -> GardeningGumps.States:
+def handle_gardening_gumps(plant: int, color: int, auto_deco: bool = False, metadata: Optional[Dict] = None) -> GardeningGumps.States:
     """
     Interact with gardening gumps.
     """
+    if metadata is None:
+        metadata = dict()
+
     for gumpid in Gumps.AllGumpIDs():
         gd = Gumps.GetGumpData(gumpid)
         if gd is None:
@@ -325,6 +358,11 @@ def handle_gardening_gumps(plant: int, color: int, auto_deco: bool = False) -> G
                 Misc.SendMessage("Trying to collect resources.", 68)
                 Gumps.SendAction(match_repro["id"], 7)
                 return GardeningGumps.States.ACTION_LEFT
+            if match_repro["seed-max"] > 0 and match_repro["seed-color"] is not None and "seed-color" not in metadata:
+                color = match_repro["seed-color"]
+                color_name = MAP_GUMP_COLOR_TO_NAME.get(color, f"unknown color ({color})")
+                metadata["seed-color"] = color
+                Misc.SendMessage(f"Seed color: {color_name}", 0x481)
             if match_repro["seed-left"] > 0:
                 # Harvest seeds
                 Misc.SendMessage("Trying to collect seeds.", 68)
@@ -368,8 +406,9 @@ def tend_plant(serial, auto_deco: bool = False):
     Timer.Create("plant-used", ACTION_DELAY)
     Timer.Create("gardening", 1000)
     Journal.Clear()
+    metadata = dict()
     while Timer.Check("gardening"):
-        state = handle_gardening_gumps(item.ItemID, item.Color, auto_deco)
+        state = handle_gardening_gumps(item.ItemID, item.Color, auto_deco, metadata)
         if state == GardeningGumps.States.NOT_FOUND:
             Misc.Pause(100)
             continue
@@ -385,6 +424,39 @@ def tend_plant(serial, auto_deco: bool = False):
     return GardeningGumps.States.INCOMPLETE
 
 
+def move_plants():
+    serial = Target.PromptTarget("Select the box to move plants to.", 0x3B2)
+    if serial == -1:
+        return
+    if not Misc.IsItem(serial):
+        return
+    for item in Items.FindAllByID(PLANTS, -1, Player.Backpack.Serial, 2):
+        Items.Move(item.Serial, serial, -1)
+        Misc.Pause(1000)
+
+
+def cut_plants():
+    serial = Target.PromptTarget("Choose the container.", 0x3B2)
+    if not Misc.IsItem(serial):
+        return
+
+    plants = Items.FindAllByID(PLANTS, -1, serial, 3)
+    for item in plants:
+        serial = item.Serial
+        while True:
+            scan = Items.FindBySerial(serial)
+            if scan is None:
+                break
+            clipper = Items.FindByID(0x0DFC, 0, Player.Backpack.Serial, 0)
+            if clipper is None:
+                break
+            Items.UseItem(clipper.Serial)
+            if not Target.WaitForTarget(1000, False):
+                continue
+            Target.TargetExecute(scan.Serial)
+            Misc.Pause(1000)
+
+
 GUMP_WT = """<CENTER><BASEFONT COLOR="#FFFFFF">{text}</BASEFONT></CENTER>"""
 SHORTCUT_GUMP_ID = hash("HarvestGump") & 0xFFFFFFFF
 
@@ -396,20 +468,28 @@ def ask_to_harvest(harvesting: bool = False):
     Gumps.CloseGump(SHORTCUT_GUMP_ID)
     gd = Gumps.CreateGump(movable=True)
     Gumps.AddPage(gd, 0)
-    Gumps.AddBackground(gd, 0, 0, 146, 115, 30546)
-    Gumps.AddAlphaRegion(gd, 0, 0, 146, 115)
+    Gumps.AddBackground(gd, 0, 0, 146, 165, 30546)
+    Gumps.AddAlphaRegion(gd, 0, 0, 146, 165)
     Gumps.AddHtml(gd, 10, 5, 126, 18, GUMP_WT.format(text="Harvest Helper"), False, False)
+
     if harvesting:
         Gumps.AddButton(gd, 10, 30, 40297, 40298, 1, 1, 0)
         Gumps.AddHtml(gd, 10, 33, 126, 18, GUMP_WT.format(text="Stop Harvesting"), False, False)
     else:
         Gumps.AddButton(gd, 10, 30, 40021, 40031, 1, 1, 0)
         Gumps.AddHtml(gd, 10, 33, 126, 18, GUMP_WT.format(text="Harvest Batch"), False, False)
+
     Gumps.AddButton(gd, 10, 55, 40021, 40031, 2, 1, 0)
     Gumps.AddHtml(gd, 10, 58, 126, 18, GUMP_WT.format(text="Harvest Each"), False, False)
 
-    Gumps.AddCheck(gd, 10, 85, 210, 211, AUTO_DECORATIVE, 10)
-    Gumps.AddLabel(gd, 35, 85, 1152, "Auto Decorative")
+    Gumps.AddButton(gd, 10, 80, 40021, 40031, 3, 1, 0)
+    Gumps.AddHtml(gd, 10, 83, 126, 18, GUMP_WT.format(text="Move Plants"), False, False)
+
+    Gumps.AddButton(gd, 10, 105, 40021, 40031, 4, 1, 0)
+    Gumps.AddHtml(gd, 10, 108, 126, 18, GUMP_WT.format(text="Cut Plants"), False, False)
+
+    Gumps.AddCheck(gd, 10, 135, 210, 211, AUTO_DECORATIVE, 10)
+    Gumps.AddLabel(gd, 35, 135, 1152, "Auto Decorative")
 
     Gumps.SendGump(SHORTCUT_GUMP_ID, Player.Serial, 100, 100, gd.gumpDefinition, gd.gumpStrings)
 
@@ -447,6 +527,7 @@ if __name__ == "__main__":
                 if plant.Color not in COLORS:
                     continue
                 # Tend the plant
+                Misc.SendMessage(f"Tending the plant: {plant.Name}", 68)
                 while True:
                     state = tend_plant(plant.Serial, AUTO_DECORATIVE)
                     Misc.Pause(Timer.Remaining("plant-used"))
@@ -454,6 +535,7 @@ if __name__ == "__main__":
                         continue
                     if state in (GardeningGumps.States.COMPLETED, GardeningGumps.States.INCOMPLETE):
                         break
+
         elif response == 2:
             while True:
                 serial = Target.PromptTarget("Choose the plant to tend.")
@@ -462,10 +544,14 @@ if __name__ == "__main__":
                 plant = Items.FindBySerial(serial)
                 if plant is None:
                     continue
-                if plant.Serial in plant_done:
-                    continue
                 if plant.ItemID not in PLANTS:
                     continue
                 if plant.Color not in COLORS:
                     continue
                 state = tend_plant(plant.Serial, AUTO_DECORATIVE)
+
+        elif response == 3:
+            move_plants()
+
+        elif response == 4:
+            cut_plants()

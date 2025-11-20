@@ -4,7 +4,7 @@ while True:
         break
     
     Items.UseItem(seed.Serial)
-    Timer.Create("action-delay", 1000)
+    Timer.Create("action-delay", 500)
     Target.WaitForTarget(1000, False)
     while Target.HasTarget() or Timer.Check("action-delay"):
         Misc.Pause(100)

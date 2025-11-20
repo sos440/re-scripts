@@ -119,17 +119,19 @@ class Fishing:
         if pole is None:
             raise cls.NoFishingPoleError()
 
-        water_info = cls.get_water(get_player_pos())
-        if water_info:
-            cls.LAST_SPOT = get_player_pos()
-        elif cls.LAST_SPOT == (-1, -1, 0):
-            pos = Target.PromptGroundTarget("Select fishing spot (max 12 tiles away):", 0x3B2)
-            cls.LAST_SPOT = (pos.X, pos.Y, pos.Z)
-            if cls.LAST_SPOT == (-1, -1, 0):
+        Misc.SendMessage(f"Last spot: {cls.LAST_SPOT}", 0x3B2)
+        if cls.LAST_SPOT == (-1, -1, 0, None):
+            Misc.SendMessage("Finding the fishing spot...", 68)
+            water_info = cls.get_water(get_player_pos())
+            if water_info is None:
+                pos = Target.PromptGroundTarget("Select fishing spot (max 12 tiles away):", 0x3B2)
+                pos_coords = (pos.X, pos.Y, pos.Z)
+                if pos_coords == (-1, -1, 0):
+                    raise cls.InvalidTargetError()
+                water_info = cls.get_water(pos_coords)
+            if water_info is None:
                 raise cls.InvalidTargetError()
-            water_info = cls.get_water(cls.LAST_SPOT)
-        if water_info is None:
-            raise cls.InvalidTargetError()
+            cls.LAST_SPOT = water_info
 
         Journal.Clear()
         Items.UseItem(pole.Serial)
@@ -145,7 +147,7 @@ class Fishing:
         if not Target.WaitForTarget(1000, False):
             raise cls.NoTargetCursorError()
 
-        x, y, z, tile = water_info
+        x, y, z, tile = cls.LAST_SPOT
         if tile is None:
             Target.TargetExecute(x, y, z)
         else:
@@ -219,7 +221,7 @@ class Fishing:
     @classmethod
     def fish_spot(cls):
         cls.dismount()
-        cls.LAST_SPOT = (-1, -1, 0)
+        cls.LAST_SPOT = (-1, -1, 0, None)
         while True:
             try:
                 cls.use_fishing_pole()

@@ -1,7 +1,7 @@
 ################################################################################
 # Settings
 
-VERSION = "1.1"
+VERSION = "1.2"
 COLOR_PRESETS = "presets.xml"
 
 ################################################################################
@@ -132,8 +132,7 @@ class ColorPickerUI:
             return
 
     @classmethod
-    def test_color(cls, color_name: str, color_value: int, model: int):
-        serial = Target.PromptTarget(f"Select an item or mobile to apply the color: {color_name}")
+    def test_color(cls, serial, color_name: str, color_value: int, model: int):
         if serial == -1:
             return
         if Misc.IsItem(serial):
@@ -159,6 +158,7 @@ class ColorPickerUI:
         COLOR_PER_PAGE = 16
         SELECTED_INDEX = -1
         SELECTED_PAGE = 0
+        TARGET_MOUNT = False
         LAST_COLORS = []
 
         def _test_color_and_update(entry):
@@ -167,7 +167,14 @@ class ColorPickerUI:
             LAST_COLORS.insert(0, entry)
             if len(LAST_COLORS) > COLOR_PER_PAGE:
                 LAST_COLORS.pop()
-            cls.test_color(*entry)
+            if TARGET_MOUNT:
+                if Player.Mount is None:
+                    Misc.SendMessage("You're not on a mount.", 33)
+                    return
+                serial = Player.Mount.Serial
+            else:
+                serial = Target.PromptTarget(f"Select an item or mobile to apply the color.")
+            cls.test_color(serial, *entry)
 
         gb = CraftingGumpBuilder(id="ColorPickerGump")
         with gb.MainFrame():
@@ -184,6 +191,10 @@ class ColorPickerUI:
             with gb.ShadedColumn():
                 with gb.Row():
                     btn_pick = gb.CraftingButton("PICK FROM ITEM", width=150)
+                    btn_mount = gb.Checkbox(checked=TARGET_MOUNT, tooltip="When it is checked, the color will be applied to your mount automatically.")
+                    gb.Spacer(5)
+                    gb.Text("Apply Color To Your Mount", hue=1152, width=200)
+                    gb.Spacer(50)
                     gb.CraftingButton("EXIT", width=100, style="x")
 
         while True:
@@ -263,6 +274,10 @@ class ColorPickerUI:
                 entry = cls.pick_color()
                 if entry is not None:
                     _test_color_and_update(entry)
+                continue
+
+            if block == btn_mount:
+                TARGET_MOUNT = btn_mount.checked
                 continue
 
             if block == btn_prev:

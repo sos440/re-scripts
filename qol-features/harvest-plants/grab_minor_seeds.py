@@ -126,10 +126,11 @@ def grab_minor_seeds():
         if plant_type not in plant_invmap:
             continue
 
-        if seed.Amount >= 17:
+        need = 1 + (20 - seed.Amount - 1) // 7
+        if need <= 0:
             continue
         Misc.SendMessage(f"[{i+1}/{n}] Grabbing minor seed: {seed.Name} (Amount: {seed.Amount})", 68)
-        Items.Move(seed.Serial, Player.Backpack.Serial, 3)
+        Items.Move(seed.Serial, Player.Backpack.Serial, need)
         Misc.Pause(1000)
 
     Misc.SendMessage("Done!", 0x3B2)
